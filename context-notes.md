@@ -97,3 +97,30 @@ GAME_DESIGN.md 5.2절이 명시한 "1인칭에서는 무기 모델과 손 애니
 - `Player Character/FirstPerson Cam/FirstPersonWeaponMount` 위치 `(0.15, -0.06, 0.4)`.
 - `Player Character`의 `Animator.cullingMode = AlwaysAnimate`.
 - `PlayerShooter.firstPersonWeaponMount` -> 위 마운트, `CameraRigController.playerShooter`/`bodyRenderer` 참조 연결.
+
+## 2026-09-18 - 실제 FPS 방식 1인칭 전용 뷰모델 카메라 스택 설계 (Claude)
+
+앞선 세션에서 확인한 "근접 포스트 프로세싱 왜곡" 문제를 해결하기 위해, 총을 메인 카메라와 별도로 그리는 URP 카메라 스택(Base + Overlay) 구조로 전환.
+
+### 구현 내용
+
+- 새 레이어 `FirstPersonWeapon`(인덱스 8) 추가.
+- `Main Camera`의 자식으로 `FirstPersonWeaponCamera` 생성. `Camera` + `UniversalAdditionalCameraData` 컴포넌트를 붙이고 다음과 같이 설정:
+  - `Camera`: `clearFlags = Depth only`, `cullingMask = FirstPersonWeapon 레이어만`, `nearClipPlane = 0.01`, `farClipPlane = 10`, `fieldOfView = 40`.
+  - `UniversalAdditionalCameraData`: `renderType = Overlay`, `renderPostProcessing = false`(포스트 프로세싱 미적용 - 근접 왜곡 문제의 핵심 해결책), `renderShadows = false`.
+  - 로컬 트랜스폼은 `Main Camera`에 대해 항등(0,0,0)이라 `CinemachineBrain`이 `Main Camera`를 옮길 때마다 자동으로 같이 따라간다.
+- `Main Camera`의 `Camera.cullingMask`에서 `FirstPersonWeapon` 레이어를 제외 (`~(1<<8)`), `UniversalAdditionalCameraData.cameraStack`에 `FirstPersonWeaponCamera`를 추가.
+- `CameraRigController`에 `weaponViewModelTarget`(Gun 오브젝트), `firstPersonWeaponLayer`/`defaultWeaponLayer` 필드 추가. 모드 전환 시 `Gun`과 모든 자식(메시/이펙트)의 레이어를 재귀적으로 `FirstPersonWeapon` <-> `Default`로 전환하는 `SetLayerRecursively()` 구현.
+- 이렇게 하면 3인칭에서는 메인 카메라가 `Default` 레이어의 총을 그대로 그리고(기존과 동일), 1인칭에서는 메인 카메라가 그 총을 그리지 않는 대신 `FirstPersonWeaponCamera`가 `FirstPersonWeapon` 레이어로 옮겨간 같은 총을 포스트 프로세싱 없이 오버레이로 그린다. 총 오브젝트(`Gun.cs`, 탄약, 발사 로직, 이펙트)는 하나만 존재하며 복제하지 않았다.
+
+### 검증 관련 중요한 발견 - 자동 스크린샷 도구의 한계
+
+- `set_component_properties`로 `Camera.m_ClearFlags`에 유효 값으로 안내된 문자열 `"Depth only"`를 그대로 넣었는데도 실제로는 `"Don't Clear"`(Nothing)로 저장되는 버그를 발견함. `UnityEditor.EditorUtility.SetDirty` 후 `eval`로 `camera.clearFlags = CameraClearFlags.Depth`를 직접 대입하는 방식으로 우회함. (Claude Code에 제품 피드백으로 별도 보고함)
+- 카메라 스택/레이어/프러스텀 설정을 `eval`로 전부 코드 레벨에서 검증(`GeometryUtility.TestPlanesAABB`, `WorldToViewportPoint`, 레이어/활성 상태 등)했고 전부 정상이었음에도, `capture_game_view` 도구(`source: "camera"`와 `source: "screen"` 둘 다)로 캡처한 화면에는 오버레이 카메라가 그리는 내용이 전혀 나타나지 않음. 오버레이 카메라의 `cullingMask`를 일부러 전체로 넓히고 배경을 빨간색 단색으로 바꿔도 캡처 결과에 전혀 반영되지 않아 재확인함.
+- 콘솔 스택 트레이스를 보면 `capture_game_view`는 `source` 옵션과 무관하게 내부적으로 `UnityEngine.Camera:Render()`를 직접 호출해 캡처하는 것으로 보임. **URP는 카메라 스택(Base+Overlay) 합성을 `Camera.Render()` 수동 호출로는 처리하지 않고, 매 프레임 SRP의 `RenderPipeline.Render(context, cameras[])` 경로로만 처리**하는 것으로 알려져 있음. 즉 이번 세션에서 만든 카메라 스택 구조 자체는 (레이어/컬링마스크/스택 리스트/직렬화 필드 등 모든 설정이 코드로 확인된 것처럼) 정상일 가능성이 높지만, **이 자동화 도구로는 실제로 화면에 나오는지 최종 확인이 불가능**했다.
+
+### 남은 작업 (사람의 확인 필요)
+
+- **사람이 직접 Unity 에디터에서 Play를 눌러** 1인칭 모드로 전환했을 때 총이 `FirstPersonWeaponCamera`를 통해 실제로 화면에 나타나는지 육안으로 확인해야 함. 자동화 도구로는 이 부분을 검증할 수 없었다.
+- 만약 실제로도 안 보인다면 다음을 의심할 것: (1) `FirstPersonWeaponMount` 위치/각도가 여전히 화면 밖일 가능성 (이번 좌표는 계산상으로만 확인됨), (2) URP 파이프라인 에셋 자체에서 카메라 스택을 막는 별도 설정, (3) Cinemachine 3.x와 카메라 스택 조합 관련 알려진 이슈.
+- 잘 보인다면 다음 다듬기 후보: 뷰모델 전용 FOV/위치 미세 조정, 1인칭에서 총구 화염/탄피 이펙트가 자연스러운지 확인, 발사/재장전 시 실제 입력으로 테스트.
