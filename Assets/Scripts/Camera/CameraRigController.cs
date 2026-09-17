@@ -9,6 +9,8 @@ public class CameraRigController : MonoBehaviour {
 
     public GameObject thirdPersonCamera; // 3인칭 카메라 가상 카메라 오브젝트
     public GameObject firstPersonCamera; // 1인칭 카메라 가상 카메라 오브젝트
+    public PlayerShooter playerShooter; // 카메라 모드에 맞춰 총 배치 기준을 바꿔줄 슈터
+    public Renderer bodyRenderer; // 1인칭 시점에서 카메라를 가리지 않도록 숨길 몸통 렌더러
 
     public KeyCode switchKey = KeyCode.C; // 카메라 모드 전환 키
 
@@ -39,6 +41,17 @@ public class CameraRigController : MonoBehaviour {
         if (firstPersonCamera != null)
         {
             firstPersonCamera.SetActive(mode == CameraMode.FirstPerson);
+        }
+
+        if (playerShooter != null)
+        {
+            playerShooter.useFirstPersonMount = mode == CameraMode.FirstPerson;
+        }
+
+        if (bodyRenderer != null)
+        {
+            // 1인칭 카메라가 몸통 메시 안쪽에서 시작해 화면을 가리는 것을 막기 위해 숨김
+            bodyRenderer.enabled = mode != CameraMode.FirstPerson;
         }
     }
 }

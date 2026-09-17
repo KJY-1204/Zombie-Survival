@@ -68,3 +68,32 @@
 - 사람이 직접 Play 모드에서 `C` 키를 눌러 전환되는지 확인 (자동화 도구로는 키 입력 시뮬레이션 불가).
 - 1인칭 시점에서 총 모델/손 위치가 자연스러운지 확인하고, 필요하면 1인칭 전용 무기 마운트를 검토.
 - `Gun`/`PlayerShooter`의 실제 발사/재장전 입력 테스트, `Zombie`의 추적/공격/사망 시퀀스 테스트 (이번 세션에서는 컴파일과 씬 배치만 확인함).
+
+## 2026-09-18 - 1인칭 무기 구성 재검토 (Claude)
+
+GAME_DESIGN.md 5.2절이 명시한 "1인칭에서는 무기 모델과 손 애니메이션이 별도 구성이 필요한지 프로토타입에서 확인"을 실제로 진행. 결론부터: **필요하다는 것이 확인됨.** 기존 3인칭 IK 기반 총 리그를 그대로 1인칭에 재사용하는 방식은 문제가 많다.
+
+### 구현 내용
+
+- `PlayerShooter.cs`에 `firstPersonWeaponMount`(Transform)와 `useFirstPersonMount`(bool) 필드 추가. `OnAnimatorIK()`에서 `useFirstPersonMount`가 true면 `gunPivot`을 팔꿈치 IK 힌트 대신 이 마운트의 위치/회전으로 맞춘다.
+- `CameraRigController`가 카메라 모드 전환 시 `playerShooter.useFirstPersonMount`와 `bodyRenderer.enabled`(1인칭에서 몸통 숨김)를 함께 갱신하도록 확장.
+- 씬에 `Player Character/FirstPerson Cam/FirstPersonWeaponMount` 빈 오브젝트 추가, 로컬 위치 `(0.15, -0.06, 0.4)`로 설정 (카메라 기준 우측 하단 전방).
+
+### 발견한 문제 (원인 조사 포함)
+
+1. **Animator 컬링으로 인한 IK 정지** - `Player Character`의 `Animator.cullingMode`가 기본값 `Cull Update Transforms`였음. 1인칭에서 몸통 `SkinnedMeshRenderer`(`Woman`)를 숨기자 Animator가 "화면에 안 보인다"고 판단해 트랜스폼/IK 갱신 자체를 멈춰버렸고, `OnAnimatorIK()`가 더 이상 호출되지 않아 총이 마지막 위치에 얼어붙었다. `AlwaysAnimate`로 변경해 해결 (씬에 저장됨).
+2. **디버깅 중 거짓 단서** - 위 문제를 조사하는 동안 실제로는 플레이어가 좀비에게 계속 공격받아 사망한 상태(`PlayerHealth.dead = true`)였고, `PlayerHealth.Die()`가 `PlayerShooter.enabled = false`로 만들면서 `Gun` 오브젝트 전체가 비활성화됐던 것도 총이 안 보인 이유 중 하나였다. `OnAnimatorIK`는 컴포넌트가 비활성화되면 호출되지 않으므로 이 상태에서는 마운트 좌표를 아무리 바꿔도 반영되지 않았다. 테스트 시 좀비를 미리 제거/스포너 비활성화하지 않으면 이런 오탐이 재발할 수 있다.
+3. **여전히 남은 문제 - 근접 프레이밍이 매우 예민함** - 위 두 문제를 모두 해결하고 `Gun`이 활성 상태, `useFirstPersonMount=true`, `GeometryUtility.TestPlanesAABB`로 카메라 프러스텀 안에 있음까지 코드로 확인했음에도, 실제 캡처한 화면에는 총이 뚜렷하게 보이지 않았다(빈 화면이거나 알아보기 힘든 흐릿한 얼룩). 카메라에서 0.3~1m 거리는 War FX/포스트 프로세싱 스택(비네트, 크로마틱 애버레이션, 블룸으로 추정)이 강하게 걸리는 구간이라 근접한 작은 오브젝트가 왜곡되거나 묻히는 것으로 보인다. 즉 좌표 계산이 맞아도 "눈으로 확인 가능한" 결과가 나오지 않았다.
+
+### 결론 및 권장 사항
+
+- 3인칭용 IK 총 리그(`Gun Pivot`이 팔꿈치를 따라가는 구조)를 그대로 가져와 1인칭 마운트에 스냅시키는 지금 방식은 근본적으로 근접 화면비/포스트 프로세싱과 맞지 않아 프로토타입 수준을 넘기 어렵다.
+- 실제 FPS 게임들처럼 **1인칭 전용 무기 뷰모델을 별도로 두는 것**(카메라에 고정된 작은 전용 오브젝트, 가능하면 별도 카메라 스택/레이어로 포스트 프로세싱 영향을 줄이거나 다르게 적용)을 다음 단계로 검토해야 한다.
+- 이 작업은 이번 세션 범위를 벗어나는 별도 수직 슬라이스로 분리하는 것을 권장 (M1 범위를 벗어나 카메라/무기 렌더링 아키텍처를 다시 설계해야 함).
+- 코드 인프라(`useFirstPersonMount`, `firstPersonWeaponMount`, 몸통 숨김)는 재사용 가능한 형태로 남겨두었으니, 별도 뷰모델을 붙일 때 이 스위치를 그대로 활용할 수 있다.
+
+### 씬에 저장된 변경 사항
+
+- `Player Character/FirstPerson Cam/FirstPersonWeaponMount` 위치 `(0.15, -0.06, 0.4)`.
+- `Player Character`의 `Animator.cullingMode = AlwaysAnimate`.
+- `PlayerShooter.firstPersonWeaponMount` -> 위 마운트, `CameraRigController.playerShooter`/`bodyRenderer` 참조 연결.

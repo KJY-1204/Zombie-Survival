@@ -150,7 +150,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 1.5, z: 0.15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 438974365}
   m_Father: {fileID: 1502623813}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &195727376
@@ -196,6 +197,43 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
+--- !u!137 &334292976 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 8512681968064397568, guid: 153166fe35c054a7190cb112c92f6d23,
+    type: 3}
+  m_PrefabInstance: {fileID: 8512681966600792165}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &438974364
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 438974365}
+  m_Layer: 0
+  m_Name: FirstPersonWeaponMount
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &438974365
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 438974364}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.15, y: -0.06, z: 0.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 195727375}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &708139771
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -797,6 +835,18 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 8512681966600792165}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1502623814 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8512681968067611307, guid: 153166fe35c054a7190cb112c92f6d23,
+    type: 3}
+  m_PrefabInstance: {fileID: 8512681966600792165}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a558a9e6e5e01c842a3d56a3e825e54e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1511016491
 GameObject:
   m_ObjectHideFlags: 0
@@ -1046,6 +1096,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraRigController
   thirdPersonCamera: {fileID: 1030195636}
   firstPersonCamera: {fileID: 195727374}
+  playerShooter: {fileID: 1502623814}
+  bodyRenderer: {fileID: 334292976}
   switchKey: 99
 --- !u!1 &1903410676
 GameObject:
@@ -1282,6 +1334,11 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8512681968060334016, guid: 153166fe35c054a7190cb112c92f6d23,
+        type: 3}
+      propertyPath: m_CullingMode
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8512681968067578880, guid: 153166fe35c054a7190cb112c92f6d23,
         type: 3}
       propertyPath: m_Name
@@ -1292,6 +1349,11 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8512681968067611307, guid: 153166fe35c054a7190cb112c92f6d23,
+        type: 3}
+      propertyPath: firstPersonWeaponMount
+      value: 
+      objectReference: {fileID: 438974365}
     - target: {fileID: 8512681968067743776, guid: 153166fe35c054a7190cb112c92f6d23,
         type: 3}
       propertyPath: m_RootOrder
