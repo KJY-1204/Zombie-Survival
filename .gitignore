@@ -1,0 +1,77 @@
+# Unity 생성 파일
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# IDE 생성 파일
+*.csproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+.vs/
+.idea/
+.vscode/
+.consulo/
+
+# Unity 크래시/캐시
+sysinfo.txt
+*.apk
+*.aab
+*.unitypackage
+*.app
+crashlytics-build.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 에셋 스토어 서드파티 패키지 (용량/라이선스 문제로 제외, 에셋 스토어에서 재설치)
+/Assets/3D\ Models/
+/Assets/3D\ Models.meta
+/Assets/Apocalyptic_World/
+/Assets/Apocalyptic_World.meta
+/Assets/Crusader_Castle/
+/Assets/Crusader_Castle.meta
+/Assets/Ditag\ Design/
+/Assets/Ditag\ Design.meta
+/Assets/Free\ medieval\ weapons/
+/Assets/Free\ medieval\ weapons.meta
+/Assets/Game\ Assets/
+/Assets/Game\ Assets.meta
+/Assets/JMO\ Assets/
+/Assets/JMO\ Assets.meta
+/Assets/Kevin\ Iglesias/
+/Assets/Kevin\ Iglesias.meta
+/Assets/MoCapCentral/
+/Assets/MoCapCentral.meta
+/Assets/MotoInteractionAnimsFREE/
+/Assets/MotoInteractionAnimsFREE.meta
+/Assets/RetroStyleGames/
+/Assets/RetroStyleGames.meta
+/Assets/Survivalist/
+/Assets/Survivalist.meta
+/Assets/TirgamesAssets/
+/Assets/TirgamesAssets.meta
+/Assets/TooManyCrosshairs/
+/Assets/TooManyCrosshairs.meta
+/Assets/Vefects/
+/Assets/Vefects.meta
+/Assets/WeaponsPack\ (LowPoly)/
+/Assets/WeaponsPack\ (LowPoly).meta
+/Assets/Zombie/
+/Assets/Zombie.meta
