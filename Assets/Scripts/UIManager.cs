@@ -23,11 +23,17 @@ public class UIManager : MonoBehaviour {
     public Text ammoText; // 탄약 표시용 텍스트
     public Text scoreText; // 점수 표시용 텍스트
     public Text waveText; // 적 웨이브 표시용 텍스트
-    public GameObject gameoverUI; // 게임 오버시 활성화할 UI 
+    public GameObject gameoverUI; // 게임 오버시 활성화할 UI
+    public SpreadCrosshair crosshair; // 탄퍼짐에 따라 벌어지는 조준점
 
     // 탄약 텍스트 갱신
     public void UpdateAmmoText(int magAmmo, int remainAmmo) {
         ammoText.text = magAmmo + "/" + remainAmmo;
+    }
+
+    // 조준점 탄퍼짐 갱신
+    public void UpdateCrosshairSpread(float normalizedSpread) {
+        crosshair.SetSpread(normalizedSpread);
     }
 
     // 점수 텍스트 갱신

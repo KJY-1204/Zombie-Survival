@@ -91,3 +91,13 @@
 - [x] `MuzzleFlashEffect`가 실제 총구(`Fire Position`)와 다른 위치에 있던 문제를 확인하고 위치/회전을 `Fire Position`에 맞춘다.
 - [x] `Gun.cs`에 `shellEjectEffect` null 체크를 추가하고, 플레이어 총 인스턴스에서 `ShellEjectEffect` 오브젝트를 제거한다.
 - [x] Play Mode에서 조준 시에도 총이 수평을 유지하는지, 발사 시 총구 이펙트가 정확한 위치에서 나오는지, 탄피 이펙트 제거로 인한 오류가 없는지 확인한다.
+
+## 2026-09-18 - 조준점, 탄퍼짐, 탄퍼짐에 따른 조준점 벌어짐
+
+- [x] `GunData`에 탄퍼짐 관련 수치(`minSpread`, `maxSpread`, `spreadIncrement`, `spreadRecoverSpeed`)를 추가한다.
+- [x] `Gun.cs`에서 발사할 때마다 탄퍼짐이 늘어나고 시간이 지나면 회복되도록 구현하고, 실제 발사 방향에 탄퍼짐을 반영한다.
+- [x] 탄퍼짐 비율(0~1)을 `Gun.spreadRatio`로 외부에 노출한다.
+- [x] 탄퍼짐에 따라 4방향으로 벌어지는 조준점 UI(`SpreadCrosshair.cs`)를 만들고 `HUD Canvas.prefab`에 배치한다.
+- [x] `UIManager`/`PlayerShooter`를 통해 매 프레임 탄퍼짐 비율을 조준점 UI에 전달한다.
+- [x] `HUD Canvas` 프리팹 인스턴스를 `Prototype` 씬에 배치한다(조준점 UI가 실제로 보이도록).
+- [x] Play Mode에서 발사 시 탄퍼짐 수치와 조준점 UI 좌표가 함께 갱신되는지 확인한다.

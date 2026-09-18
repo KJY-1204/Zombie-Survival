@@ -104,3 +104,16 @@
 - **총구 이펙트 위치**: `MuzzleFlashEffect`의 로컬 위치 `(0, 0.08, 0.20)`가 실제 총구인 `Fire Position`(`(0, -0.05, 0.85)`)과 전혀 다른 곳에 있었다. 두 무기(옛 Uzi, 현재 Pistol Gun)가 같은 좌표값을 공유하는 걸로 봐서 코스 공용 템플릿의 기본값이 그대로 남아있던 것으로 보인다. `MuzzleFlashEffect`의 로컬 위치/회전을 `Fire Position`과 동일하게 맞춰 총구에서 정확히 발사되도록 했다.
 - **탄피 이펙트 제거**: `Gun.cs`의 `Shot()` 코루틴이 `shellEjectEffect.Play()`를 무조건 호출하고 있어서, 단순히 참조만 비우면 `NullReferenceException`이 난다. `if (shellEjectEffect != null)` 가드를 추가한 뒤, 플레이어 총 인스턴스에서 `ShellEjectEffect` 자식 오브젝트를 완전히 삭제하고 `Gun.shellEjectEffect`를 null로 비웠다(다른 무기가 이 이펙트를 쓰고 싶다면 그대로 참조를 넣으면 되므로 스크립트 자체는 여전히 재사용 가능).
 - Play Mode에서 검증: 조준 강제 시에도 `gunPivot.forward=(0,0,1)` 유지, `gun.Fire()` 호출 시 `MuzzleFlashEffect` 월드 위치가 `Fire Position`과 완전히 일치(dist=0.00000), 오류 없이 발사됨. `recompile_status`/`console_status` 모두 깨끗함.
+
+## 2026-09-18 - 조준점 / 탄퍼짐 / 탄퍼짐에 따른 조준점 벌어짐
+
+- 사용자가 "조준점을 만들어 주고 조준점으로 총알이 발사되게 해줘 그리고 탄퍼짐도 구현해주고 조준점이 탄퍼짐에 따라 벌어지는 효과도 넣어줘"라고 요청. `Gun.Shot()`은 이미 화면 중앙(뷰포트 0.5,0.5) 기준으로 발사하고 있었으므로, 조준점은 그 지점을 시각적으로 보여주기만 하면 된다.
+- `GunData`에 `minSpread`(정지 시 최소 탄퍼짐), `maxSpread`(최대 탄퍼짐), `spreadIncrement`(발사 1회당 증가량), `spreadRecoverSpeed`(초당 회복량) 4개 필드를 추가했다.
+- `Gun.cs`에 런타임 `currentSpread` 상태를 추가했다. `OnEnable`에서 `minSpread`로 초기화, 새로 추가한 `Update()`에서 시간이 지나면 `minSpread`까지 서서히 회복시킨다. `Shot()`에서는 `ApplySpread()`로 조준 레이 방향을 카메라의 실제 상하(`transform.up`)·좌우(`transform.right`) 축 기준 무작위 각도(`±currentSpread`)만큼 흔들고, 발사 후 `currentSpread`를 `spreadIncrement`만큼 늘린다(월드축이 아닌 카메라 축 기준으로 회전시켜야 위/아래를 보고 쏠 때도 탄퍼짐이 일관되게 동작한다).
+- 탄퍼짐 비율은 `Gun.spreadRatio`(0~1, `Mathf.InverseLerp(minSpread, maxSpread, currentSpread)`)로 외부에 노출했다.
+- 조준점 UI는 `Assets/Scripts/SpreadCrosshair.cs`(새 스크립트)로 구현했다. 이름을 `Crosshair`가 아니라 `SpreadCrosshair`로 지은 이유: 이미 소유 중인 `Too Many Crosshairs` 에셋 패키지의 `HELLSLAYER Crosshairs/_Demo/Scripts/Crosshair.cs`가 네임스페이스 없이 전역에 `Crosshair` 클래스를 정의하고 있어 이름이 충돌했다(그 에셋의 데모 스크립트는 손대지 않고 우리 스크립트 쪽을 리네임해서 해결). 상/하/좌/우 4개의 흰색 UI 바(Image)의 `anchoredPosition`을 탄퍼짐 비율에 따라 중심에서 `baseGap`~`baseGap+maxGap` 픽셀만큼 벌어지게 한다.
+- `UIManager`에 `crosshair` 필드와 `UpdateCrosshairSpread(float)` 메서드를 추가했고, `PlayerShooter.UpdateUI()`가 매 프레임 `UIManager.instance.UpdateCrosshairSpread(gun.spreadRatio)`를 호출하도록 연결했다(기존 `UpdateAmmoText` 호출과 동일한 패턴).
+- 조준점 UI 자체는 기존 `Assets/Prefabs/HUD Canvas.prefab`(전역 UI, `UIManager` 보유) 안에 자식으로 만들어 넣었다. 이 프리팹이 지금까지 `Prototype` 씬에 배치된 적이 없었다는 걸 발견해서(즉 `UIManager.instance`가 그동안 계속 null이었음), 조준점이 실제로 보이도록 씬에 인스턴스를 배치했다.
+- Play Mode에서 `gun.Fire()` 한 번 호출 후 `spreadRatio`가 정확히 `(1.2)/(6-1)=0.24`로 계산되는 것과, 조준점의 `top`/`left` `anchoredPosition`이 그 비율에 맞춰 실제로 움직이는 것을 확인했다.
+- 작업 중 `HUD Canvas.prefab`의 `Gameover UI` 자식 오브젝트가 기본값으로 활성화되어 있어(원래부터 있던, 이번 작업과 무관한 프리팹 설정) 스크린샷에 "YOU DIE" 화면이 항상 덮여 보이는 것을 발견했다. 사용자가 "요청하지 않은 것은 추가/수정하지 말라"고 명확히 해서 이 부분은 조사만 하고 손대지 않았다 — 있는 그대로 남겨둔다.
+- (참고, 사소한 이슈) `EditorSceneManager.SaveOpenScenes()`가 이번 세션에서 씬 변경사항을 디스크에 실제로 쓰지 않는 것처럼 보인 적이 있었다. `MarkSceneDirty()` 후 `EditorSceneManager.SaveScene(scene)`을 명시적으로 호출하니 정상적으로 저장됐다.

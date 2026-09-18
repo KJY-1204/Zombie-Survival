@@ -33,7 +33,15 @@ public class Gun : MonoBehaviour {
     public int magAmmo; // 현재 탄창에 남아있는 탄약
     
     private float lastFireTime; // 총을 마지막으로 발사한 시점
-    
+
+    private float currentSpread; // 현재 탄퍼짐 각도(도)
+
+    // 조준점 UI가 탄퍼짐을 표시할 때 사용할 0~1 정규화 값
+    public float spreadRatio =>
+        gunData.maxSpread > gunData.minSpread
+            ? Mathf.InverseLerp(gunData.minSpread, gunData.maxSpread, currentSpread)
+            : 0f;
+
     private void Awake() {
         // 사용할 컴포넌트들의 참조를 가져오기
         gunAudioPlayer = GetComponent<AudioSource>();
@@ -56,6 +64,15 @@ public class Gun : MonoBehaviour {
         state = State.Ready;
         // 마지막으로 총을 쏜 시점을 초기화
         lastFireTime = 0;
+        // 탄퍼짐을 최소값으로 초기화
+        currentSpread = gunData.minSpread;
+    }
+
+    private void Update() {
+        // 발사하지 않는 동안 탄퍼짐을 최소값까지 서서히 회복시킨다
+        currentSpread = Mathf.Max(
+            gunData.minSpread,
+            currentSpread - gunData.spreadRecoverSpeed * Time.deltaTime);
     }
 
     // 조준 레이가 자기 자신의 콜라이더를 맞추지 않도록 소유자(총을 든 사람)의 루트를 등록
@@ -84,6 +101,8 @@ public class Gun : MonoBehaviour {
         // 화면 중앙(조준점)에서 카메라가 바라보는 방향으로 레이를 쏴서
         // 총구 위치/각도와 무관하게 실제로 조준한 지점이 맞도록 한다
         Ray aimRay = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        // 현재 탄퍼짐 각도만큼 조준 방향을 무작위로 흐트러뜨린다
+        aimRay.direction = ApplySpread(aimRay.direction, currentSpread);
 
         // 자기 자신(총을 든 사람)의 콜라이더는 제외하고 가장 가까운 충돌을 찾는다
         // (카메라가 캐릭터 몸 뒤쪽에 있어서 조준 레이가 자기 몸을 먼저 통과하는 경우를 방지)
@@ -122,6 +141,25 @@ public class Gun : MonoBehaviour {
             // 탄창에 남은 탄약이 없다면, 총의 현재 상태를 Empty으로 갱신
             state = State.Empty;
         }
+
+        // 발사할 때마다 탄퍼짐이 최대값까지 늘어난다
+        currentSpread = Mathf.Min(gunData.maxSpread, currentSpread + gunData.spreadIncrement);
+    }
+
+    // 조준 방향을 카메라의 상하좌우 축 기준으로 spreadAngle 범위 안에서 무작위로 회전시킨다
+    private Vector3 ApplySpread(Vector3 direction, float spreadAngle) {
+        if (spreadAngle <= 0f)
+        {
+            return direction;
+        }
+
+        float pitch = Random.Range(-spreadAngle, spreadAngle);
+        float yaw = Random.Range(-spreadAngle, spreadAngle);
+        Quaternion spreadRotation =
+            Quaternion.AngleAxis(yaw, aimCamera.transform.up) *
+            Quaternion.AngleAxis(pitch, aimCamera.transform.right);
+
+        return spreadRotation * direction;
     }
 
     // 레이 경로에서 자기 자신의 콜라이더를 제외하고 가장 가까운 충돌을 찾는다
