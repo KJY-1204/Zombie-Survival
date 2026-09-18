@@ -31,3 +31,10 @@
 2. 이동 입력, 점프, 지면 상태를 Survivalist Animator에 전달한다.
 3. PlayerShooter의 양손 IK를 Survivalist Animator에 적용한다.
 4. Play Mode에서 이동 애니메이션, 손 위치, 콘솔 오류를 확인한다.
+
+## Survivalist 총기 피벗 보정
+
+1. Survivalist 오른손·총기 피벗·총구의 실제 월드 좌표를 비교한다.
+2. 오른손 그립과 총기 손잡이가 일치하도록 피벗 위치와 회전을 매 프레임 계산한다.
+3. 왼손만 보조 IK로 총기 전방 손잡이에 맞춘다.
+4. Play Mode에서 총구가 캐릭터 배가 아닌 총기 모델에서 출발하는지 확인한다.

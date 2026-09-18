@@ -30,7 +30,20 @@ public class PlayerMovement : MonoBehaviour {
         Transform visualRoot = transform.Find("Survivalist Visual");
         if (visualRoot != null)
         {
-            visualAnimator = visualRoot.GetComponent<Animator>();
+            Animator[] animators = visualRoot.GetComponentsInChildren<Animator>();
+            foreach (Animator animator in animators)
+            {
+                if (animator.transform != visualRoot)
+                {
+                    visualAnimator = animator;
+                    break;
+                }
+            }
+
+            if (visualAnimator == null)
+            {
+                visualAnimator = visualRoot.GetComponent<Animator>();
+            }
         }
     }
 

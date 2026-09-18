@@ -5,10 +5,22 @@ using UnityEngine;
 public class SurvivalistWeaponIK : MonoBehaviour {
     private Animator visualAnimator;
     private PlayerShooter playerShooter;
+    private Vector3 pivotToRightGripPosition;
+    private Quaternion pivotToRightGripRotation;
 
     private void Awake() {
         visualAnimator = GetComponent<Animator>();
         playerShooter = GetComponentInParent<PlayerShooter>();
+
+        if (playerShooter != null && playerShooter.gunPivot != null &&
+            playerShooter.rightHandMount != null)
+        {
+            pivotToRightGripPosition = playerShooter.gunPivot.InverseTransformPoint(
+                playerShooter.rightHandMount.position);
+            pivotToRightGripRotation = Quaternion.Inverse(
+                playerShooter.gunPivot.rotation) *
+                playerShooter.rightHandMount.rotation;
+        }
     }
 
     private void OnAnimatorIK(int layerIndex) {
@@ -27,16 +39,22 @@ public class SurvivalistWeaponIK : MonoBehaviour {
         }
         else
         {
-            Transform rightForearm = visualAnimator.GetBoneTransform(
-                HumanBodyBones.RightLowerArm);
-            if (rightForearm != null)
+            Transform rightHand = visualAnimator.GetBoneTransform(
+                HumanBodyBones.RightHand);
+            if (rightHand != null)
             {
-                playerShooter.gunPivot.position = rightForearm.position;
+                Quaternion weaponRotation = rightHand.rotation *
+                    Quaternion.Inverse(pivotToRightGripRotation);
+
+                // 오른손 그립이 손 본에 겹치도록 총기 피벗을 매 프레임 계산한다
+                playerShooter.gunPivot.SetPositionAndRotation(
+                    rightHand.position - weaponRotation * pivotToRightGripPosition,
+                    weaponRotation);
             }
         }
 
+        // 오른손은 애니메이션이 직접 총을 들고, 왼손만 총기 전방 손잡이를 따른다
         SetHandIK(AvatarIKGoal.LeftHand, playerShooter.leftHandMount);
-        SetHandIK(AvatarIKGoal.RightHand, playerShooter.rightHandMount);
     }
 
     // 손 목표점의 위치와 회전을 총기 손잡이에 맞춘다

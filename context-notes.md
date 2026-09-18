@@ -37,3 +37,11 @@
 - 기존 루트 Animator는 이전 여성 Avatar와 Shooter Animator를 사용하므로 비활성화했다. `PlayerMovement`는 원래 플레이어 프리팹 호환을 유지하면서 `Survivalist Visual`이 존재할 때만 새 Animator 상태를 갱신한다.
 - `SurvivalistWeaponIK`는 Survivalist Animator가 IK를 갱신하는 시점에 기존 `PlayerShooter`의 총기 마운트를 읽어 양손 목표점으로 전달한다. Play Mode에서 수평 입력을 주입했을 때 `Speed=5`, `MotionSpeed=1`, `Grounded=true`를 확인했고, 양손 IK 목표와 각 총기 손잡이의 거리는 모두 0이었다.
 - Survivalist 캐릭터 교체와 스트레이프 커밋 두 개는 원격 `main`에 push했다. 이번 애니메이션·IK 변경은 별도 커밋과 push로 이어서 기록한다.
+
+## 2026-09-18 - Survivalist 총기 피벗 보정
+
+- 현 구현은 총기 피벗을 오른쪽 아래팔의 위치로만 옮긴 뒤 양손을 IK로 총기 손잡이에 맞춘다. 이 방식은 피벗의 회전과 손잡이의 로컬 오프셋을 무시해 총구가 배 부근에 생길 수 있다.
+- 총기 피벗과 오른손 손잡이의 상대 위치·회전을 보존하고, 오른손 본 위치에 오른손 손잡이가 정확히 겹치도록 피벗 변환을 역산한다. 오른손은 본래 애니메이션을 유지하고 왼손만 보조 IK로 맞춘다.
+- 측면 렌더링에서 총구 높이는 상체 앞으로 보정됐지만 손이 모델에 반영되지 않았다. `Survivalist Visual` 루트와 `Geometry/SK_Military_Survivalist` 자식에 Animator가 각각 있고, 실제 렌더 메시는 자식 Animator가 구동한다. 따라서 이동 상태와 IK 컴포넌트를 자식 Animator로 연결한다.
+- 총기 위치는 상체 앞 고정점 대신 오른손 본과 총기 오른손 그립의 초기 상대 변환으로 매 IK 프레임 역산한다. 오른손 애니메이션이 총을 직접 움직이고, 왼손만 IK로 전방 손잡이를 따르게 한다.
+- Play Mode에서 오른손 본과 총기 오른손 손잡이 거리는 약 `0.00000006`으로 확인됐고, 총구는 총기 모델의 `Fire Position`을 그대로 따른다. 기본 자세는 오른손을 따라가는 힙 파이어이며, ADS에서 어깨 조준 자세로 올리는 보간은 별도 작업으로 남긴다.

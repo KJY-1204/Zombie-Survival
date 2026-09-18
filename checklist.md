@@ -22,6 +22,13 @@
 - [x] 총기 양손 IK를 Survivalist Animator에 적용한다.
 - [x] Unity Play Mode에서 애니메이션·손 위치·콘솔을 검증한다.
 - [x] 검증된 변경을 로컬 커밋하고 원격에 push한다.
+
+## 2026-09-18 - Survivalist 총기 피벗 보정
+
+- [x] 오른손·총기 피벗·총구 위치를 확인한다.
+- [x] 오른손 그립 기준 총기 피벗 계산으로 교체한다.
+- [x] Unity Play Mode에서 총구 위치와 콘솔을 검증한다.
+- [x] 검증된 변경을 로컬 커밋하고 원격에 push한다.
 - [x] 원격 `main` 브랜치로 push한다.
 
 ## 2026-09-18 - TPS 스트레이프와 Survivalist 플레이어
