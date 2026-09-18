@@ -106,6 +106,29 @@
 - 무기별로 다른 Aim/Reload 포즈(Rifle vs Gun 카테고리)를 자동으로 바꿔주는 로직은 아직 없음 - 인벤토리/장비 시스템을 만들 때 함께 설계해야 함.
 - IK Helper Tool 도입은 보류.
 
+## 2026-09-18 - 1인칭 테스트 씬 생성 + 카메라 스택 검증 결과 정정 (Claude)
+
+사용자가 "1인칭 테스트 맵을 만들어줘 잘되어있는지 확인하게"라고 요청. `Assets/Scenes/FirstPersonTest.unity` 신규 생성.
+
+### 씬 구성 방법
+
+- Main.unity를 건드리지 않기 위해 additive로 새 씬을 열고, Main에서 `Player Character`/`Main Camera`/`Follow Cam`을 임시 부모(`TestPlayerRigRoot`) 밑에 모아 `Assets/Prefabs/PlayerTestRig.prefab`으로 저장. 이렇게 프리팹으로 묶어야 세 오브젝트 사이의 컴포넌트 참조(예: `CameraRigController`가 `Follow Cam`/`FirstPerson Cam`을 가리키는 것)가 인스턴스화 시 올바르게 리매핑된다. 그냥 각각 따로 `Instantiate`하면 참조가 원본(Main 씬)을 계속 가리켜서 못 쓰게 됨.
+- 프리팹을 새 씬에 인스턴스화한 뒤, `Player Character`만 스폰 지점(0, 0.05, -2)으로 재배치 (카메라들은 `Follow`/`LookAt` 참조로 자동 추적하므로 별도 이동 불필요).
+- `EventSystem`/`HUD Canvas`/`Game Manager`는 서로 다른 씬 간 참조가 없는 독립 오브젝트라 그냥 `Instantiate`로 복제.
+- Main.unity는 이 작업 동안 저장하지 않았고(`save_scene`을 Main 경로로 호출하지 않음), 마지막에 `open_scene(FirstPersonTest, additive:false)`로 전체를 언로드해 임시 편집 내용이 디스크에 전혀 반영되지 않도록 함 (`git status`로 Main.unity 무변경 확인).
+- 테스트용 오브젝트: 바닥 Plane, 방향광, 2m/5m/10m 거리 마커 큐브, 실제 캐릭터 키(1.9m) 비교용 기둥, 사격 연습용 캡슐 타겟 2개(`Target A`/`Target B`, IDamageable은 구현하지 않아 데미지는 안 들어가고 총알 궤적/명중 위치 확인용). 좀비/스포너는 넣지 않음 - 지난 세션에서 방치된 플레이어가 좀비에게 죽어 테스트를 방해한 적이 있어서, 이번 맵은 순수하게 카메라/이동/무기 확인용으로 좀비 위협 없이 구성.
+
+### 중요: 이전 세션의 "카메라 스택 검증 불가" 결론을 정정함
+
+- 이전 세션(1인칭 무기 뷰모델 작업)에서는 `capture_game_view`가 `Camera.Render()`를 직접 호출하는 방식이라 URP Base+Overlay 카메라 스택 합성이 캡처에 반영되지 않는다고 결론 내렸었음.
+- 이번 테스트 씬에서 Play 모드로 들어가 이런저런 확인 작업을 좀 진행한 뒤(즉 몇 프레임 이상 지난 시점에) 같은 `capture_game_view`(source 기본값 `camera`)로 1인칭 모드를 캡처했더니 **총이 포스트 프로세싱 왜곡 없이 정상적으로 화면에 나타남**을 확인했다. 이전 실패는 카메라 스택 자체의 문제가 아니라, 모드 전환 직후 너무 빨리 캡처해서(또는 에디터가 포커스를 잃어 프레임이 거의 진행되지 않아서) 스택이 아직 합성되지 않은 상태를 캡처했던 것으로 보인다.
+- 결론: **1인칭 전용 무기 카메라 스택(Base+Overlay)은 정상 작동한다.** 이전 context-notes의 "자동화 도구로 검증 불가"는 정정. 다만 여전히 모드 전환 직후 1~2프레임 이내의 상태는 캡처가 불안정할 수 있으니, 검증 시 전환 후 약간의 프레임이 지난 뒤 캡처하는 것을 권장.
+
+### 남은 사람 확인 사항
+
+- 이 문서 작업은 Unity 에디터에서 `Assets/Scenes/FirstPersonTest.unity`를 열고 Play를 누르면 바로 테스트 가능. WASD류 이동은 없고 기존 탑다운 이동(전후진+제자리 회전)과 `C` 키로 1인칭/3인칭 전환.
+- Build Settings에 이 씬을 추가하려 시도했으나(`add_scene_to_build`) `ProjectSettings/EditorBuildSettings.asset` 파일에 실제로 반영되지 않는 것을 확인함 (에디터 메모리상에는 등록되지만 디스크 저장이 안 됨) - 급하지 않아 더 파고들지 않음. 필요하면 Unity 에디터에서 File > Build Settings로 직접 추가할 것.
+
 ## 2026-09-18 - 1인칭 무기 구성 재검토 (Claude)
 
 GAME_DESIGN.md 5.2절이 명시한 "1인칭에서는 무기 모델과 손 애니메이션이 별도 구성이 필요한지 프로토타입에서 확인"을 실제로 진행. 결론부터: **필요하다는 것이 확인됨.** 기존 3인칭 IK 기반 총 리그를 그대로 1인칭에 재사용하는 방식은 문제가 많다.

@@ -31,6 +31,8 @@
 - [x] Pistol Gun / Sniper Gun 프리팹 + 전용 GunData 준비 (아직 미장착, 인벤토리/장비 시스템 대기)
 - [ ] **사람 확인 필요**: 이동(Walk/Run) 블렌드 자세가 실제로 자연스러운지, 재장전 애니메이션과 타이밍이 맞는지 육안 확인 (Idle/Aim/Die만 스크린샷으로 검증함)
 - [ ] IK Helper Tool(Kevin Iglesias) 도입 검토 - 이번엔 기존 PlayerShooter 수동 IK를 유지 (자세한 이유는 context-notes.md)
+- [x] 1인칭 테스트 씬 생성 (`Assets/Scenes/FirstPersonTest.unity`) - 거리 마커/키 비교 기둥/사격 타겟 포함, 좀비 없음
+- [x] 1인칭 무기 카메라 스택이 실제로 화면에 나오는지 재검증 완료 - **정상 작동 확인** (이전 "검증 불가" 결론 정정, context-notes.md 참고)
 
 ## M2. 전투 수직 슬라이스
 
