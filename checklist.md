@@ -51,3 +51,13 @@
 - [x] 임시 여성 메시를 Survivalist 비주얼로 교체한다.
 - [x] Unity Play Mode에서 전후·좌우 이동과 비주얼을 검증한다.
 - [x] 검증된 변경을 로컬 커밋한다.
+
+## 2026-09-18 - 소총 조준 자세 (힙 파이어 -> ADS)
+
+- [x] `SurvivalistTPS.controller`에 `Aiming` Bool 파라미터와 `Rifle Aim Blend` 상태(IK@RifleIdle/IK@RifleRun 블렌드)를 추가한다.
+- [x] `Idle Walk Run Blend` <-> `Rifle Aim Blend` 전환과 조준 중 점프/낙하 전환을 연결한다.
+- [x] `PlayerMovement`가 `ThirdPersonCameraController.isAiming`을 읽어 `Aiming` 파라미터를 갱신하도록 연결한다.
+- [x] Play Mode에서 `PlayerMovement`를 일시 비활성화하고 `Aiming` 파라미터를 직접 토글해 총구·손 위치를 측정해 검증한다.
+- [x] `recompile_status`/`console_status`에 신규 오류가 없음을 확인한다.
+- [x] 검증된 변경을 로컬 커밋한다.
+- [ ] Unity Editor에서 실제 마우스 우클릭 ADS로 육안 확인한다 (Pipeline은 마우스 입력 합성 불가, 수동 확인 필요).

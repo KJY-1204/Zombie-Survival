@@ -55,3 +55,13 @@
 ## 2026-09-18 - Claude 인수인계
 
 - `CLAUDE_HANDOFF.md`에 기준 커밋, 보존할 사용자 변경, 실제 Survivalist Animator 계층, IK Helper Tool 연결, 허리춤 힙 파이어 원인, 소총 자세 애니메이션을 적용하는 권장 순서와 검증 명령을 정리했다.
+
+## 2026-09-18 - 소총 조준 자세 (힙 파이어 -> ADS)
+
+- 인수인계 메모의 권장 순서대로 `IKHelperTool/Animations/IK@RifleIdle.anim`, `IK@RifleRun.anim`을 후보로 확인했다. 둘 다 `humanMotion=true`인 Humanoid 클립이라 Survivalist Avatar에 원본 리그와 무관하게 리타겟된다.
+- 원본 IK Helper Tool 에셋은 건드리지 않고 기존 복사본인 `SurvivalistTPS.controller`에 `Aiming`(Bool) 파라미터와 `Rifle Aim Blend` 상태를 추가했다. 이 상태는 기존 `Idle Walk Run Blend`와 동일한 `Speed` 파라미터 기준 Simple1D 블렌드 트리(`Idle` 임계값 0, `Run` 임계값 6)를 사용해 IK@RifleIdle/IK@RifleRun을 블렌드한다.
+- 전환은 `Idle Walk Run Blend` <-> `Rifle Aim Blend` (Aiming 조건, 0.1초)이며, 조준 중 점프/낙하도 끊기지 않도록 `Rifle Aim Blend` -> `InAir`/`JumpStart` 전환도 기존과 동일한 조건·시간으로 추가했다.
+- `PlayerMovement`는 기존에 없던 카메라 참조가 필요해 `ThirdPersonCameraController`를 `FindFirstObjectByType`으로 찾고, `UpdateVisualAnimator`에서 `cameraController.isAiming`을 `Aiming` 파라미터로 전달한다. `SurvivalistWeaponIK`와 `PlayerShooter`는 오른손 애니메이션을 그대로 따라가므로 별도 수정 없이 새 조준 포즈에 자동으로 맞춰진다.
+- Pipeline은 마우스 우클릭(Fire2)을 합성하지 못해, Play Mode에서 `PlayerMovement.enabled = false`로 실시간 덮어쓰기를 잠깐 멈추고 Animator의 `Aiming` 파라미터를 직접 토글해 검증했다(검증 후 다시 `enabled = true`로 복구). 측정 결과: 힙 파이어 상태 총구 Y=1.194 (상체 Y=1.387보다 낮음, 기존 문제 재확인) -> 조준 상태 총구 Y=1.380 (상체 Y=1.308보다 높음). 오른손-그립, 왼손-효과기 거리는 조준 상태에서 모두 0.00000이었다.
+- `recompile_status`는 성공, `console_status`에는 신규 스크립트/콘솔 오류가 없었다(유일한 오류 1건은 이 세션 중 eval 호출 하나가 5초 타임아웃난 MCP 전송 오류였고 게임 코드와 무관).
+- 남은 작업은 실제 마우스 우클릭으로 Unity Editor에서 ADS 전환·이동·사격을 육안 확인하는 수동 테스트뿐이다.

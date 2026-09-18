@@ -13,6 +13,7 @@ public class PlayerMovement : MonoBehaviour {
 
     private Animator playerAnimator; // 플레이어 캐릭터의 애니메이터
     private Animator visualAnimator; // Survivalist 비주얼의 애니메이터
+    private ThirdPersonCameraController cameraController; // ADS 상태를 알려주는 TPS 카메라
     private PlayerInput playerInput; // 플레이어 입력을 알려주는 컴포넌트
     private Rigidbody playerRigidbody; // 플레이어 캐릭터의 리지드바디
     private Collider playerCollider; // 바닥 검사에서 자기 자신을 제외하기 위한 콜라이더
@@ -26,6 +27,7 @@ public class PlayerMovement : MonoBehaviour {
         playerRigidbody = GetComponent<Rigidbody>();
         playerAnimator = GetComponent<Animator>();
         playerCollider = GetComponent<Collider>();
+        cameraController = FindFirstObjectByType<ThirdPersonCameraController>();
 
         Transform visualRoot = transform.Find("Survivalist Visual");
         if (visualRoot != null)
@@ -122,6 +124,7 @@ public class PlayerMovement : MonoBehaviour {
         visualAnimator.SetBool("Grounded", isGrounded);
         visualAnimator.SetBool("FreeFall", !isGrounded && !isJumping);
         visualAnimator.SetBool("Jump", isJumping);
+        visualAnimator.SetBool("Aiming", cameraController != null && cameraController.isAiming);
     }
 
     // 입력값에 따라 캐릭터를 전후좌우로 움직임
