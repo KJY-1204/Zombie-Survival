@@ -81,3 +81,4 @@
 - [x] 체력 슬라이더 UI(Canvas+Slider)를 새로 만들고 `PlayerHealth`에 연결한다(사망/피격/아이템 습득 사운드는 원본 초기 커밋과 동일한 클립 재사용).
 - [x] Play Mode에서 오른손-그립/왼손-이펙터 거리 0.00000, 카메라 자동 타겟팅, 체력 슬라이더 렌더링을 스크린샷으로 확인한다.
 - [x] `Assets/Prefabs/Player Character.prefab`로 저장하고 `recompile_status`/`console_status`에 신규 오류 없음을 확인한다.
+- [x] 사용자 피드백("총을 대각선으로 들고 있다")에 따라 `Gun/Right Handle`의 로컬 회전을 재계산해 총이 항상 플레이어 정면·수평을 향하도록 보정한다.

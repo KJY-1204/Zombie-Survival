@@ -85,3 +85,12 @@
 - `PlayerHealth.Awake()`와 `PlayerMovement.Start()`가 루트 게임오브젝트에서 직접 `GetComponent<Animator>()`를 호출하기 때문에, 루트에 컨트롤러/아바타 없는 **비활성 더미 Animator**를 추가해야 `MissingComponentException`이 나지 않는다. 이걸 빠뜨려서 Play Mode 진입 직후 232개의 예외가 발생했었고, 원인을 확인한 뒤 더미 Animator를 추가해 해결했다.
 - 체력 슬라이더 UI는 기존 `Assets/Prefabs/HUD Canvas.prefab`(전역 탄약/점수/웨이브 UI)과는 별개로, 플레이어 전용 Canvas(ScreenSpaceOverlay)+Slider를 코드로 새로 만들었다(Background+Fill Area/Fill 최소 구성, interactable=false). `PlayerHealth`의 `deathClip`/`hitClip`/`itemPickupClip`은 git 초기 커밋에서 GUID로 확인한 `Assets/Audios/Woman Die.ogg`, `Woman Damage.ogg`, `Pick Up.ogg`를 그대로 연결했다.
 - Play Mode에서 오른손-그립/왼손-이펙터 거리 모두 0.00000, `ThirdPersonCameraController.target`이 새 `PlayerMovement`를 자동으로 찾은 것, 체력 슬라이더가 게임 뷰에 렌더링되는 것을 확인했다. `Assets/Prefabs/Player Character.prefab`로 저장했고 `recompile_status`/`console_status` 모두 깨끗하다.
+
+## 2026-09-18 - 총이 대각선으로 들리는 문제 수정
+
+- 사용자가 "총을 대각선으로 들고 있는거 빼면 괜찮다"고 피드백. 스크린샷으로 확인해보니 총구가 거의 위쪽(world up 성분 0.79)을 향하고 있었다.
+- 원인: `SurvivalistWeaponIK`는 `gunPivot`의 회전을 `rightHand.rotation * Inverse(pivotToRightGripRotation)`으로 매 프레임 계산하고, `pivotToRightGripRotation`은 Awake 시점에 `Right Handle`의 로컬 회전값을 그대로 캡처한다. 이 `Right Handle` 로컬 회전(357.18, 320.43, 271.35)은 원래 이 프로젝트의 초기 커밋 도구(다른 캐릭터/다른 손 포즈 컨벤션)를 기준으로 만들어진 값이었고, 지금 오른손을 구동하는 `Weapon Hold Arms`(Human Soldier Animations, 라이플용) 포즈의 손목 방향과는 전혀 다른 기준이었다. 두 값이 안 맞아서 총이 엉뚱한 각도로 튀어나왔다.
+- 수학적으로 확인: `pivotToRightGripRotation`은 결국 "오른손의 로컬(캐릭터 기준) 회전값"과 같아진다. 원하는 목표 회전(플레이어 정면·수평, 즉 `Quaternion.LookRotation(player.forward, Vector3.up)`)을 하나 정하고, 그 순간의 실제 `rightHand.rotation`으로 `newRightHandleLocalRotation = Inverse(target) * rightHand.rotation`을 계산하면, 이후 플레이어가 어떤 방향을 보고 있어도(회전에 관계없이) `weaponRotation`이 항상 플레이어의 현재 정면 방향과 정확히 일치한다는 것을 증명했다(플레이어 회전 P(t)가 손의 월드 회전에도 그대로 곱해지기 때문에 서로 상쇄됨).
+- Play Mode에서 실제 오른손 회전을 측정해 `Right Handle.localRotation`을 `(0.19779, -0.81233, -0.49433, 0.23800)`(쿼터니언)으로 교체했다. 적용 후 `gunPivot.forward=(0,0,1)`, `up=(0,1,0)`으로 완벽하게 플레이어 정면·수평을 향했고, 오른손-그립/왼손-이펙터 거리는 여전히 0.00000이었다(왼손 IK는 위치+회전을 매 프레임 재계산하므로 총의 새 방향에 자동으로 다시 맞춰짐).
+- 이 보정값은 `Pistol Gun.prefab` 원본이 아니라 `Player Character.prefab` 안의 `Gun` 인스턴스에만 적용했다(이 값은 "이 플레이어의 이 팔 포즈"에 종속적인 보정이며, 다른 곳에서 `Pistol Gun.prefab`을 다른 캐릭터/포즈로 재사용할 경우에는 맞지 않을 수 있기 때문).
+- `recompile_status`/`console_status` 모두 깨끗함(기존에 있던 "Animator is not playing an AnimatorController" 경고 2건은 더미 Animator + Reload 트리거 호출 때문이며 이번 수정과 무관, 향후 필요시 별도로 정리).
