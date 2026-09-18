@@ -10,6 +10,8 @@ public class CameraRigController : MonoBehaviour {
     public GameObject thirdPersonCamera; // 3인칭 카메라 가상 카메라 오브젝트
     public GameObject firstPersonCamera; // 1인칭 카메라 가상 카메라 오브젝트
     public PlayerShooter playerShooter; // 카메라 모드에 맞춰 총 배치 기준을 바꿔줄 슈터
+    public PlayerMovement playerMovement; // 1인칭에서 마우스 좌우 회전으로 전환할 이동 스크립트
+    public FirstPersonLook firstPersonLook; // 1인칭 카메라 상하 시점(피치) 조작 컴포넌트
     public GameObject bodyRoot; // 1인칭 시점에서 카메라를 가리지 않도록 숨길 몸통(모든 파츠) 루트
 
     public GameObject weaponViewModelTarget; // 1인칭 전용 카메라로만 보이게 할 총 오브젝트 (Gun)
@@ -51,6 +53,20 @@ public class CameraRigController : MonoBehaviour {
         {
             playerShooter.useFirstPersonMount = mode == CameraMode.FirstPerson;
         }
+
+        if (playerMovement != null)
+        {
+            playerMovement.useMouseLook = mode == CameraMode.FirstPerson;
+        }
+
+        if (firstPersonLook != null)
+        {
+            firstPersonLook.enabled = mode == CameraMode.FirstPerson;
+        }
+
+        // 1인칭에서는 마우스로 시점을 조작하므로 커서를 고정하고 숨긴다
+        Cursor.lockState = mode == CameraMode.FirstPerson ? CursorLockMode.Locked : CursorLockMode.None;
+        Cursor.visible = mode != CameraMode.FirstPerson;
 
         if (bodyRoot != null)
         {

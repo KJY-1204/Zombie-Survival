@@ -3,7 +3,10 @@
 // 플레이어 캐릭터를 사용자 입력에 따라 움직이는 스크립트
 public class PlayerMovement : MonoBehaviour {
     public float moveSpeed = 5f; // 앞뒤 움직임의 속도
-    public float rotateSpeed = 180f; // 좌우 회전 속도
+    public float rotateSpeed = 180f; // 좌우 회전 속도(키보드)
+
+    public bool useMouseLook; // 1인칭 모드에서 마우스로 좌우 회전할지 여부 (CameraRigController가 전환)
+    public float mouseYawSpeed = 3f; // 마우스 좌우 회전 감도
 
     private Animator playerAnimator; // 플레이어 캐릭터의 애니메이터
     private PlayerInput playerInput; // 플레이어 입력을 알려주는 컴포넌트
@@ -38,9 +41,10 @@ public class PlayerMovement : MonoBehaviour {
 
     // 입력값에 따라 캐릭터를 좌우로 회전
     private void Rotate() {
-        // 상대적으로 회전할 수치 계산
-        float turn =
-            playerInput.rotate * rotateSpeed * Time.deltaTime;
+        // 1인칭 모드에서는 마우스 X 입력으로, 그 외에는 키보드 입력으로 회전량을 계산
+        float turn = useMouseLook
+            ? Input.GetAxis("Mouse X") * mouseYawSpeed
+            : playerInput.rotate * rotateSpeed * Time.deltaTime;
         // 리지드바디를 통해 게임 오브젝트 회전 변경
         playerRigidbody.rotation = playerRigidbody.rotation * Quaternion.Euler(0, turn, 0f);
     }
