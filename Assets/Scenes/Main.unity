@@ -238,7 +238,7 @@ Transform:
   m_GameObject: {fileID: 438974364}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.12, y: -0.08, z: 0.2}
+  m_LocalPosition: {x: 0.15, y: -0.06, z: 0.35}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -350,6 +350,18 @@ PrefabInstance:
     - target: {fileID: 1378188243159790, guid: 49b04053ea2dc49ae8eae12418134ef1, type: 3}
       propertyPath: m_Name
       value: Level Art
+      objectReference: {fileID: 0}
+    - target: {fileID: 4302848993737282, guid: 49b04053ea2dc49ae8eae12418134ef1, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4302848993737282, guid: 49b04053ea2dc49ae8eae12418134ef1, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4302848993737282, guid: 49b04053ea2dc49ae8eae12418134ef1, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4449291502637212, guid: 49b04053ea2dc49ae8eae12418134ef1, type: 3}
       propertyPath: m_RootOrder
@@ -1005,6 +1017,46 @@ PrefabInstance:
       propertyPath: m_Name
       value: Survivalist (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 2333246136317272218, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Layer
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246136668176074, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137036166553, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Layer
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137036166559, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137215516623, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137245916022, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Layer
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137245916022, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137382995467, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Layer
+      value: 10
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 2333246135476635897, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
     m_RemovedGameObjects: []
@@ -1020,6 +1072,12 @@ Transform:
 --- !u!1 &1577739450 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2333246135476635899, guid: bae3b6da9f558a04994badd5424cbd6f,
+    type: 3}
+  m_PrefabInstance: {fileID: 1577739448}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1708314357 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2333246137245916022, guid: bae3b6da9f558a04994badd5424cbd6f,
     type: 3}
   m_PrefabInstance: {fileID: 1577739448}
   m_PrefabAsset: {fileID: 0}
@@ -1111,7 +1169,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1761076141}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 1.78, z: 0.15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1213,6 +1271,10 @@ MonoBehaviour:
   playerMovement: {fileID: 8512681966600792166}
   firstPersonLook: {fileID: 195727377}
   bodyRoot: {fileID: 1577739450}
+  firstPersonHands: {fileID: 1708314357}
+  firstPersonVisiblePartNames:
+  - SK_Miliary_FPS_Arms_Gloves1
+  - SK_Miliary_Military_FPS_Shirt3
   weaponViewModelTarget: {fileID: 947030383}
   firstPersonWeaponLayer: FirstPersonWeapon
 --- !u!1 &1903410676
@@ -1546,17 +1608,17 @@ PrefabInstance:
     - target: {fileID: 8512681968067743776, guid: 153166fe35c054a7190cb112c92f6d23,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 8512681968067743776, guid: 153166fe35c054a7190cb112c92f6d23,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 8512681968067743776, guid: 153166fe35c054a7190cb112c92f6d23,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 8512681968067743776, guid: 153166fe35c054a7190cb112c92f6d23,
         type: 3}
@@ -1653,9 +1715,7 @@ MonoBehaviour:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1761076144}
   - {fileID: 708139771}
-  - {fileID: 8512681966600792165}
   - {fileID: 1973619083}
   - {fileID: 842842329}
   - {fileID: 1370410591}
@@ -1664,3 +1724,5 @@ SceneRoots:
   - {fileID: 1488649578}
   - {fileID: 1903410678}
   - {fileID: 1511016493}
+  - {fileID: 8512681966600792165}
+  - {fileID: 1761076144}

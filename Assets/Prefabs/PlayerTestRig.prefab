@@ -149,7 +149,7 @@ Transform:
   m_GameObject: {fileID: 2498366179448961251}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.12, y: -0.08, z: 0.2}
+  m_LocalPosition: {x: 0.15, y: -0.06, z: 0.35}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -378,6 +378,10 @@ MonoBehaviour:
   playerMovement: {fileID: 7210265903255890534}
   firstPersonLook: {fileID: 8724807768779638317}
   bodyRoot: {fileID: 2430920538954704753}
+  firstPersonHands: {fileID: 2430920538779268348}
+  firstPersonVisiblePartNames:
+  - SK_Miliary_FPS_Arms_Gloves1
+  - SK_Miliary_Military_FPS_Shirt3
   weaponViewModelTarget: {fileID: 7212044661976489340}
   firstPersonWeaponLayer: FirstPersonWeapon
 --- !u!1 &8782185635273666235
@@ -571,12 +575,58 @@ PrefabInstance:
       propertyPath: m_Name
       value: Survivalist (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 2333246136317272218, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Layer
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246136668176074, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137036166553, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Layer
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137036166559, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137215516623, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137245916022, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Layer
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137245916022, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2333246137382995467, guid: bae3b6da9f558a04994badd5424cbd6f,
+        type: 3}
+      propertyPath: m_Layer
+      value: 10
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 2333246135476635897, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bae3b6da9f558a04994badd5424cbd6f, type: 3}
+--- !u!1 &2430920538779268348 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2333246137245916022, guid: bae3b6da9f558a04994badd5424cbd6f,
+    type: 3}
+  m_PrefabInstance: {fileID: 134271974632058762}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2430920538954704753 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2333246135476635899, guid: bae3b6da9f558a04994badd5424cbd6f,

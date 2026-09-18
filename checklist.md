@@ -38,6 +38,8 @@
 - [x] 탑다운/3인칭 추적 카메라(Follow Cam) 제거, 1인칭을 유일한 시점으로 고정 (GAME_DESIGN.md 5.1/21장 갱신)
 - [x] 1인칭 무기 마운트 거리 조정 (총이 너무 앞으로 나와 보이는 문제, Z 0.4 -> 0.2)
 - [x] 장착 무기(AssaultRifle)에 맞는 조준/재장전 모션으로 교체 (Rifle 카테고리 -> AssaultRifle 카테고리)
+- [x] "1인칭에서 캐릭터가 사라진다" 버그 진단/수정 - 실제 원인은 (1) 그래스톤 프리팹 1개가 3배 스케일로 스폰 코앞에 배치됨 (2) 1인칭 팔이 전용 FPS_HANDS 뷰모델 대신 3인칭용 팔이 배선되어 카메라 근평면에 클리핑됨 (3) FirstPersonWeaponMount Z가 음수라 총도 근평면에 클리핑됨. `CameraRigController`가 FPS_HANDS를 무기와 동일한 전용 레이어로 옮기도록 수정 (자세한 내용은 context-notes.md)
+- [x] `capture_game_view` 캡처 파라미터 정정 - `source: "camera"`(기본값)는 카메라 스택 합성을 반영하지 않음, 반드시 `source: "screen"` + Play 모드로 검증 (context-notes.md 참고)
 
 ## M2. 전투 수직 슬라이스
 

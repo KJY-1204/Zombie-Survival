@@ -230,3 +230,51 @@ GAME_DESIGN.md 5.2절이 명시한 "1인칭에서는 무기 모델과 손 애니
 - **사람이 직접 Unity 에디터에서 Play를 눌러** 1인칭 모드로 전환했을 때 총이 `FirstPersonWeaponCamera`를 통해 실제로 화면에 나타나는지 육안으로 확인해야 함. 자동화 도구로는 이 부분을 검증할 수 없었다.
 - 만약 실제로도 안 보인다면 다음을 의심할 것: (1) `FirstPersonWeaponMount` 위치/각도가 여전히 화면 밖일 가능성 (이번 좌표는 계산상으로만 확인됨), (2) URP 파이프라인 에셋 자체에서 카메라 스택을 막는 별도 설정, (3) Cinemachine 3.x와 카메라 스택 조합 관련 알려진 이슈.
 - 잘 보인다면 다음 다듬기 후보: 뷰모델 전용 FOV/위치 미세 조정, 1인칭에서 총구 화염/탄피 이펙트가 자연스러운지 확인, 발사/재장전 시 실제 입력으로 테스트.
+
+## 2026-09-18 - "1인칭에서 캐릭터가 사라진다" 진단 및 수정 (Claude)
+
+사용자가 `FirstPersonWeaponMount` 로컬 위치를 `(0.34, -0.06, -0.15)`로 직접 조정한 뒤 Play하면 캐릭터가 사라지는 것 같다고 보고. 실제로는 서로 무관한 **세 가지 버그**가 겹쳐 있었다.
+
+### 발견 1 - `capture_game_view`의 `source: "camera"`(기본값)는 카메라 스택 합성 결과가 아니다
+
+- 이전 세션에서 "오버레이 카메라 합성을 캡처 도구로 검증 불가"라고 결론 내렸던 것을 정정한다. 원인은 도구 자체가 아니라 **파라미터 선택 문제**였다.
+- `capture_game_view`의 `source` 파라미터 설명을 다시 확인: `source: "camera"`(기본값)는 지정한 카메라 한 대만 단독 렌더링하며 URP Base+Overlay 스택 합성이나 Screen Space - Overlay UI를 반영하지 않는다. **`source: "screen"`을 써야 Play 모드에서 실제로 화면에 합성되는 최종 백버퍼(HUD 포함)를 그대로 캡처한다.**
+- 그동안 `source: "camera"`로 찍은 스크린샷에 총/팔이 안 보였던 것은 상당수 이 파라미터 선택 문제 때문이었다. **앞으로 1인칭/카메라 스택 관련 시각 확인은 반드시 Play 모드 + `source: "screen"`으로 검증한다.**
+
+### 발견 2 - 그래스톤 프리팹 하나가 3배 스케일로 스폰 지점 코앞에 배치됨
+
+- `Main.unity`의 `cross (1)` 오브젝트(그래스톤/묘비 십자가)가 `localScale (3,3,3)`, 스폰 지점에서 `(0.2, 0, 2.79)` 위치, 즉 플레이어 정면 2.79m 거리에 있었다. 실제 크기는 약 3.2m x 5.9m로 화면 대부분을 가려 "캐릭터가 사라진 것처럼" 보이는 **가장 큰 원인**이었다. 같은 프리팹의 다른 인스턴스(`cross`, `gravestoneBevel` 등)는 전부 `localScale (1,1,1)`이라 이것만 실수로 3배가 된 것으로 보인다.
+- **중요한 함정**: 이 오브젝트는 `isStatic = true`(정적 배칭 대상)라서, Play 모드에서 `transform.localScale`을 코드로 바꿔도 `MeshRenderer.bounds`/실제 렌더링에는 전혀 반영되지 않는다(정적 배칭이 에디터에서 미리 굽는 트랜스폼을 그대로 쓰기 때문). **정적 오브젝트의 트랜스폼 수정은 반드시 Edit 모드에서 해야 하고, Play 모드에서 고친 뒤 "안 바뀐다"고 오판하지 않도록 주의.** `cross (1)`을 Edit 모드에서 `localScale = (1,1,1)`로 수정.
+
+### 발견 3 - 1인칭 팔 뷰모델이 잘못 배선되어 있었음 + 메인 카메라 근평면 클리핑
+
+- Survivalist 프리팹에는 원래 **전용 1인칭 팔/소매 뷰모델**이 `Survivalist (2)/FPS_HANDS` 하위에 별도로 준비되어 있었다(`SK_Miliary_FPS_Arms_Gloves1`, `SK_Miliary_Military_FPS_Shirt3`, 에셋 원본 오타로 "Miliary" 표기). 전 세션에는 이걸 몰라서 일반 3인칭용 `SK_Military_Male_Arms1`/`_Gloves1`을 1인칭에서도 보이게 켜놨었는데, 이 팔은 몸통 스켈레톤 기준의 아임(조준) 포즈 위치라서 메인 카메라 위치(눈높이)에 비해 카메라 근평면(`nearClipPlane = 0.1`)보다도 가깝게 있어 **거의 전부 클리핑되어 안 보였다.**
+- 총(`Gun`)과 동일하게, 1인칭 팔 전용 뷰모델도 근평면이 훨씬 얇은(`0.01`) `FirstPersonWeaponCamera` 전용 레이어(`FirstPersonWeapon`)로 옮겨야 카메라에 파고들어도 잘리지 않는다. `FPS_HANDS`는 기본적으로 `SetActive(false)` 상태였던 것도 원인 중 하나.
+- `FirstPersonWeaponMount`의 `Z`가 음수(`-0.15`)라 총 메시 뒤쪽 절반이 메인 카메라 근평면보다 가까이 들어와 있었던 것도 확인됨 (근평면 클리핑으로 총이 거대한 왜곡된 도형처럼 보임). `(0.15, -0.06, 0.35)`로 재조정.
+
+### 코드 변경 - `Assets/Scripts/Camera/CameraRigController.cs`
+
+- 새 필드 `firstPersonHands`(FPS_HANDS 참조) 추가. `Awake()`에서 `firstPersonHands.SetActive(true)` + `SetLayerRecursively(firstPersonHands, FirstPersonWeapon 레이어)`를 총과 동일하게 수행.
+- `firstPersonVisiblePartNames` 기본값을 `SK_Military_Male_Arms1`/`_Gloves1` -> `SK_Miliary_FPS_Arms_Gloves1`/`SK_Miliary_Military_FPS_Shirt3`로 교체. `bodyRoot` 하위 렌더러 중 이 이름과 일치하는 것만 켜고 나머지는 전부 끄는 기존 로직은 그대로 재사용(이제 FPS 전용 팔만 살아남는다).
+- 씬에서 `CameraRigController.firstPersonHands`를 `FPS_HANDS`로, `firstPersonVisiblePartNames`를 새 이름 배열로 배선(직렬화된 기존 값이 남아있어 코드 기본값만으로는 갱신되지 않으므로 씬 컴포넌트 값도 직접 갱신).
+
+### 씬에 저장된 변경 사항 (Edit 모드에서 적용, 저장 완료)
+
+- `cross (1)`: `localScale (3,3,3)` -> `(1,1,1)`.
+- `Player Character/FirstPerson Cam/FirstPersonWeaponMount`: 로컬 위치 `(0.15, -0.06, 0.35)`.
+- `Survivalist (2)/FPS_HANDS`: `SetActive(true)`, 레이어 `FirstPersonWeapon`로 재귀 변경. 하위 `SK_Miliary_FPS_Arms_Gloves1`/`SK_Miliary_Military_FPS_Shirt3` 렌더러 활성화, `SK_Miliary_FPS_Arms`(장갑 없는 버전)는 비활성.
+- `Survivalist (2)/SK_Military_Male_Arms1`, `SK_Military_Male_Arms1_Gloves1`: 렌더러 비활성 (더 이상 1인칭에서 사용 안 함, 3인칭 시점 자체가 없으므로 완전히 숨김 상태 유지).
+- `CameraRigController` 컴포넌트: `firstPersonHands` = `FPS_HANDS`, `firstPersonVisiblePartNames` = `["SK_Miliary_FPS_Arms_Gloves1", "SK_Miliary_Military_FPS_Shirt3"]`.
+- `Assets/Prefabs/PlayerTestRig.prefab` 재생성 (위 변경 반영).
+
+### 검증
+
+- Edit 모드에서 위 수정 적용 후 Play 모드 재진입 (Awake()가 새 코드로 처음부터 다시 실행됨을 보장).
+- `source: "screen"` 캡처로 최종 확인: 그래스톤 정상 크기, 총과 1인칭 팔(장갑/소매 포함)이 정상적으로 화면에 렌더링됨. 콘솔 에러 0건.
+- 컴파일 확인 완료 (`recompile` 결과 오류 0건).
+
+### 남은 위험 / 다음 확인 사항
+
+- 이번에 확정한 `FirstPersonWeaponMount (0.15, -0.06, 0.35)`는 근평면 클리핑을 피하는 안전한 값 위주로 고른 것이라, 실제 조준선/화면 구도는 사람이 눈으로 미세 조정할 필요가 있음.
+- `cross (1)`처럼 스케일이 잘못된 다른 정적 오브젝트가 그래프야드/월드에 더 있을 수 있으니, 나중에 레벨 아트 전수 점검 시 정적 오브젝트 스케일을 한 번 더 훑어볼 것.
+- `SK_Miliary_FPS_Arms`(장갑 없는 맨손 버전)는 현재 비활성 상태로 남겨둠 - 나중에 장갑 없는 무기/맨손 상태가 필요해지면 이 메시를 재사용할 수 있음.
