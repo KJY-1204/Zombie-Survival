@@ -61,3 +61,12 @@
 - [x] `recompile_status`/`console_status`에 신규 오류가 없음을 확인한다.
 - [x] 검증된 변경을 로컬 커밋한다.
 - [ ] Unity Editor에서 실제 마우스 우클릭 ADS로 육안 확인한다 (Pipeline은 마우스 입력 합성 불가, 수동 확인 필요).
+
+## 2026-09-18 - 총기 파지 프리팹 재구성
+
+- [x] `TPS Player.prefab`을 백업한다 (`TPS Player (Backup 0918).prefab`).
+- [x] `Survivalist Visual`을 `PlayerArmature.prefab` 원본에서 새로 인스턴스화하고, 불필요한 StarterAssets 이동 컴포넌트를 제거한다.
+- [x] `Human Soldier Animations` 에셋의 `Weapon Hold Arms`(Human Arms Mask, Override) 레이어를 `SurvivalistTPS.controller`에 추가해 항상 두 손으로 총을 쥔 자세를 적용한다.
+- [x] Play Mode 스크린샷으로 그립을 검증하고, 오른손-그립/왼손-이펙터 거리가 모두 0.00000임을 확인한다.
+- [x] 재구성된 인스턴스를 `TPS Player.prefab`에 저장한다.
+- [x] `recompile_status`/`console_status`에 신규 오류가 없음을 확인한다.
