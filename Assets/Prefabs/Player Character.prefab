@@ -7258,6 +7258,26 @@ PrefabInstance:
       propertyPath: m_LocalRotation.z
       value: -0.49432823
       objectReference: {fileID: 0}
+    - target: {fileID: 7153186046764987438, guid: 6cb9fc2491067224e8aa54d92c605645,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153186046764987438, guid: 6cb9fc2491067224e8aa54d92c605645,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.85
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153186046764987438, guid: 6cb9fc2491067224e8aa54d92c605645,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153186046764987438, guid: 6cb9fc2491067224e8aa54d92c605645,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8092456817615789608, guid: 6cb9fc2491067224e8aa54d92c605645,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -7308,13 +7328,19 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8368327677115064671, guid: 6cb9fc2491067224e8aa54d92c605645,
+        type: 3}
+      propertyPath: shellEjectEffect
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 8676350878345809743, guid: 6cb9fc2491067224e8aa54d92c605645,
         type: 3}
       propertyPath: m_Name
       value: Gun
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 3267796548659054000, guid: 6cb9fc2491067224e8aa54d92c605645, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 4756440190393671073, guid: 6cb9fc2491067224e8aa54d92c605645,
         type: 3}

@@ -155,8 +155,11 @@ public class Gun : MonoBehaviour {
     private IEnumerator ShotEffect(Vector3 hitPosition) {
         // 총구 화염 효과 재생
         muzzleFlashEffect.Play();
-        // 탄피 배출 효과 재생
-        shellEjectEffect.Play();
+        // 탄피 배출 효과 재생 (총에 배출 이펙트가 없으면 생략)
+        if (shellEjectEffect != null)
+        {
+            shellEjectEffect.Play();
+        }
 
         // 총격 소리 재생
         gunAudioPlayer.PlayOneShot(gunData.shotClip);

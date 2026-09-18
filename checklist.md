@@ -82,3 +82,12 @@
 - [x] Play Mode에서 오른손-그립/왼손-이펙터 거리 0.00000, 카메라 자동 타겟팅, 체력 슬라이더 렌더링을 스크린샷으로 확인한다.
 - [x] `Assets/Prefabs/Player Character.prefab`로 저장하고 `recompile_status`/`console_status`에 신규 오류 없음을 확인한다.
 - [x] 사용자 피드백("총을 대각선으로 들고 있다")에 따라 `Gun/Right Handle`의 로컬 회전을 재계산해 총이 항상 플레이어 정면·수평을 향하도록 보정한다.
+
+## 2026-09-18 - 조준 시 총 처짐 / 총구 이펙트 위치 / 탄피 이펙트 제거
+
+- [x] 조준(Aiming) 시 총이 대각선 아래로 처지는 문제의 원인(전신 포즈 전환이 팔 오버라이드가 가리지 않는 척추 각도를 바꿔 오른손 월드 회전이 달라짐)을 확인한다.
+- [x] `SurvivalistTPS.controller`에서 이제 쓸모없어진(오히려 버그를 유발하는) `Aiming` 파라미터, `Rifle Aim Blend` 상태와 관련 전환을 전부 제거한다.
+- [x] `PlayerMovement.cs`에서 더 이상 존재하지 않는 `Aiming` 파라미터를 갱신하던 코드와 카메라 참조를 제거한다.
+- [x] `MuzzleFlashEffect`가 실제 총구(`Fire Position`)와 다른 위치에 있던 문제를 확인하고 위치/회전을 `Fire Position`에 맞춘다.
+- [x] `Gun.cs`에 `shellEjectEffect` null 체크를 추가하고, 플레이어 총 인스턴스에서 `ShellEjectEffect` 오브젝트를 제거한다.
+- [x] Play Mode에서 조준 시에도 총이 수평을 유지하는지, 발사 시 총구 이펙트가 정확한 위치에서 나오는지, 탄피 이펙트 제거로 인한 오류가 없는지 확인한다.

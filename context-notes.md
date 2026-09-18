@@ -94,3 +94,13 @@
 - Play Mode에서 실제 오른손 회전을 측정해 `Right Handle.localRotation`을 `(0.19779, -0.81233, -0.49433, 0.23800)`(쿼터니언)으로 교체했다. 적용 후 `gunPivot.forward=(0,0,1)`, `up=(0,1,0)`으로 완벽하게 플레이어 정면·수평을 향했고, 오른손-그립/왼손-이펙터 거리는 여전히 0.00000이었다(왼손 IK는 위치+회전을 매 프레임 재계산하므로 총의 새 방향에 자동으로 다시 맞춰짐).
 - 이 보정값은 `Pistol Gun.prefab` 원본이 아니라 `Player Character.prefab` 안의 `Gun` 인스턴스에만 적용했다(이 값은 "이 플레이어의 이 팔 포즈"에 종속적인 보정이며, 다른 곳에서 `Pistol Gun.prefab`을 다른 캐릭터/포즈로 재사용할 경우에는 맞지 않을 수 있기 때문).
 - `recompile_status`/`console_status` 모두 깨끗함(기존에 있던 "Animator is not playing an AnimatorController" 경고 2건은 더미 Animator + Reload 트리거 호출 때문이며 이번 수정과 무관, 향후 필요시 별도로 정리).
+
+## 2026-09-18 - 조준 시 총 처짐 / 총구 이펙트 위치 / 탄피 이펙트 제거
+
+- 사용자가 "조준하면 총이 대각선 아래로 내려가고 총알의 불꽃이 총구에서 안나온다 그리고 탄피 떨어지는 효과는 제거해줘"라고 요청.
+- **조준 시 총 처짐 원인**: `Aiming=true`일 때 Base Layer가 `Idle Walk Run Blend`에서 `Rifle Aim Blend`(IK@RifleIdle/IK@RifleRun)로 전환되는데, `Weapon Hold Arms` 오버라이드 레이어(Human Arms Mask)는 팔/손/손가락만 덮어쓰고 척추·어깨는 덮어쓰지 않는다. `Rifle Aim Blend`의 척추 커브가 `Idle Walk Run Blend`와 다르게 캐릭터를 앞으로 기울이면서 오른손의 **월드** 회전이 바뀌었고, 지난번에 계산한 `Right Handle` 보정값은 "척추가 기본 자세일 때"만 유효했기 때문에 조준 중에는 다시 어긋났다. 실측: 기본 상태 `gunPivot.forward=(0,0,1)` → 조준 상태 `(0.57, -0.26, 0.78)`.
+- 지난 세션 노트에서 이미 "`Rifle Aim Blend`는 팔 포즈 차원에서 무의미해졌다"고 적어뒀던 대로, 이번엔 실제 버그까지 유발한다는 게 확인되어 완전히 제거했다: `SurvivalistTPS.controller`에서 `Aiming` 파라미터, `Rifle Aim Blend` 상태(및 딸린 블렌드 트리), 관련 전환 3개를 모두 삭제했다. Base Layer는 항상 `Idle Walk Run Blend`만 사용하므로 척추 포즈가 고정되고, 조준 여부는 이제 순수하게 카메라 줌(`ThirdPersonCameraController`)만으로 표현된다.
+- `PlayerMovement.cs`에서 `cameraController` 필드, `FindFirstObjectByType<ThirdPersonCameraController>()` 호출, `visualAnimator.SetBool("Aiming", ...)` 줄을 제거했다(파라미터가 없어져 호출해도 경고만 뜨고 아무 효과가 없으므로 죽은 코드였다).
+- **총구 이펙트 위치**: `MuzzleFlashEffect`의 로컬 위치 `(0, 0.08, 0.20)`가 실제 총구인 `Fire Position`(`(0, -0.05, 0.85)`)과 전혀 다른 곳에 있었다. 두 무기(옛 Uzi, 현재 Pistol Gun)가 같은 좌표값을 공유하는 걸로 봐서 코스 공용 템플릿의 기본값이 그대로 남아있던 것으로 보인다. `MuzzleFlashEffect`의 로컬 위치/회전을 `Fire Position`과 동일하게 맞춰 총구에서 정확히 발사되도록 했다.
+- **탄피 이펙트 제거**: `Gun.cs`의 `Shot()` 코루틴이 `shellEjectEffect.Play()`를 무조건 호출하고 있어서, 단순히 참조만 비우면 `NullReferenceException`이 난다. `if (shellEjectEffect != null)` 가드를 추가한 뒤, 플레이어 총 인스턴스에서 `ShellEjectEffect` 자식 오브젝트를 완전히 삭제하고 `Gun.shellEjectEffect`를 null로 비웠다(다른 무기가 이 이펙트를 쓰고 싶다면 그대로 참조를 넣으면 되므로 스크립트 자체는 여전히 재사용 가능).
+- Play Mode에서 검증: 조준 강제 시에도 `gunPivot.forward=(0,0,1)` 유지, `gun.Fire()` 호출 시 `MuzzleFlashEffect` 월드 위치가 `Fire Position`과 완전히 일치(dist=0.00000), 오류 없이 발사됨. `recompile_status`/`console_status` 모두 깨끗함.
