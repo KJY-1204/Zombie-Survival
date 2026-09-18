@@ -69,6 +69,43 @@
 - 1인칭 시점에서 총 모델/손 위치가 자연스러운지 확인하고, 필요하면 1인칭 전용 무기 마운트를 검토.
 - `Gun`/`PlayerShooter`의 실제 발사/재장전 입력 테스트, `Zombie`의 추적/공격/사망 시퀀스 테스트 (이번 세션에서는 컴파일과 씬 배치만 확인함).
 
+## 2026-09-18 - 캐릭터 교체 + 무기 적용 + 자세 세팅 (Claude)
+
+사용자 요청: "캐릭터를 바꾸고 무기들 에셋도 적용시킨다음 애니메이션 에셋을 참고 해서 자세같은걸 세팅". 실제 존재하는 에셋을 먼저 확인(`get_import_settings`로 avatar 타입 확인 등)한 뒤 진행. 사용자가 고른 옵션: 캐릭터 = Survivalist, 무기 = 권총 + 소총 2종, 자세 = 이동+전투 전부 한번에.
+
+### 1. 캐릭터 교체 (Woman -> Survivalist)
+
+- `Assets/Survivalist/Prefab/Survivalist (2).prefab`을 씬에 배치 후 `Player Character`의 자식으로 재배치. 이 프리팹은 자체 `Animator`(avatar만 있고 controller는 없음)와 7개의 `SkinnedMeshRenderer`(머리/바지/셔츠/조끼x2/장갑/모자 - 모듈식 장비 파츠)를 가짐.
+- 중복 `Animator`를 피하기 위해 인스턴스의 `Animator` 컴포넌트는 제거하고, `Player Character`(원래 있던 루트 Animator, `ShooterAnimator.controller` 보유)의 `avatar` 필드만 Survivalist의 avatar로 교체. 기존 `Woman` 자식은 삭제.
+- Survivalist가 기존 Woman보다 커서(약 1.92m vs 1.62m) `CapsuleCollider` 높이를 1.5->1.9, 중심을 0.75->0.95로, 1인칭 카메라(`FirstPerson Cam`) 로컬 Y를 1.5->1.78로 조정.
+- `CameraRigController.bodyRenderer`(단일 `Renderer`)는 `bodyRoot`(`GameObject`)로 리팩터링해 Survivalist의 여러 렌더러를 한번에 켜고 끄도록 함(`SetActive`).
+- 검증: Play 모드에서 사망 애니메이션이 새 스켈레톤에 정상 리타겟됨을 확인(`Animator.avatar.isHuman == true`), 좀비를 정리한 뒤 Aim Idle 자세로 서 있는 모습을 스크린샷으로 확인.
+
+### 2. 애니메이션 재타겟팅 (Human Soldier Animations 2.0 FREE)
+
+- `Assets/Kevin Iglesias/Human Animations`가 실제 존재함을 확인(Male/Female, Combat/Idles/Movement 카테고리). FBX 임포터의 `animationType`이 Woman/Survivalist/HumanM 전부 `Human`이라 Mecanim 제네릭 리타겟팅이 가능함을 먼저 확인.
+- FBX 안의 `AnimationClip` 서브에셋은 `find_assets` 도구로는 검색되지 않음(메인 타입만 인덱싱하는 것으로 추정) — `AssetDatabase.LoadAllAssetsAtPath` + `OfType<AnimationClip>()`으로 직접 찾아야 했음. 클립 이름은 파일명과 동일(`HumanM@Rifle_Aim01` 등).
+- `ShooterAnimator.controller`의 클립을 코드로 교체 (블렌드 트리/상태 자체는 그대로 두고 `motion`만 교체, 파라미터 `Move`/`Reload`/`Die` 이름도 그대로라 `PlayerMovement`/`PlayerShooter`/`PlayerHealth`는 전혀 수정하지 않음):
+  - `Movement Tree`(param `Move`, 5분기): -1/1 -> `HumanM@Run01_Forward`, -0.5/0.5 -> `HumanM@Walk01_Forward`, 0 -> `HumanM@MilitaryIdle01`. (기존에도 음수/양수 구간에 같은 클립을 재사용하던 패턴을 그대로 유지 - 후진 시 방향별 클립을 쓰지 않음)
+  - Base layer `Die` -> `HumanM@Death01`.
+  - Upper Body layer `Aim Idle` -> `HumanM@Rifle_Aim01`, `Reload` -> `HumanM@Rifle_Reload01` (장착 무기가 소총이므로 Rifle 카테고리 선택. 권총 장비 시 `HumanM@Gun_Aim01`/`Gun_Reload01`로 바꾸면 됨).
+- IK Helper Tool(Kevin Iglesias)도 존재를 확인했으나 이번엔 도입하지 않음: 이 도구는 `OnAnimatorIK`를 직접 구현해서 손마다 별도 컴포넌트가 필요하고 `iKSwitch`로 가중치를 애니메이션 커브로 페이드하는 방식이라, 기존 `PlayerShooter`의 단순 IK 코드와 같은 `AvatarIKGoal`을 동시에 건드리면 충돌한다. 기존 코드가 이미 정상 작동하므로 교체하지 않고 그대로 둠 - 필요해지면 `PlayerShooter`의 IK를 걷어내고 IK Helper Tool로 전환하는 별도 작업으로 분리해야 함.
+
+### 3. 무기 교체 및 추가 (WeaponsPack (LowPoly))
+
+- 기존 placeholder Uzi를 `Assets/WeaponsPack (LowPoly)/FBXs/American Light AssaultRifle.fbx`로 교체. 이 에셋들은 `.prefab`이 아니라 FBX라서 `instantiate_prefab` MCP 도구가 거부함(`is not a prefab asset`) - `PrefabUtility.InstantiatePrefab`를 `eval`로 직접 호출해 우회.
+- FBX 원본은 로컬 X축을 따라 길게 뻗어 있어(기존 Uzi 구조는 로컬 Z축이 총열 방향) 그대로 넣으면 총이 옆으로 누움. 모델 자식에 Y축 +90도 회전을 줘서 Z축 방향으로 맞춤. 회전 후 실제 바운즈를 다시 측정해 `Fire Position`/`Left Handle`/`Right Handle`을 새 좌표에 맞게 재배치 (원점=총 뒤쪽/그립 부근, +Z가 총구 방향이 되는 패턴을 세 무기 모두에 동일하게 적용).
+- 기존 `Gun Data.asset`(Uzi 스탯)을 `Assault Rifle Data.asset`으로 이름 변경(GUID 유지되어 `Gun.gunData` 참조 안 끊김)하고 값만 소총에 맞게 조정(damage 25->30, ammo 100->120, mag 25->30, fireRate 0.12->0.10, reload 1.8->2.0).
+- 같은 패턴으로 `Pistol Gun.prefab`/`Sniper Gun.prefab`(`Assets/Prefabs/Weapons/`)과 각각의 GunData(`Pistol Data.asset`: 데미지 낮고 연사 빠름, `Sniper Data.asset`: 데미지 높고 연사 느림/재장전 김)를 준비. **이 두 무기는 아직 플레이어에게 장착되어 있지 않음** - 인벤토리/장비 교체 시스템(M3)이 없어서 장착할 방법이 없기 때문. 씬 밖에서 임시로 조립한 뒤 `create_prefab`으로 저장하고 씬에서는 삭제했다.
+- 검증: 소총으로 교체된 상태에서 Play 모드로 들어가 Aim 자세를 취하고 있는 캐릭터가 총을 정상적으로 쥐고 있는 모습을 스크린샷으로 확인, 콘솔 에러 없음. Pistol/Sniper 두 프리팹은 좌표만 비슷한 패턴으로 추정 배치했고 실제 화면으로 개별 검증하지는 못했다 (시간 제약).
+
+### 남은 위험 / 다음 작업
+
+- Pistol Gun / Sniper Gun 프리팹의 Fire Position/Handle 좌표는 추정치라 실제 장착해서 눈으로 확인 필요.
+- Walk/Run 블렌드 애니메이션이 실제로 자연스러운지 확인 안 됨 (Idle/Aim/Die만 캡처로 확인).
+- 무기별로 다른 Aim/Reload 포즈(Rifle vs Gun 카테고리)를 자동으로 바꿔주는 로직은 아직 없음 - 인벤토리/장비 시스템을 만들 때 함께 설계해야 함.
+- IK Helper Tool 도입은 보류.
+
 ## 2026-09-18 - 1인칭 무기 구성 재검토 (Claude)
 
 GAME_DESIGN.md 5.2절이 명시한 "1인칭에서는 무기 모델과 손 애니메이션이 별도 구성이 필요한지 프로토타입에서 확인"을 실제로 진행. 결론부터: **필요하다는 것이 확인됨.** 기존 3인칭 IK 기반 총 리그를 그대로 1인칭에 재사용하는 방식은 문제가 많다.
