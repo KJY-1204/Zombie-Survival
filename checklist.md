@@ -42,6 +42,8 @@
 - [x] `capture_game_view` 캡처 파라미터 정정 - `source: "camera"`(기본값)는 카메라 스택 합성을 반영하지 않음, 반드시 `source: "screen"` + Play 모드로 검증 (context-notes.md 참고)
 - [x] `Gun.Shot()`이 총구 방향 대신 화면 중앙(조준점) 기준으로 레이캐스트하도록 수정 - 1인칭에서 총구 위치가 카메라 중심에서 벗어나 있어 총구 기준 발사 시 조준점과 실제 탄착점이 어긋나던 문제 해결
 - [x] 화면 중앙 크로스헤어 UI 추가 (`Too Many Crosshairs` 에셋의 `Cross128` 스프라이트, `HUD Canvas/Crosshair`) - `Gun.Shot()`이 실제로 조준하는 지점과 시각적으로 일치
+- [x] 점프 모션/기능 추가 - `ShooterAnimator.controller`에 `Jump`(Trigger)/`IsGrounded`(Bool) 파라미터와 `JumpStart`->`InAir`->`Movement` 상태/전환 추가 (Survivalist StarterAssets의 `Jump--Jump`/`Jump--InAir` 클립 재사용), `PlayerMovement`에 바닥 검사 + 점프 물리 구현. 기존 무기(Aim/Reload)/이동(Walk/Run) 모션은 이전 세션에서 이미 구현되어 있었음을 재확인
+- [ ] **사람 확인 필요**: 실제 스페이스바 입력으로 점프 감도/타이밍이 자연스러운지, 착지 시 애니메이션 전환이 어색하지 않은지 육안 확인 (자동화로는 리플렉션으로 `Jump()`를 직접 호출해 물리/애니메이터 상태 전환만 검증함)
 
 ## M2. 전투 수직 슬라이스
 

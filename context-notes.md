@@ -330,3 +330,50 @@ GAME_DESIGN.md 5.2절이 명시한 "1인칭에서는 무기 모델과 손 애니
 ### 씬에 저장된 변경 사항
 
 - `HUD Canvas/Crosshair`(신규): `RawImage`(texture=`Cross128`, color=흰색), `RectTransform`(앵커 중앙, `sizeDelta (32, 32)`).
+
+## 2026-09-18 - 플레이어 모션 전체 적용 (무기/이동/뛰기/점프) (Claude)
+
+사용자 요청: "일단 플레이어 케릭터에 모션들을 적용해봐 무기 모션들도 이동모션도 뛰는 모션도 점프 모션도".
+
+### 현황 확인
+
+- `ShooterAnimator.controller`를 `get_animator_controller`로 조회한 결과, **무기(조준/재장전)/이동(Idle-Walk-Run 블렌드 트리)/뛰기 모션은 이전 세션에서 이미 구현되어 있었다** (Base Movement 레이어의 `Movement Tree`가 `Move` 파라미터로 `HumanM@MilitaryIdle01`/`HumanM@Walk01_Forward`/`HumanM@Run01_Forward`를 -1~1 구간에 블렌드, Upper Body 레이어가 `HumanM@AssaultRifle_Aim01`/`HumanM@AssaultRifle_Reload01` 재생). **점프만 완전히 빠져 있었다** - 애니메이터 상태도, 입력도, 물리 코드도 전혀 없었음.
+- 따라서 이번 작업은 실질적으로 점프를 새로 구현하고 기존 3개 모션이 여전히 정상 동작하는지 재확인하는 것으로 좁혀짐.
+
+### 점프 애니메이션 클립 선정
+
+- Kevin Iglesias Human Soldier Animations 팩에는 점프 클립이 없음. 대신 `Assets/Survivalist/StarterAssets/ThirdPersonController/Character/Animations/`에 Unity 공식 Starter Assets ThirdPersonController의 점프 클립이 있었음(`Jump--Jump.anim.fbx`, `Jump--InAir.anim.fbx`) - `animationType: Human`이라 기존 Humanoid 리타겟팅 파이프라인에 그대로 재사용 가능.
+- FBX 내부 실제 클립 이름은 파일명과 다름: `Jump--Jump.anim.fbx` 안의 진짜 클립은 `JumpStart`(0.4초, non-loop, 도약 시작 포즈), `Jump--InAir.anim.fbx` 안의 진짜 클립은 `InAir`(2.67초, **loop**, 공중 유지 포즈). 각 FBX에는 프리뷰용 `__preview__X` 서브에셋도 같이 들어있으니 그건 쓰면 안 됨.
+- 착지(`Land`) 전용 클립(`Locomotion--Run_N_Land` 등)은 이번엔 가져오지 않음 - 단순화 우선: `InAir` -> `Movement`로 바로 크로스페이드(0.15초)해도 충분히 자연스러움.
+
+### Animator Controller 변경 - `Assets/Animations/ShooterAnimator.controller`
+
+- 파라미터 추가: `Jump`(Trigger), `IsGrounded`(Bool, 기본값 true).
+- Base Movement 레이어에 상태 추가: `JumpStart`(motion=`JumpStart` 클립), `InAir`(motion=`InAir` 클립).
+- 전환 추가: `Movement`->`JumpStart`(조건 `Jump` 트리거, exitTime 없음, duration 0.1) -> `InAir`(exitTime 0.85, duration 0.1, 조건 없음 - JumpStart 클립이 끝나갈 때 자동 진행) -> `Movement`(조건 `IsGrounded`==true, exitTime 없음, duration 0.15).
+- 서브에셋 클립을 `add_animator_state`의 `motion` 파라미터에 지정할 때 클립 이름이나 FBX 경로로는 해석이 안 되고 **`UnityEditor.GlobalObjectId.GetGlobalObjectIdSlow(clip)`로 얻은 GlobalObjectId 문자열**을 넘겨야 정상 인식됨 - 향후 FBX 서브에셋(클립)을 애니메이터 상태에 연결할 때 이 방법을 재사용할 것.
+
+### 코드 변경
+
+- `Assets/Scripts/PlayerInput.cs`: `jumpButtonName = "Jump"`(Unity 기본 프로젝트에 이미 스페이스바로 바인딩되어 있음), `jump` 값을 `reload`와 동일하게 `Input.GetButtonDown` 기반 단발성 플래그로 노출.
+- `Assets/Scripts/PlayerMovement.cs`:
+  - `CheckGrounded()`: 캐릭터 중심(`transform.position + Vector3.up * 0.5`)에서 아래로 `Physics.RaycastAll`을 쏴서 자기 자신의 콜라이더를 제외한 히트가 있으면 `isGrounded = true`. (레이 시작점이 자기 캡슐 콜라이더 내부에 있으면 `Physics.Raycast` 단일 호출은 자기 자신을 거리 0으로 히트해버리는 문제가 있어, `RaycastAll` + 자기 콜라이더 제외 방식을 사용함.)
+  - 점프 입력은 `Update()`에서 감지된 단일 프레임 값이라 물리 갱신 주기(`FixedUpdate`)가 이를 놓칠 수 있어, `jumpRequested` 플래그로 래치했다가 다음 `FixedUpdate`에서 소비하고 초기화.
+  - `Jump()`: `Rigidbody.linearVelocity.y`에 `jumpForce`(기본 5)를 대입하는 순간 속도 방식(중력은 기존 `Rigidbody.useGravity=true` 설정을 그대로 활용, 수평 이동은 기존처럼 `MovePosition`으로 별도 처리하므로 서로 간섭하지 않음). 점프 시 `Animator.SetTrigger("Jump")` 호출.
+  - 매 `FixedUpdate`마다 `Animator.SetBool("IsGrounded", isGrounded)`도 갱신.
+
+### 검증
+
+- 컴파일 오류 0건.
+- Play 모드에서 리플렉션으로 `PlayerMovement.CheckGrounded()`/`Jump()` private 메서드를 직접 호출해 확인:
+  - 평지에 서 있을 때 `isGrounded=true` 정상 감지.
+  - `Jump()` 호출 직후 `Rigidbody.linearVelocity.y`가 정확히 `jumpForce`(5)로 설정됨을 확인.
+  - 약 13초 뒤(테스트 간 대기 시간) 재확인했을 때 이미 착지하여 `Movement` 상태로 정상 복귀, `velocity.y=0` - 즉 `JumpStart`->`InAir`->`Movement` 전체 사이클이 코드 개입 없이 애니메이터 스스로 자동 완주함을 확인.
+  - 점프 재실행 직후 캡처한 스크린샷에서 카메라(1인칭, 플레이어에 종속)가 평소보다 살짝 높은 각도로 보임 - 실제로 캐릭터가 물리적으로 떠올랐음을 시각적으로도 확인.
+  - 콘솔 에러 0건 (기존에 있던 무관한 에러 18건 외 신규 에러 없음).
+
+### 남은 작업
+
+- **사람 확인 필요**: 실제 스페이스바로 점프했을 때 감도(점프 높이/체공 시간)와 착지 애니메이션 전환이 자연스러운지 육안 확인. `jumpForce=5`, `groundCheckDistance=0.6`은 초기 추정치라 실제 캐릭터 스케일(캡슐 height=1.9)에 맞게 미세 조정이 필요할 수 있음.
+- 착지 전용 애니메이션(`Land`)은 아직 없음 - `InAir`에서 `Movement`로 바로 크로스페이드하는 것이 부자연스럽게 느껴지면 `Locomotion--Run_N_Land`/`Locomotion--Walk_N_Land` 클립 추가를 검토.
+- 이동 중 좌우 이동(strafe, A/D)이 현재 전혀 구현되어 있지 않음을 재확인함(`PlayerInput.rotateAxisName = "Horizontal"`이 마우스룩 모드에서는 아예 안 쓰이고, `PlayerMovement.Move()`도 전후 축만 사용) - 별도 요청이 오면 처리할 것, 이번 점프 작업 범위 밖이라 손대지 않음.
