@@ -112,3 +112,15 @@
 - [x] `HUD Canvas.prefab`에서 `Ammo Display`, `Score Text`, `Enemy Wave Text`, `Gameover UI` 자식 오브젝트를 삭제하고 저장한다.
 - [x] `recompile_status`/`console` 로그로 신규 오류 없음과 4개 오브젝트 삭제·`Crosshair`만 남은 것을 확인한다.
 - [x] 검증된 변경을 로컬 커밋하고 원격 `main`에 push한다.
+
+## 2026-09-18 - 다른 무기(저격총/돌격소총)로 무기 교체 시스템 구현
+
+- [x] 사용자에게 대상 무기군(총기류/근접무기)과 작업 목표(IK 확인용 vs 실제 교체 시스템)를 확인한다 -> 총기류 우선, 실제 교체 시스템 구현으로 확정.
+- [x] `Pistol Gun.prefab`/`Sniper Gun.prefab`에 남아있던 템플릿 잔재(Right Handle 회전 미보정, MuzzleFlashEffect가 Fire Position과 어긋남)를 공용 에셋 레벨에서 수정한다.
+- [x] WeaponsPack (LowPoly)의 American AssaultRifle 모델로 `Assault Rifle Gun.prefab`을 새로 만들고 Fire Position/Left/Right Handle 좌표를 실측해 배치한다.
+- [x] `PlayerShooter`에 `weaponPrefabs` 배열과 `EquipWeapon(int)`을 추가해 gunPivot 아래에 총을 동적으로 생성/교체하고 gun/leftHandMount/rightHandMount/IK 이펙터를 매번 다시 연결한다.
+- [x] `SurvivalistWeaponIK`의 그립 보정 로직을 `RecalibrateGrip()`으로 분리해 무기 교체 시마다 다시 호출할 수 있게 한다.
+- [x] `PlayerInput`에 숫자키(1~9) 기반 무기 선택 입력(`selectWeaponIndex`)을 추가한다.
+- [x] `Player Character.prefab`의 정적 `Gun` 자식을 제거하고 `weaponPrefabs`에 3종을 등록한다.
+- [x] Play Mode에서 Pistol/Sniper/Assault Rifle 각각으로 `EquipWeapon()`을 호출해 오른손 그립 거리, 총구 이펙트 정렬, gunPivot 방향을 검증한다.
+- [x] 검증된 변경을 로컬 커밋하고 원격 `main`에 push한다.

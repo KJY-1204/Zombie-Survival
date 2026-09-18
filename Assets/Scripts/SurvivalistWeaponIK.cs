@@ -12,6 +12,12 @@ public class SurvivalistWeaponIK : MonoBehaviour {
         visualAnimator = GetComponent<Animator>();
         playerShooter = GetComponentInParent<PlayerShooter>();
 
+        RecalibrateGrip();
+    }
+
+    // 오른손-총기 그립 오프셋을 현재 gunPivot/rightHandMount 기준으로 다시 계산한다
+    // 장착한 무기가 바뀌어 rightHandMount가 다른 총으로 교체될 때마다 다시 호출해야 한다
+    public void RecalibrateGrip() {
         if (playerShooter != null && playerShooter.gunPivot != null &&
             playerShooter.rightHandMount != null)
         {

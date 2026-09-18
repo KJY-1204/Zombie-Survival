@@ -16,6 +16,9 @@ public class PlayerInput : MonoBehaviour {
     public bool reload { get; private set; } // 감지된 재장전 입력값
     public bool jump { get; private set; } // 감지된 점프 입력값
 
+    // 숫자키 1~9로 선택한 무기 인덱스(0부터 시작), 이번 프레임에 선택 입력이 없으면 -1
+    public int selectWeaponIndex { get; private set; }
+
     // 매프레임 사용자 입력을 감지
     private void Update() {
         // 게임오버 상태에서는 사용자 입력을 감지하지 않는다
@@ -27,6 +30,7 @@ public class PlayerInput : MonoBehaviour {
             fire = false;
             reload = false;
             jump = false;
+            selectWeaponIndex = -1;
             return;
         }
 
@@ -40,5 +44,16 @@ public class PlayerInput : MonoBehaviour {
         reload = Input.GetButtonDown(reloadButtonName);
         // jump에 관한 입력 감지
         jump = Input.GetButtonDown(jumpButtonName);
+
+        // 무기 선택(1~9) 입력 감지
+        selectWeaponIndex = -1;
+        for (int i = 0; i < 9; i++)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+            {
+                selectWeaponIndex = i;
+                break;
+            }
+        }
     }
 }
