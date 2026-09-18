@@ -24,3 +24,10 @@
 2. 기획서에서 3인칭 우선 후보로 지정한 `Survivalist/Prefab/PlayerArmature.prefab`을 플레이어 비주얼로 사용한다.
 3. 기존 전투 루트와 총기 참조를 유지하고, 임시 여성 메시만 교체한다.
 4. Play Mode에서 전후·좌우 이동과 Survivalist 비주얼 렌더링을 확인한다.
+
+## Survivalist 이동 애니메이션과 무기 손 그립
+
+1. 기존 전투 루트와 Survivalist 자식 Animator의 실제 컨트롤러·파라미터를 확인한다.
+2. 이동 입력, 점프, 지면 상태를 Survivalist Animator에 전달한다.
+3. PlayerShooter의 양손 IK를 Survivalist Animator에 적용한다.
+4. Play Mode에서 이동 애니메이션, 손 위치, 콘솔 오류를 확인한다.

@@ -12,6 +12,7 @@ public class PlayerMovement : MonoBehaviour {
     public float groundCheckDistance = 0.6f; // 캐릭터 중심에서 바닥까지 검사할 거리
 
     private Animator playerAnimator; // 플레이어 캐릭터의 애니메이터
+    private Animator visualAnimator; // Survivalist 비주얼의 애니메이터
     private PlayerInput playerInput; // 플레이어 입력을 알려주는 컴포넌트
     private Rigidbody playerRigidbody; // 플레이어 캐릭터의 리지드바디
     private Collider playerCollider; // 바닥 검사에서 자기 자신을 제외하기 위한 콜라이더
@@ -25,6 +26,12 @@ public class PlayerMovement : MonoBehaviour {
         playerRigidbody = GetComponent<Rigidbody>();
         playerAnimator = GetComponent<Animator>();
         playerCollider = GetComponent<Collider>();
+
+        Transform visualRoot = transform.Find("Survivalist Visual");
+        if (visualRoot != null)
+        {
+            visualAnimator = visualRoot.GetComponent<Animator>();
+        }
     }
 
     private void Update() {
@@ -46,16 +53,23 @@ public class PlayerMovement : MonoBehaviour {
         // 움직임 실행
         Move();
         // 점프 요청이 있고 바닥에 있을 때만 점프 실행
-        if (jumpRequested && isGrounded)
+        bool isJumping = jumpRequested && isGrounded;
+        if (isJumping)
         {
             Jump();
         }
         jumpRequested = false;
 
         // 입력값에 따라 애니메이터의 Move 파라미터 값을 변경
-        playerAnimator.SetFloat("Move", new Vector2(
-            playerInput.rotate, playerInput.move).magnitude);
-        playerAnimator.SetBool("IsGrounded", isGrounded);
+        float moveAmount = new Vector2(
+            playerInput.rotate, playerInput.move).magnitude;
+        if (playerAnimator.enabled)
+        {
+            playerAnimator.SetFloat("Move", moveAmount);
+            playerAnimator.SetBool("IsGrounded", isGrounded);
+        }
+
+        UpdateVisualAnimator(moveAmount, isJumping);
     }
 
     // 캐릭터 중심에서 아래로 검사해 바닥에 닿아 있는지 확인 (자기 자신의 콜라이더는 제외)
@@ -77,7 +91,24 @@ public class PlayerMovement : MonoBehaviour {
     private void Jump() {
         playerRigidbody.linearVelocity = new Vector3(
             playerRigidbody.linearVelocity.x, jumpForce, playerRigidbody.linearVelocity.z);
-        playerAnimator.SetTrigger("Jump");
+        if (playerAnimator.enabled)
+        {
+            playerAnimator.SetTrigger("Jump");
+        }
+    }
+
+    // Survivalist Animator가 사용하는 이동·점프·지면 상태를 갱신
+    private void UpdateVisualAnimator(float moveAmount, bool isJumping) {
+        if (visualAnimator == null)
+        {
+            return;
+        }
+
+        visualAnimator.SetFloat("Speed", moveAmount * moveSpeed);
+        visualAnimator.SetFloat("MotionSpeed", moveAmount > 0f ? 1f : 0f);
+        visualAnimator.SetBool("Grounded", isGrounded);
+        visualAnimator.SetBool("FreeFall", !isGrounded && !isJumping);
+        visualAnimator.SetBool("Jump", isJumping);
     }
 
     // 입력값에 따라 캐릭터를 전후좌우로 움직임

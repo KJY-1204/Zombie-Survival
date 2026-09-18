@@ -14,7 +14,15 @@
 - [x] Unity Play Mode에서 기본 숄더뷰 초기화와 콘솔 오류를 검증한다.
 - [ ] Unity Editor에서 우클릭 ADS 전환과 이동·사격을 수동 확인한다.
 - [x] 검증된 변경을 로컬 커밋한다.
-- [ ] 원격 `main` 브랜치로 push한다.
+
+## 2026-09-18 - Survivalist 애니메이션과 양손 IK
+
+- [x] Survivalist Animator의 컨트롤러와 파라미터를 확인한다.
+- [x] 이동·점프·지면 상태를 Survivalist Animator에 전달한다.
+- [x] 총기 양손 IK를 Survivalist Animator에 적용한다.
+- [x] Unity Play Mode에서 애니메이션·손 위치·콘솔을 검증한다.
+- [x] 검증된 변경을 로컬 커밋하고 원격에 push한다.
+- [x] 원격 `main` 브랜치로 push한다.
 
 ## 2026-09-18 - TPS 스트레이프와 Survivalist 플레이어
 
