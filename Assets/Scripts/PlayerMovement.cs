@@ -53,7 +53,8 @@ public class PlayerMovement : MonoBehaviour {
         jumpRequested = false;
 
         // 입력값에 따라 애니메이터의 Move 파라미터 값을 변경
-        playerAnimator.SetFloat("Move", playerInput.move);
+        playerAnimator.SetFloat("Move", new Vector2(
+            playerInput.rotate, playerInput.move).magnitude);
         playerAnimator.SetBool("IsGrounded", isGrounded);
     }
 
@@ -79,11 +80,14 @@ public class PlayerMovement : MonoBehaviour {
         playerAnimator.SetTrigger("Jump");
     }
 
-    // 입력값에 따라 캐릭터를 앞뒤로 움직임
+    // 입력값에 따라 캐릭터를 전후좌우로 움직임
     private void Move() {
-        // 상대적으로 이동할 거리 계산
-        Vector3 moveDistance =
-            playerInput.move * transform.forward * moveSpeed * Time.deltaTime;
+        // 대각선 이동 속도가 빨라지지 않도록 입력 방향의 길이를 제한
+        Vector3 moveDirection = Vector3.ClampMagnitude(
+            transform.forward * playerInput.move
+            + transform.right * playerInput.rotate,
+            1f);
+        Vector3 moveDistance = moveDirection * moveSpeed * Time.deltaTime;
         // 리지드바디를 통해 게임 오브젝트 위치 변경
         playerRigidbody.MovePosition(playerRigidbody.position + moveDistance);
     }
