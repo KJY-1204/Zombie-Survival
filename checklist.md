@@ -101,3 +101,14 @@
 - [x] `UIManager`/`PlayerShooter`를 통해 매 프레임 탄퍼짐 비율을 조준점 UI에 전달한다.
 - [x] `HUD Canvas` 프리팹 인스턴스를 `Prototype` 씬에 배치한다(조준점 UI가 실제로 보이도록).
 - [x] Play Mode에서 발사 시 탄퍼짐 수치와 조준점 UI 좌표가 함께 갱신되는지 확인한다.
+
+## 2026-09-18 - 쓸모없는 UI 삭제 (게임오버/웨이브/스코어/탄약)
+
+- [x] 삭제 대상 범위를 사용자에게 확인한다(게임오버 UI, 웨이브 텍스트, 스코어 텍스트, 탄약 수 텍스트 전부 + 관련 코드 정리).
+- [x] `UIManager.cs`를 조준점 갱신만 담당하도록 재작성한다(ammoText/scoreText/waveText/gameoverUI 필드와 관련 메서드 제거).
+- [x] `GameManager.cs`의 `AddScore`/`EndGame`에서 UI 갱신 호출을 제거하고 `score`/`isGameover` 상태는 유지한다.
+- [x] `ZombieSpawner.cs`의 `UpdateUI()` 호출과 메서드를 제거한다.
+- [x] `PlayerShooter.cs`의 `UpdateUI()`에서 탄약 텍스트 갱신 호출만 제거하고 조준점 갱신은 유지한다.
+- [x] `HUD Canvas.prefab`에서 `Ammo Display`, `Score Text`, `Enemy Wave Text`, `Gameover UI` 자식 오브젝트를 삭제하고 저장한다.
+- [x] `recompile_status`/`console` 로그로 신규 오류 없음과 4개 오브젝트 삭제·`Crosshair`만 남은 것을 확인한다.
+- [x] 검증된 변경을 로컬 커밋하고 원격 `main`에 push한다.

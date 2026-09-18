@@ -117,3 +117,15 @@
 - Play Mode에서 `gun.Fire()` 한 번 호출 후 `spreadRatio`가 정확히 `(1.2)/(6-1)=0.24`로 계산되는 것과, 조준점의 `top`/`left` `anchoredPosition`이 그 비율에 맞춰 실제로 움직이는 것을 확인했다.
 - 작업 중 `HUD Canvas.prefab`의 `Gameover UI` 자식 오브젝트가 기본값으로 활성화되어 있어(원래부터 있던, 이번 작업과 무관한 프리팹 설정) 스크린샷에 "YOU DIE" 화면이 항상 덮여 보이는 것을 발견했다. 사용자가 "요청하지 않은 것은 추가/수정하지 말라"고 명확히 해서 이 부분은 조사만 하고 손대지 않았다 — 있는 그대로 남겨둔다.
 - (참고, 사소한 이슈) `EditorSceneManager.SaveOpenScenes()`가 이번 세션에서 씬 변경사항을 디스크에 실제로 쓰지 않는 것처럼 보인 적이 있었다. `MarkSceneDirty()` 후 `EditorSceneManager.SaveScene(scene)`을 명시적으로 호출하니 정상적으로 저장됐다.
+
+## 2026-09-18 - 쓸모없는 UI 삭제 (게임오버/웨이브/스코어/탄약)
+
+- 사용자가 "쓸모없는 UI는 삭제하고 프리팹을 갱신해"라고 요청. 범위가 모호해 `AskUserQuestion`으로 확인한 결과 게임오버 UI, 웨이브 텍스트, 스코어 텍스트, 탄약 수 텍스트 전부를 대상으로 하고, 관련 코드(`SetActiveGameoverUI`, `GameManager` 호출부 등)까지 함께 정리하기로 확정했다(직전 세션에서 "요청하지 않은 건 건드리지 말라"고 명확히 한 사용자였으므로, 이번엔 범위를 먼저 명시적으로 확인받았다).
+- `UIManager.cs`를 조준점(`SpreadCrosshair`) 갱신 하나만 담당하도록 완전히 재작성했다. `ammoText`/`scoreText`/`waveText`/`gameoverUI` 필드와 `UpdateAmmoText`/`UpdateScoreText`/`UpdateWaveText`/`SetActiveGameoverUI`/`GameRestart` 메서드, 그리고 이제 안 쓰는 `UnityEngine.SceneManagement`/`UnityEngine.UI` using을 모두 제거했다.
+- `GameManager.cs`는 `AddScore()`/`EndGame()`에서 UI 호출(`UpdateScoreText`, `SetActiveGameoverUI`)만 제거했다. `score`/`isGameover` 필드 자체는 그대로 남겼다 — 특히 `isGameover`는 `PlayerInput.cs`가 입력 게이팅에 쓰는 게임플레이 상태라 UI와 무관하게 반드시 유지해야 한다.
+- `ZombieSpawner.cs`는 `UpdateWaveText`만 호출하던 `UpdateUI()` 메서드 전체와 `Update()` 안의 호출부를 제거했다(다른 로직에 영향 없음).
+- `PlayerShooter.cs`는 `UpdateUI()`에서 `UpdateAmmoText` 호출 줄만 제거하고, 지난 세션에 구현한 `UpdateCrosshairSpread` 호출은 그대로 남겼다.
+- `HUD Canvas.prefab`은 `PrefabUtility.LoadPrefabContents`로 열어 `Ammo Display`/`Score Text`/`Enemy Wave Text`/`Gameover UI` 4개 자식 오브젝트를 `DestroyImmediate`로 삭제하고 `SaveAsPrefabAsset`으로 저장했다. 콘솔 로그로 4개 모두 존재가 확인되어 삭제됐고, 삭제 후 남은 자식은 `Crosshair` 하나뿐임을 확인했다.
+- `recompile_status`(컴파일 성공, 오류 0건)와 `console_status`(consoleErrors=0)로 검증했다. 콘솔에 있던 "Animator is not playing an AnimatorController" 경고 2건은 더미 Animator + Reload 트리거 호출 때문이며(지난 세션에서 이미 원인 파악, 이번 작업과 무관) 이번에도 그대로 남아있다 — 요청 범위 밖이라 손대지 않았다.
+- `ProjectSettings/ProjectSettings.asset`, `ProjectSettings/ShaderGraphSettings.asset`, `.vsconfig`는 이번 세션 시작 전부터 이미 변경/미추적 상태였던 사용자 소유 변경이라 커밋에 포함하지 않았다(계속 유지 중인 원칙).
+- 변경 사항을 하나의 커밋(`57d16eb`)으로 기록하고 원격 `main`에 push했다.
