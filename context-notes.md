@@ -127,7 +127,28 @@
 ### 남은 사람 확인 사항
 
 - 이 문서 작업은 Unity 에디터에서 `Assets/Scenes/FirstPersonTest.unity`를 열고 Play를 누르면 바로 테스트 가능. WASD류 이동은 없고 기존 탑다운 이동(전후진+제자리 회전)과 `C` 키로 1인칭/3인칭 전환.
-- Build Settings에 이 씬을 추가하려 시도했으나(`add_scene_to_build`) `ProjectSettings/EditorBuildSettings.asset` 파일에 실제로 반영되지 않는 것을 확인함 (에디터 메모리상에는 등록되지만 디스크 저장이 안 됨) - 급하지 않아 더 파고들지 않음. 필요하면 Unity 에디터에서 File > Build Settings로 직접 추가할 것.
+- Build Settings에 이 씬을 추가하려 시도했으나(`add_scene_to_build`) `ProjectSettings/EditorBuildSettings.asset` 파일에 실제로 반영되지 않는 것을 확인함 (에디터 메모리상에는 등록되지만 디스크 저장이 안 됨) - 급하지 않아 더 파고들지 않음. 필요하면 Unity 에디터에서 File > Build Settings로 직접 추가할 것. → 이후 다른 작업(Play 진입 등) 중에 자동으로 디스크에 반영된 것을 확인함(에디터가 지연 저장하는 것으로 보임).
+
+## 2026-09-18 - 1인칭 시점을 실제 FPS 방식(마우스룩)으로 개선 (Claude)
+
+사용자 요청: "1인칭 시점을 인터넷에 검색해서 총게임 1인칭 시점으로 고쳐봐". 웹 검색으로 Unity FPS 카메라의 표준 패턴을 확인: **마우스 X로 몸통(또는 카메라 부모) Yaw 회전 + 마우스 Y로 카메라만 Pitch 회전(각도 클램프) + 커서 잠금/숨김**. (참고: Unity Discussions "FPS MouseScript", 구 Standard Assets `MouseLook.cs`)
+
+### 문제였던 것
+
+기존 1인칭 카메라(`FirstPerson Cam`)는 `Player Character`의 자식으로 붙어서 몸통 회전을 그대로 따라가기만 했음. 몸통 회전은 `PlayerMovement.Rotate()`가 키보드 `Horizontal` 축으로만 처리해서, 마우스를 움직여도 시점이 전혀 돌아가지 않았다 - 사실상 "1인칭 카메라가 달린 탑다운 조작"이었지 FPS 시점이 아니었음.
+
+### 구현
+
+- `PlayerMovement.cs`: `useMouseLook`(bool), `mouseYawSpeed`(float) 필드 추가. `Rotate()`에서 `useMouseLook`이 true면 `Input.GetAxis("Mouse X") * mouseYawSpeed`를, false면 기존 키보드 기반 회전량을 사용 - 리지드바디에 적용하는 나머지 로직은 동일해서 두 모드가 서로 다른 회전 "소스"만 갖도록 최소 침습적으로 수정.
+- `Assets/Scripts/Camera/FirstPersonLook.cs`(신규): `FirstPerson Cam`에 부착. 마우스 Y로 `pitch`를 누적하고 -80~80도로 클램프한 뒤 로컬 회전에 반영. `OnEnable()`에서 pitch를 0으로 초기화해 1인칭 진입 시 항상 정면을 보게 함.
+- `CameraRigController.SetMode()`: 모드 전환 시 `playerMovement.useMouseLook`, `firstPersonLook.enabled`, `Cursor.lockState`/`Cursor.visible`을 함께 전환 (1인칭 = Locked + 숨김, 3인칭 = None + 표시).
+- `FirstPerson Cam`(Cinemachine Lens)과 `FirstPersonWeaponCamera`(오버레이 Camera) 시야각을 기존 40도에서 75도로 확대 - 40도는 상당히 좁아(줌인된 느낌) 일반적인 FPS 시야각(60~90도 사이)에 맞지 않았음.
+- 총 조준 방향: `Gun Pivot`은 1인칭에서 `firstPersonWeaponMount`(FirstPerson Cam의 자식)의 월드 회전을 그대로 따라가도록 이미 구현되어 있었기 때문에, 카메라가 피치로 위아래를 보면 총도 자동으로 같은 방향을 향하게 된다 - 별도 수정 없이 "보는 곳을 쏜다"가 성립함.
+
+### 검증의 한계
+
+- `Input.GetAxis("Mouse X"/"Mouse Y")`는 실제 OS 마우스 이동을 읽기 때문에 자동화 도구로는 입력 자체를 시뮬레이션할 수 없음. Play 모드에서 컴포넌트 활성화 상태(`useMouseLook=True`, `firstPersonLook.enabled=True`, `Cursor.lockState=Locked`)와 FOV 값(75)이 올바르게 적용됐음은 코드로 확인했고, 스크린샷으로 시야각이 넓어진 것도 확인했다. **실제로 마우스를 움직였을 때 감도/반응이 자연스러운지는 사람이 직접 플레이해서 확인해야 함.** 감도가 안 맞으면 `FirstPersonLook.mouseSensitivity`(카메라 상하)와 `PlayerMovement.mouseYawSpeed`(몸통 좌우)를 조정.
+- `FirstPersonTest.unity`용 `PlayerTestRig.prefab`도 Main.unity와 동일하게 갱신했다 (그룹핑 후 프리팹 덮어쓰기 방식, 작업 후 Main 씬 계층은 메모리상에서도 즉시 원상 복구해 실수로 저장되는 일이 없도록 함).
 
 ## 2026-09-18 - 1인칭 무기 구성 재검토 (Claude)
 
