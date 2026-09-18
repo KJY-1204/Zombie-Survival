@@ -45,3 +45,9 @@
 - 측면 렌더링에서 총구 높이는 상체 앞으로 보정됐지만 손이 모델에 반영되지 않았다. `Survivalist Visual` 루트와 `Geometry/SK_Military_Survivalist` 자식에 Animator가 각각 있고, 실제 렌더 메시는 자식 Animator가 구동한다. 따라서 이동 상태와 IK 컴포넌트를 자식 Animator로 연결한다.
 - 총기 위치는 상체 앞 고정점 대신 오른손 본과 총기 오른손 그립의 초기 상대 변환으로 매 IK 프레임 역산한다. 오른손 애니메이션이 총을 직접 움직이고, 왼손만 IK로 전방 손잡이를 따르게 한다.
 - Play Mode에서 오른손 본과 총기 오른손 손잡이 거리는 약 `0.00000006`으로 확인됐고, 총구는 총기 모델의 `Fire Position`을 그대로 따른다. 기본 자세는 오른손을 따라가는 힙 파이어이며, ADS에서 어깨 조준 자세로 올리는 보간은 별도 작업으로 남긴다.
+
+## 2026-09-18 - IK Helper Tool 왼손 그립
+
+- `Assets/Kevin Iglesias/IKHelperTool`에는 `KevinIglesias.IKHelperTool`과 소총 예제 프리팹·애니메이션이 있다. 문서의 의도는 물체를 제어하는 손은 애니메이션으로 유지하고 반대 손만 IK 효과기로 보정하는 것이다.
+- 현재 오른손은 동적으로 총기 피벗을 제어한다. 따라서 기존 직접 `SetIK` 왼손 로직은 제거하고, 총기 왼손 손잡이를 따르는 효과기와 가중치 1의 IK Switch를 IK Helper Tool에 연결한다.
+- `IK Left Hand Effector`는 총기의 `Left Handle` 자식으로 만들어 총기와 함께 움직이며, `IK Switch`는 실제 메시 Animator의 자식으로 로컬 Y값 `1`을 사용해 IK Helper Tool 가중치를 1로 만든다. Play Mode에서 왼손과 효과기 거리는 약 1.8cm, 오른손과 오른손 그립 거리는 약 0이었다.

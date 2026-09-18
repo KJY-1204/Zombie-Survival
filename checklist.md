@@ -23,6 +23,14 @@
 - [x] Unity Play Mode에서 애니메이션·손 위치·콘솔을 검증한다.
 - [x] 검증된 변경을 로컬 커밋하고 원격에 push한다.
 
+## 2026-09-18 - IK Helper Tool 왼손 그립
+
+- [x] IK Helper Tool 문서와 소총 예제 구성을 확인한다.
+- [x] 직접 왼손 IK를 IK Helper Tool 컴포넌트로 교체한다.
+- [x] 효과기와 스위치를 Survivalist 프리팹에 연결한다.
+- [x] Unity Play Mode에서 양손 그립과 콘솔을 검증한다.
+- [x] 검증된 변경을 로컬 커밋하고 원격에 push한다.
+
 ## 2026-09-18 - Survivalist 총기 피벗 보정
 
 - [x] 오른손·총기 피벗·총구 위치를 확인한다.

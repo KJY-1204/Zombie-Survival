@@ -1,5 +1,67 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6942374790475050326
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4562930349592646138}
+  m_Layer: 0
+  m_Name: IK Left Hand Effector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4562930349592646138
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6942374790475050326}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9209587759148531570}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7341245288927839414
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5986629844269601318}
+  m_Layer: 0
+  m_Name: IK Switch
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5986629844269601318
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7341245288927839414}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4253085444755445771}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &188882008731976361
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -86,12 +148,20 @@ PrefabInstance:
     - {fileID: 701808484328101820, guid: 76b9d8179905d454e9bf6dcc847231ce, type: 3}
     - {fileID: 5058610423253894750, guid: 76b9d8179905d454e9bf6dcc847231ce, type: 3}
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 4150899946157431458, guid: 76b9d8179905d454e9bf6dcc847231ce,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5986629844269601318}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 3661748854452551704, guid: 76b9d8179905d454e9bf6dcc847231ce,
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 5588346009143036292}
+    - targetCorrespondingSourceObject: {fileID: 3661748854452551704, guid: 76b9d8179905d454e9bf6dcc847231ce,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2018478858379805656}
   m_SourcePrefab: {fileID: 100100000, guid: 76b9d8179905d454e9bf6dcc847231ce, type: 3}
 --- !u!4 &759003470818316408 stripped
 Transform:
@@ -117,6 +187,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80ec7225671a6ea46a13bc86dc3b92ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SurvivalistWeaponIK
+--- !u!114 &2018478858379805656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3480770143912985265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9e61810448c4394d92f341a80513181, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KevinIglesias.IKHelperTool
+  iKSwitch: {fileID: 5986629844269601318}
+  handEffector: {fileID: 4562930349592646138}
+  hand: 0
+--- !u!4 &4253085444755445771 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4150899946157431458, guid: 76b9d8179905d454e9bf6dcc847231ce,
+    type: 3}
+  m_PrefabInstance: {fileID: 188882008731976361}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &712520316552478975
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -203,11 +294,21 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 759003470818316408}
+    - targetCorrespondingSourceObject: {fileID: 8515293378983329677, guid: 153166fe35c054a7190cb112c92f6d23,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4562930349592646138}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 153166fe35c054a7190cb112c92f6d23, type: 3}
 --- !u!4 &9205496547046920415 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8512681968067743776, guid: 153166fe35c054a7190cb112c92f6d23,
+    type: 3}
+  m_PrefabInstance: {fileID: 712520316552478975}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &9209587759148531570 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8515293378983329677, guid: 153166fe35c054a7190cb112c92f6d23,
     type: 3}
   m_PrefabInstance: {fileID: 712520316552478975}
   m_PrefabAsset: {fileID: 0}

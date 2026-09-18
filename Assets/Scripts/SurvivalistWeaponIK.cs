@@ -53,15 +53,5 @@ public class SurvivalistWeaponIK : MonoBehaviour {
             }
         }
 
-        // 오른손은 애니메이션이 직접 총을 들고, 왼손만 총기 전방 손잡이를 따른다
-        SetHandIK(AvatarIKGoal.LeftHand, playerShooter.leftHandMount);
-    }
-
-    // 손 목표점의 위치와 회전을 총기 손잡이에 맞춘다
-    private void SetHandIK(AvatarIKGoal hand, Transform handMount) {
-        visualAnimator.SetIKPositionWeight(hand, 1f);
-        visualAnimator.SetIKRotationWeight(hand, 1f);
-        visualAnimator.SetIKPosition(hand, handMount.position);
-        visualAnimator.SetIKRotation(hand, handMount.rotation);
     }
 }
