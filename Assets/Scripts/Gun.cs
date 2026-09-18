@@ -21,6 +21,8 @@ public class Gun : MonoBehaviour {
 
     private AudioSource gunAudioPlayer; // 총 소리 재생기
 
+    private Camera aimCamera; // 조준점(화면 중앙) 기준을 계산할 카메라
+
     public GunData gunData; // 총의 현재 데이터
     
     private float fireDistance = 50f; // 사정거리
@@ -34,6 +36,7 @@ public class Gun : MonoBehaviour {
         // 사용할 컴포넌트들의 참조를 가져오기
         gunAudioPlayer = GetComponent<AudioSource>();
         bulletLineRenderer = GetComponent<LineRenderer>();
+        aimCamera = Camera.main;
 
         // 사용할 점을 두개로 변경
         bulletLineRenderer.positionCount = 2;
@@ -73,9 +76,12 @@ public class Gun : MonoBehaviour {
         // 총알이 맞은 곳을 저장할 변수
         Vector3 hitPosition = Vector3.zero;
 
-        // 레이캐스트(시작지점, 방향, 충돌 정보 컨테이너, 사정거리)
-        if (Physics.Raycast(fireTransform.position,
-            fireTransform.forward, out hit, fireDistance))
+        // 화면 중앙(조준점)에서 카메라가 바라보는 방향으로 레이를 쏴서
+        // 총구 위치/각도와 무관하게 실제로 조준한 지점이 맞도록 한다
+        Ray aimRay = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+
+        // 레이캐스트(조준 레이, 충돌 정보 컨테이너, 사정거리)
+        if (Physics.Raycast(aimRay, out hit, fireDistance))
         {
             // 레이가 어떤 물체와 충돌한 경우
 
@@ -97,8 +103,7 @@ public class Gun : MonoBehaviour {
         {
             // 레이가 다른 물체와 충돌하지 않았다면
             // 총알이 최대 사정거리까지 날아갔을때의 위치를 충돌 위치로 사용
-            hitPosition = fireTransform.position +
-                          fireTransform.forward * fireDistance;
+            hitPosition = aimRay.origin + aimRay.direction * fireDistance;
         }
 
         // 발사 이펙트 재생 시작
