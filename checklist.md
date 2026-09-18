@@ -70,3 +70,14 @@
 - [x] Play Mode 스크린샷으로 그립을 검증하고, 오른손-그립/왼손-이펙터 거리가 모두 0.00000임을 확인한다.
 - [x] 재구성된 인스턴스를 `TPS Player.prefab`에 저장한다.
 - [x] `recompile_status`/`console_status`에 신규 오류가 없음을 확인한다.
+
+## 2026-09-18 - 플레이어 캐릭터 프리팹 완전 재작성
+
+- [x] 사용자가 기존 플레이어 프리팹(`TPS Player`, `TPS Player (Backup 0918)`, `Player Character`, `PlayerTestRig`, `Gun`)을 모두 삭제하고 처음부터 다시 만들 것을 요청.
+- [x] 루트에 Rigidbody/CapsuleCollider/AudioSource/PlayerInput/PlayerMovement/PlayerHealth/PlayerShooter를 새로 구성한다(원본 초기 커밋의 캡슐 치수·리지드바디 제약을 그대로 사용).
+- [x] 총은 삭제되지 않고 남아있던 `Assets/Prefabs/Weapons/Pistol Gun.prefab`(Left/Right Handle, Fire Position 기본 리깅 포함)을 재사용하고 `Pistol Data.asset`을 연결한다.
+- [x] `Survivalist Visual`을 `PlayerArmature.prefab` 원본에서 다시 인스턴스화하고 `SurvivalistTPS.controller`(Weapon Hold Arms 레이어 포함) + `SurvivalistWeaponIK` + `IKHelperTool`을 연결한다.
+- [x] 루트에 비활성 `Animator` 더미를 추가해 `PlayerHealth`/`PlayerMovement`의 `GetComponent<Animator>()` 참조가 예외를 던지지 않도록 한다.
+- [x] 체력 슬라이더 UI(Canvas+Slider)를 새로 만들고 `PlayerHealth`에 연결한다(사망/피격/아이템 습득 사운드는 원본 초기 커밋과 동일한 클립 재사용).
+- [x] Play Mode에서 오른손-그립/왼손-이펙터 거리 0.00000, 카메라 자동 타겟팅, 체력 슬라이더 렌더링을 스크린샷으로 확인한다.
+- [x] `Assets/Prefabs/Player Character.prefab`로 저장하고 `recompile_status`/`console_status`에 신규 오류 없음을 확인한다.

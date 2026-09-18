@@ -75,3 +75,13 @@
 - 이 레이어를 추가한 뒤 부가 효과로 왼손-이펙터 거리가 1.8cm에서 정확히 0.00000으로 줄었다(오른손도 0.00000 유지). 새 팔 포즈가 왼팔을 총의 실제 도달 가능 범위 안으로 자연스럽게 가져다 놓았기 때문이며, 별도의 이펙터 위치 재보정 작업(문서의 Step 5-7 수동 캘리브레이션)은 필요하지 않았다.
 - 기존 `Rifle Aim Blend`/`Aiming` 파라미터(지난 세션에 힙파이어→조준 자세 전환용으로 추가)는 이제 팔 포즈 차원에서는 사실상 무의미해졌다(Weapon Hold Arms가 항상 팔을 덮어쓰므로). 다만 이번 작업 범위를 벗어나므로 제거하지 않고 그대로 남겨뒀다 — 다리/카메라 줌 차원에서는 여전히 약간의 차이를 만들 수 있고, 나중에 `Shoots Upper Body > Rifle Aim`(같은 에셋의 진짜 조준 포즈) 레이어로 대체할 여지가 있다.
 - Play Mode 스크린샷(측면/후면/정면)으로 새 파지가 자연스러운 양손 무기 휴대 자세임을 육안으로 확인했다. 검증 후 `PrefabUtility.SaveAsPrefabAssetAndConnect`로 씬의 인스턴스를 `TPS Player.prefab`에 다시 저장했다. `recompile_status` 성공, `console_status`에 신규 스크립트 오류 없음(세션 중 유일한 오류는 MCP eval 호출 타임아웃 1건으로 게임 코드와 무관).
+
+## 2026-09-18 - 플레이어 캐릭터 프리팹 완전 재작성 (사용자가 기존 프리팹 전부 삭제 후 재요청)
+
+- 사용자가 "이상하게 참고할까봐" `TPS Player.prefab`, `TPS Player (Backup 0918).prefab`, `Player Character.prefab`, `PlayerTestRig.prefab`, `Assets/Prefabs/Gun.prefab`을 직접 디스크에서 삭제했다. 씬(`Prototype.unity`)에서도 `Player Character` 게임오브젝트가 사라진 상태였다. 삭제된 프리팹은 git으로 되살리지 않고 완전히 새로 구성했다(사용자가 기존 것을 참고하지 않길 원했으므로).
+- 총(`Gun.prefab`)은 초기 커밋부터 있던 원본 코스 에셋이었는데 사용자가 삭제했다. 다행히 같은 리깅 컨벤션(Left Handle/Right Handle 로컬 회전값이 완전히 동일: `(21.97, 58.91, 150.52)`/`(357.18, 320.43, 271.35)`)을 가진 `Assets/Prefabs/Weapons/Pistol Gun.prefab`이 남아있어 이것을 재사용했다. 짝이 되는 `Assets/ScriptableData/Pistol Data.asset`(GunData, 사운드 클립 포함 완비)도 그대로 있어서 재사용했다.
+- 플레이어 루트는 초기 커밋의 `Player Character.prefab`(git 히스토리로 원본 수치만 참고, 파일 자체는 복원하지 않음) 설정을 따라 CapsuleCollider(radius 0.2, height 1.5, center (0,0.75,0)), Rigidbody(mass 1, angularDrag 20, constraints=FreezeRotationX|FreezeRotationZ)를 그대로 재현했다.
+- `Survivalist Visual`은 지난 세션과 동일한 절차로 `PlayerArmature.prefab`에서 새로 인스턴스화하고 `CharacterController`/`ThirdPersonController`/`BasicRigidBodyPush`/`StarterAssetsInputs`/Input System `PlayerInput`을 제거했다. `ThirdPersonController`를 `CharacterController`보다 먼저 제거해야 `RequireComponent` 의존성 오류가 나지 않는다(지난 세션에서 겪은 순서 문제를 이번엔 피함).
+- `PlayerHealth.Awake()`와 `PlayerMovement.Start()`가 루트 게임오브젝트에서 직접 `GetComponent<Animator>()`를 호출하기 때문에, 루트에 컨트롤러/아바타 없는 **비활성 더미 Animator**를 추가해야 `MissingComponentException`이 나지 않는다. 이걸 빠뜨려서 Play Mode 진입 직후 232개의 예외가 발생했었고, 원인을 확인한 뒤 더미 Animator를 추가해 해결했다.
+- 체력 슬라이더 UI는 기존 `Assets/Prefabs/HUD Canvas.prefab`(전역 탄약/점수/웨이브 UI)과는 별개로, 플레이어 전용 Canvas(ScreenSpaceOverlay)+Slider를 코드로 새로 만들었다(Background+Fill Area/Fill 최소 구성, interactable=false). `PlayerHealth`의 `deathClip`/`hitClip`/`itemPickupClip`은 git 초기 커밋에서 GUID로 확인한 `Assets/Audios/Woman Die.ogg`, `Woman Damage.ogg`, `Pick Up.ogg`를 그대로 연결했다.
+- Play Mode에서 오른손-그립/왼손-이펙터 거리 모두 0.00000, `ThirdPersonCameraController.target`이 새 `PlayerMovement`를 자동으로 찾은 것, 체력 슬라이더가 게임 뷰에 렌더링되는 것을 확인했다. `Assets/Prefabs/Player Character.prefab`로 저장했고 `recompile_status`/`console_status` 모두 깨끗하다.
