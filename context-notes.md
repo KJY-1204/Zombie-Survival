@@ -150,6 +150,31 @@
 - `Input.GetAxis("Mouse X"/"Mouse Y")`는 실제 OS 마우스 이동을 읽기 때문에 자동화 도구로는 입력 자체를 시뮬레이션할 수 없음. Play 모드에서 컴포넌트 활성화 상태(`useMouseLook=True`, `firstPersonLook.enabled=True`, `Cursor.lockState=Locked`)와 FOV 값(75)이 올바르게 적용됐음은 코드로 확인했고, 스크린샷으로 시야각이 넓어진 것도 확인했다. **실제로 마우스를 움직였을 때 감도/반응이 자연스러운지는 사람이 직접 플레이해서 확인해야 함.** 감도가 안 맞으면 `FirstPersonLook.mouseSensitivity`(카메라 상하)와 `PlayerMovement.mouseYawSpeed`(몸통 좌우)를 조정.
 - `FirstPersonTest.unity`용 `PlayerTestRig.prefab`도 Main.unity와 동일하게 갱신했다 (그룹핑 후 프리팹 덮어쓰기 방식, 작업 후 Main 씬 계층은 메모리상에서도 즉시 원상 복구해 실수로 저장되는 일이 없도록 함).
 
+## 2026-09-18 - 탑다운/3인칭 제거하고 1인칭 전용으로 확정, 총 위치/모션 조정 (Claude)
+
+사용자 요청: "탑다운 시점을 없에고 1인칭 시점을 만들어 그리고 총이 너무 앞으로 나와있는거 같고 에셋에 모션 애니메이션들이 있으니 어울리는 모션을 적용해봐".
+
+### 1. 카메라를 1인칭 전용으로 확정
+
+- `Follow Cam`(탑다운/어깨너머 3인칭 Cinemachine 카메라) GameObject를 씬에서 완전히 삭제.
+- `CameraRigController`를 대폭 단순화: `CameraMode` enum, `thirdPersonCamera`, `switchKey`, `Update()`의 `C`키 토글 로직을 모두 제거. 이제 `Awake()`에서 무조건 1인칭 상태(1인칭 카메라 활성화, `useFirstPersonMount`/`useMouseLook`/`FirstPersonLook` 모두 켬, 몸통 숨김, 총 레이어 전환, 커서 잠금)를 한 번만 구성한다. 씬에는 이제 카메라가 1인칭 하나뿐이라 모드 개념 자체가 필요 없어짐.
+- GAME_DESIGN.md 5.1절("현재 결정 상태")을 "1인칭으로 결정됨"으로 갱신하고, 21장("현재 미정 사항")에서 "최종 카메라가 1인칭인지 3인칭인지" 항목을 제거 - 문서를 실제 코드 상태와 일치시킴. 카메라 로직은 여전히 이동/전투와 분리되어 있어 나중에 3인칭을 다시 붙이는 것은 여전히 가능한 구조.
+- `FirstPersonTest.unity`용 `PlayerTestRig.prefab`도 동일하게 갱신(이제 `Follow Cam`도 그룹에서 제외).
+
+### 2. 총이 너무 앞으로 나와 보이는 문제 수정
+
+- `FirstPersonWeaponMount`의 로컬 위치를 `(0.15, -0.06, 0.4)` -> `(0.12, -0.08, 0.2)`로 조정 (카메라와의 거리를 절반 가까이 줄임). 실제 사용자가 Play 모드에서 확인하고 피드백을 준 사항이라 이 값을 신뢰하고 반영했음.
+
+### 3. 장착 무기에 맞는 모션 적용
+
+- 기존에는 Upper Body 레이어의 `Aim Idle`/`Reload` 상태에 범용 "Rifle" 카테고리 클립(`HumanM@Rifle_Aim01`/`HumanM@Rifle_Reload01`)을 썼는데, 실제 장착 무기는 `Assets/WeaponsPack (LowPoly)`의 **American Light AssaultRifle**이라 이름이 맞는 "AssaultRifle" 카테고리 클립(`HumanM@AssaultRifle_Aim01`/`HumanM@AssaultRifle_Reload01`, `Assets/Kevin Iglesias/Human Animations/Animations/Male/Combat/AssaultRifle/`)으로 교체 - 무기 종류와 포즈 카테고리가 이름부터 일치하도록 맞춘 것.
+- 이동(Idle/Walk/Run) 블렌드 트리와 사망 애니메이션은 그대로 유지 (무기 종류와 무관한 동작이라 변경 불필요).
+
+### 검증
+
+- Play 모드 진입 시 별도 키 입력 없이 곧바로 1인칭 시점으로 시작하는 것, 콘솔 에러 0건, 넓어진 시야각(75도)과 가까워진 총 위치를 스크린샷으로 확인.
+- AssaultRifle 포즈로 바뀐 뒤의 실제 손 IK 그립이 자연스러운지는 육안으로 미세 비교하지 않음 - 사람이 확인 권장.
+
 ## 2026-09-18 - 1인칭 무기 구성 재검토 (Claude)
 
 GAME_DESIGN.md 5.2절이 명시한 "1인칭에서는 무기 모델과 손 애니메이션이 별도 구성이 필요한지 프로토타입에서 확인"을 실제로 진행. 결론부터: **필요하다는 것이 확인됨.** 기존 3인칭 IK 기반 총 리그를 그대로 1인칭에 재사용하는 방식은 문제가 많다.
