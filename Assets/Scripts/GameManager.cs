@@ -45,8 +45,6 @@ public class GameManager : MonoBehaviour {
         {
             // 점수 추가
             score += newScore;
-            // 점수 UI 텍스트 갱신
-            UIManager.instance.UpdateScoreText(score);
         }
     }
 
@@ -54,7 +52,5 @@ public class GameManager : MonoBehaviour {
     public void EndGame() {
         // 게임 오버 상태를 참으로 변경
         isGameover = true;
-        // 게임 오버 UI를 활성화
-        UIManager.instance.SetActiveGameoverUI(true);
     }
 }

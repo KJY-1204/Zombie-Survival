@@ -23,15 +23,6 @@ public class ZombieSpawner : MonoBehaviour {
         {
             SpawnWave();
         }
-
-        // UI 갱신
-        UpdateUI();
-    }
-
-    // 웨이브 정보를 UI로 표시
-    private void UpdateUI() {
-        // 현재 웨이브와 남은 적 수 표시
-        UIManager.instance.UpdateWaveText(wave, zombies.Count);
     }
 
     // 현재 웨이브에 맞춰 좀비들을 생성
