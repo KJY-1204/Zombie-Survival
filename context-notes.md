@@ -304,3 +304,29 @@ GAME_DESIGN.md 5.2절이 명시한 "1인칭에서는 무기 모델과 손 애니
 ### 남은 작업
 
 - 화면 중앙에 실제 크로스헤어 UI가 아직 없음. 사용자가 시각적 조준점 표시도 원하면 `Too Many Crosshairs` 에셋으로 HUD Canvas에 추가하는 작업이 별도로 필요.
+
+## 2026-09-18 - 크로스헤어 UI 추가 (Claude)
+
+사용자 요청: "크로스헤어 UI도 추가해줘".
+
+### 구현
+
+- `Assets/TooManyCrosshairs/128px/Base/Cross/Cross128.png`(단순 십자형 크로스헤어) 스프라이트를 사용. 해당 텍스처의 `textureType`이 `Default`(Sprite 아님)라서 `Image` 대신 `RawImage` 컴포넌트로 붙임(에셋의 import 설정을 건드리지 않기 위한 surgical한 선택).
+- `HUD Canvas` 하위에 `Crosshair` GameObject(`RectTransform` + `RawImage`) 신규 생성. 앵커/피벗을 화면 중앙(0.5, 0.5)에 고정, `sizeDelta (32, 32)`, `raycastTarget = false`(다른 UI 버튼 클릭을 막지 않도록).
+- 씬 파일에 직접 저장(Edit 모드에서 생성 + `save_scene`). 별도 스크립트는 만들지 않음 - 정적 이미지이므로 코드 없이 UI 오브젝트만으로 충분(에셋에 딸려오는 `TooManyCrosshairs.Crosshair` 데모 스크립트는 이 프로젝트의 `Gun`/`GunData`/재장전 UI와 별개의 자체 탄약/재장전 시스템을 가정하고 있어 가져오지 않음 - 과잉 엔지니어링 방지).
+
+### 검증 중 발견한 이슈 - `capture_game_view`의 프레임 지연
+
+- 처음 크로스헤어를 추가한 직후 `capture_game_view(source: "screen")`로 확인했을 때 몇 차례 연속으로 아무것도 안 보여서 "크로스헤어가 렌더링되지 않는다"고 오판할 뻔했다.
+- 진단 결과: 컴포넌트 상태(`enabled`, `color`, `texture`, `RectTransform` 좌표, `CanvasRenderer.cull`, 소속 `Canvas` 설정 등)는 전부 정상이었고, 실제로는 **`eval`로 텍스처/색상/크기를 바꾼 직후 곧바로 캡처하면 1~2프레임 정도 갱신이 지연되어 이전 상태(또는 완전히 빈 화면)가 캡처되는 현상**이었다. 매우 큰 마젠타색 300px 사각형으로 교체한 뒤 다른 `eval` 호출을 하나 더 거치고 나서야 캡처에 반영되는 것을 확인했다.
+- 이전 세션의 "카메라 스택 캡처 타이밍 문제"와 동일한 패턴. **`eval`로 UI/렌더링 상태를 바꾼 직후 곧바로 `capture_game_view`를 호출하지 말고, 최소 한 번의 다른 호출(로그 확인 등)을 사이에 끼워 넣거나 캡처를 2회 연속 호출해서 두 번째 결과를 신뢰할 것.**
+- 최종적으로는 밝은 빨간색 40px 정사각형으로 교체해 화면 정중앙(조준 레이캐스트가 나가는 지점, 총구/가로등 기둥이 겹치는 지점)에 정확히 위치함을 시각적으로 확인했고, 원래 설정(`Cross128`, 흰색, 32px)으로 되돌린 뒤 최종 상태를 `eval`로 재확인(코드 레벨) 완료.
+
+### 알아둘 점
+
+- 기본 `Cross128` 흰색 크로스헤어는 얇은 선이라 밝은 하늘 배경이나 화염 이펙트가 많은 장면에서는 육안으로 잘 안 보일 수 있음. 필요하면 `Assets/TooManyCrosshairs`의 다른 스타일(도트 포함형인 `BaseDot` 계열, 더 두꺼운 `CrossStripedThick128` 등)이나 색상/외곽선 추가를 검토할 것.
+- 크로스헤어는 정적 이미지이며 반동에 따라 벌어지거나 재장전 시 별도 애니메이션은 없음 (요청 범위 밖이라 구현 안 함).
+
+### 씬에 저장된 변경 사항
+
+- `HUD Canvas/Crosshair`(신규): `RawImage`(texture=`Cross128`, color=흰색), `RectTransform`(앵커 중앙, `sizeDelta (32, 32)`).

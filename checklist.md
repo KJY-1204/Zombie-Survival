@@ -41,6 +41,7 @@
 - [x] "1인칭에서 캐릭터가 사라진다" 버그 진단/수정 - 실제 원인은 (1) 그래스톤 프리팹 1개가 3배 스케일로 스폰 코앞에 배치됨 (2) 1인칭 팔이 전용 FPS_HANDS 뷰모델 대신 3인칭용 팔이 배선되어 카메라 근평면에 클리핑됨 (3) FirstPersonWeaponMount Z가 음수라 총도 근평면에 클리핑됨. `CameraRigController`가 FPS_HANDS를 무기와 동일한 전용 레이어로 옮기도록 수정 (자세한 내용은 context-notes.md)
 - [x] `capture_game_view` 캡처 파라미터 정정 - `source: "camera"`(기본값)는 카메라 스택 합성을 반영하지 않음, 반드시 `source: "screen"` + Play 모드로 검증 (context-notes.md 참고)
 - [x] `Gun.Shot()`이 총구 방향 대신 화면 중앙(조준점) 기준으로 레이캐스트하도록 수정 - 1인칭에서 총구 위치가 카메라 중심에서 벗어나 있어 총구 기준 발사 시 조준점과 실제 탄착점이 어긋나던 문제 해결
+- [x] 화면 중앙 크로스헤어 UI 추가 (`Too Many Crosshairs` 에셋의 `Cross128` 스프라이트, `HUD Canvas/Crosshair`) - `Gun.Shot()`이 실제로 조준하는 지점과 시각적으로 일치
 
 ## M2. 전투 수직 슬라이스
 
