@@ -220,7 +220,7 @@ Transform:
   m_GameObject: {fileID: 195727374}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.78, z: 0.15}
+  m_LocalPosition: {x: 0, y: 2.2, z: -1.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1126,7 +1126,7 @@ PrefabInstance:
     - target: {fileID: 2333246137245916022, guid: bae3b6da9f558a04994badd5424cbd6f,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2333246137382995467, guid: bae3b6da9f558a04994badd5424cbd6f,
         type: 3}
@@ -1246,7 +1246,7 @@ Transform:
   m_GameObject: {fileID: 1761076141}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.78, z: 0.15}
+  m_LocalPosition: {x: 0, y: 2.2, z: -1.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1348,9 +1348,6 @@ MonoBehaviour:
   firstPersonLook: {fileID: 195727377}
   bodyRoot: {fileID: 1577739450}
   firstPersonHands: {fileID: 1708314357}
-  firstPersonVisiblePartNames:
-  - SK_Miliary_FPS_Arms_Gloves1
-  - SK_Miliary_Military_FPS_Shirt3
   weaponViewModelTarget: {fileID: 947030383}
   firstPersonWeaponLayer: FirstPersonWeapon
 --- !u!1 &1903410676

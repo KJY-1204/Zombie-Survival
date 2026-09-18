@@ -23,6 +23,8 @@ public class Gun : MonoBehaviour {
 
     private Camera aimCamera; // 조준점(화면 중앙) 기준을 계산할 카메라
 
+    private Transform ownerRoot; // 자기 자신(총을 든 사람)의 콜라이더를 조준 레이에서 제외하기 위한 루트 트랜스폼
+
     public GunData gunData; // 총의 현재 데이터
     
     private float fireDistance = 50f; // 사정거리
@@ -56,6 +58,11 @@ public class Gun : MonoBehaviour {
         lastFireTime = 0;
     }
 
+    // 조준 레이가 자기 자신의 콜라이더를 맞추지 않도록 소유자(총을 든 사람)의 루트를 등록
+    public void SetOwner(Transform owner) {
+        ownerRoot = owner;
+    }
+
     // 발사 시도
     public void Fire() {
         // 현재 상태가 발사 가능한 상태
@@ -71,8 +78,6 @@ public class Gun : MonoBehaviour {
 
     // 실제 발사 처리
     private void Shot() {
-        // 레이캐스트에 의한 충돌 정보를 저장하는 컨테이너
-        RaycastHit hit;
         // 총알이 맞은 곳을 저장할 변수
         Vector3 hitPosition = Vector3.zero;
 
@@ -80,8 +85,9 @@ public class Gun : MonoBehaviour {
         // 총구 위치/각도와 무관하게 실제로 조준한 지점이 맞도록 한다
         Ray aimRay = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
 
-        // 레이캐스트(조준 레이, 충돌 정보 컨테이너, 사정거리)
-        if (Physics.Raycast(aimRay, out hit, fireDistance))
+        // 자기 자신(총을 든 사람)의 콜라이더는 제외하고 가장 가까운 충돌을 찾는다
+        // (카메라가 캐릭터 몸 뒤쪽에 있어서 조준 레이가 자기 몸을 먼저 통과하는 경우를 방지)
+        if (TryGetClosestHit(aimRay, out RaycastHit hit))
         {
             // 레이가 어떤 물체와 충돌한 경우
 
@@ -116,6 +122,33 @@ public class Gun : MonoBehaviour {
             // 탄창에 남은 탄약이 없다면, 총의 현재 상태를 Empty으로 갱신
             state = State.Empty;
         }
+    }
+
+    // 레이 경로에서 자기 자신의 콜라이더를 제외하고 가장 가까운 충돌을 찾는다
+    private bool TryGetClosestHit(Ray ray, out RaycastHit closestHit) {
+        RaycastHit[] hits = Physics.RaycastAll(ray, fireDistance);
+
+        closestHit = default;
+        float closestDistance = float.MaxValue;
+        bool found = false;
+
+        foreach (var hit in hits)
+        {
+            if (ownerRoot != null && hit.transform.IsChildOf(ownerRoot))
+            {
+                // 자기 자신(총을 든 사람)의 콜라이더는 무시
+                continue;
+            }
+
+            if (hit.distance < closestDistance)
+            {
+                closestDistance = hit.distance;
+                closestHit = hit;
+                found = true;
+            }
+        }
+
+        return found;
     }
 
     // 발사 이펙트와 소리를 재생하고 총알 궤적을 그린다

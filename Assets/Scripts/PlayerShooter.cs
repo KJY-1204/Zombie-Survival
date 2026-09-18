@@ -18,6 +18,9 @@ public class PlayerShooter : MonoBehaviour {
         // 사용할 컴포넌트들을 가져오기
         playerInput = GetComponent<PlayerInput>();
         playerAnimator = GetComponent<Animator>();
+
+        // 총이 자기 자신(플레이어)의 콜라이더를 조준 레이에서 제외할 수 있도록 소유자 등록
+        gun.SetOwner(transform);
     }
 
     private void OnEnable() {

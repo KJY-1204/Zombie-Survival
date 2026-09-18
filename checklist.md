@@ -44,6 +44,8 @@
 - [x] 화면 중앙 크로스헤어 UI 추가 (`Too Many Crosshairs` 에셋의 `Cross128` 스프라이트, `HUD Canvas/Crosshair`) - `Gun.Shot()`이 실제로 조준하는 지점과 시각적으로 일치
 - [x] 점프 모션/기능 추가 - `ShooterAnimator.controller`에 `Jump`(Trigger)/`IsGrounded`(Bool) 파라미터와 `JumpStart`->`InAir`->`Movement` 상태/전환 추가 (Survivalist StarterAssets의 `Jump--Jump`/`Jump--InAir` 클립 재사용), `PlayerMovement`에 바닥 검사 + 점프 물리 구현. 기존 무기(Aim/Reload)/이동(Walk/Run) 모션은 이전 세션에서 이미 구현되어 있었음을 재확인
 - [ ] **사람 확인 필요**: 실제 스페이스바 입력으로 점프 감도/타이밍이 자연스러운지, 착지 시 애니메이션 전환이 어색하지 않은지 육안 확인 (자동화로는 리플렉션으로 `Jump()`를 직접 호출해 물리/애니메이터 상태 전환만 검증함)
+- [x] 몸이 안 보이는(전신 숨김) 1인칭 방식을 폐기하고 몸 전체가 보이는 근접 3인칭(어깨너머) 시점으로 전환 - `CameraRigController`가 더 이상 몸통 렌더러를 숨기지 않음, `PlayerShooter.useFirstPersonMount=false`로 전환해 팔꿈치 IK 기반 자연스러운 파지 자세 사용, `FirstPerson Cam` 위치를 캐릭터 뒤 위쪽으로 이동해 카메라가 몸 메시 안에 끼는 문제 해결
+- [x] **버그 수정**: 카메라가 캐릭터 몸 뒤로 이동하면서 조준 레이(화면 중앙 기준)가 자기 자신의 콜라이더를 먼저 맞춰 총 쏘면 플레이어가 죽던 문제 - `Gun`에 `SetOwner()`로 소유자 루트를 등록하고 레이캐스트에서 자기 자신의 콜라이더를 제외하도록 수정
 
 ## M2. 전투 수직 슬라이스
 
