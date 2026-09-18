@@ -51,3 +51,7 @@
 - `Assets/Kevin Iglesias/IKHelperTool`에는 `KevinIglesias.IKHelperTool`과 소총 예제 프리팹·애니메이션이 있다. 문서의 의도는 물체를 제어하는 손은 애니메이션으로 유지하고 반대 손만 IK 효과기로 보정하는 것이다.
 - 현재 오른손은 동적으로 총기 피벗을 제어한다. 따라서 기존 직접 `SetIK` 왼손 로직은 제거하고, 총기 왼손 손잡이를 따르는 효과기와 가중치 1의 IK Switch를 IK Helper Tool에 연결한다.
 - `IK Left Hand Effector`는 총기의 `Left Handle` 자식으로 만들어 총기와 함께 움직이며, `IK Switch`는 실제 메시 Animator의 자식으로 로컬 Y값 `1`을 사용해 IK Helper Tool 가중치를 1로 만든다. Play Mode에서 왼손과 효과기 거리는 약 1.8cm, 오른손과 오른손 그립 거리는 약 0이었다.
+
+## 2026-09-18 - Claude 인수인계
+
+- `CLAUDE_HANDOFF.md`에 기준 커밋, 보존할 사용자 변경, 실제 Survivalist Animator 계층, IK Helper Tool 연결, 허리춤 힙 파이어 원인, 소총 자세 애니메이션을 적용하는 권장 순서와 검증 명령을 정리했다.
