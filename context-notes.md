@@ -144,3 +144,30 @@
 - **왼손 그립의 잔여 오차**: 오른손은 항상 0.00000으로 정확히 맞지만, 왼손은 무기별로 약간의 잔여 오차가 남을 수 있다(Sniper 기준 약 2.4cm). 이는 버그가 아니라 "Weapon Hold Arms" 팔 포즈 애니메이션이 실제로 도달 가능한 범위와 내가 지정한 `Left Handle` 좌표가 무기마다 완벽히 일치하지는 않기 때문이며(오른손과 달리 왼손은 `IK Helper Tool`이 자유롭게 끌어당기는 보조 IK라 한계가 있음), 총의 조준 방향(오른손 기준)에는 영향이 없다. 무기별 정밀한 손 위치 캘리브레이션은 필요하면 나중에 폴리싱 단계에서 다룬다.
 - Play Mode에서 Pistol(기본)/Sniper/Assault Rifle 세 가지 모두 `EquipWeapon()`으로 전환해 오른손 그립 거리 0.00000, 총구 이펙트-Fire Position 거리 0.00000, `gunPivot`이 캐릭터 정면을 향함(Scene View 스크린샷으로 어깨총 자세 확인)을 검증했다. `recompile_status`/`console_status` 모두 새 오류 없음.
 - **문서-코드 불일치 발견(미해결로 기록만)**: `GAME_DESIGN.md` §5.1은 "최종 카메라는 1인칭으로 결정되었다"고 적혀 있지만, 이는 훨씬 이전 커밋(`7b001f0`)의 결정이고 그 이후 여러 세션에 걸쳐 실제로는 3인칭(Survivalist Visual + `ThirdPersonCameraController`)으로 되돌아가 지금까지 계속 검증/확장돼 왔다(현재 씬의 `Main Camera`도 `ThirdPersonCameraController`를 사용 중). 문서가 갱신되지 않은 것으로 보이며, 이번 세션에서는 무기 교체 작업과 무관해 문서를 고치지 않고 이 노트에만 남긴다 - 다음에 카메라 방향이 다시 논의될 때 확인 필요.
+
+## 2026-09-20 - 다른 PC 인계 동기화와 에셋 검증
+
+- 사용자가 "다른 컴에서 하던걸 이어서 하게 깃허브에서 clone하자"라고 요청했으나, 실제로 확인해보니 `E:\Unity\Zombie`가 이미 같은 원격(`KJY-1204/Zombie-Survival`)에 연결된 깨끗한 저장소였고 34커밋만 뒤처진 상태였다. clone하면 gitignore 대상인 `Library/` 캐시를 처음부터 다시 임포트해야 하고 프로젝트가 중복되므로, `git pull --ff-only`로 `88b5ee6` -> `e2570a1`까지 fast-forward만 했다. 앞으로도 "clone" 요청이 와도 기존 저장소가 같은 원격을 가리키고 깨끗하면 pull이 더 낫다.
+- `GAME_DESIGN.md` §15의 보유 에셋 19종을 실제 폴더와 1:1로 대조해 전부 존재함을 확인했다. 폴더명이 에셋 이름과 다른 것들이 많아 다음 매핑을 기록해 둔다(다음 세션에서 다시 추적하지 않도록).
+  - IK Helper Tool -> `Assets/Kevin Iglesias/IKHelperTool/`
+  - Human Soldier Animations FREE -> `Assets/Kevin Iglesias/Human Animations/` (2.0 FREE)
+  - War FX -> `Assets/JMO Assets/WarFX/`
+  - Stylized Character Female -> `Assets/Vefects/Stylized Female Character - Vexa/`
+  - Crusader Weapon -> `Assets/Crusader_Castle/` (`Crusader_Weapons.fbx` + 근접무기 48종 prefab)
+  - Grenade System Free Edition -> `Assets/Game Assets/Aegis77/Grenades testing/`
+  - Grenade M18 Smoke -> `Assets/3D Models/Props/Weapons/Grenades/M18/`
+  - Post Apocalyptic Motorcycle -> `Assets/RetroStyleGames/LastGuns/{Base,URP}/Bike_B/` (폴더명이 LastGuns라 헷갈림, `SK_RSG_Bike_B.fbx`가 리깅된 본체)
+  - Realistic Crate & Chest Bundle -> `Assets/Ditag Design/Mesh Pack/Chest 01/` (SM_Chest01~18)
+  - School Scene -> `Assets/TirgamesAssets/SchoolScene/`
+  - Post Apocalyptic World Pack -> `Assets/Apocalyptic_World/`
+- 이 에셋 폴더들은 전부 `.gitignore`에 등록돼 GitHub로 동기화되지 않는다(용량/라이선스). 즉 PC마다 로컬 설치 상태가 다를 수 있고, 실제로 그 차이가 아래 컴파일 에러의 원인이었다.
+- Chest / Bike_B / Survivalist 등 여러 에셋이 Built-in / URP / HDRP 변종 프리팹을 함께 담고 있다. 이 프로젝트는 URP이므로 URP 쪽만 써야 한다.
+- **컴파일 실패 발견과 해결**: pull 직후 `console_status`가 `compilationFailed: true`였다. 실제 에러는 `Assets\Survivalist\StarterAssets\Editor\StarterAssetsDeployMenu.cs(5,7): error CS0246: The type or namespace name 'Cinemachine' could not be found`였다. 원인 추적 결과:
+  - `ProjectSettings/ProjectSettings.asset:854`의 Standalone 정의에 `STARTER_ASSETS_PACKAGES_CHECKED`가 들어 있고(HEAD에도 커밋돼 있음), 이 심볼이 `#if` 블록을 켜서 `using Cinemachine;`을 활성화한다.
+  - 설치된 Cinemachine은 3.1.7이라 네임스페이스가 `Unity.Cinemachine`으로 바뀌었고 구버전 `Cinemachine`은 존재하지 않는다.
+  - 이 심볼은 `StarterAssets/Editor/PackageChecker/PackageChecker.cs:64`가 자동으로 다시 넣으므로, ProjectSettings에서 심볼만 지우는 방식은 되돌려져서 무의미하다(실제로 시도하지 않고 코드를 읽어 확인).
+  - `Assets/Survivalist/`가 gitignore 대상이라 다른 PC에서는 StarterAssets 폴더가 없거나 다르게 임포트돼 컴파일이 통과했던 것으로 보인다. 즉 이 에러는 이 PC의 로컬 에셋 설치 상태 때문이다.
+- **해결 방식(사용자 확인 후 결정)**: `Assets/Survivalist/StarterAssets` 폴더 전체를 삭제했다. 삭제 전에 StarterAssets의 스크립트/에셋 GUID 10개를 뽑아 `Assets/Scenes`, `Assets/Prefabs`, `Assets/ScriptableData`, `Assets/Animations`, `Assets/Materials`, `ProjectSettings`에서 역참조를 검색해 **참조 0건**임을 확인했다(프리팹은 스크립트를 이름이 아니라 GUID로 참조하므로 텍스트 grep만으로는 불충분하다 - 이 검증 방식을 다음에도 쓸 것). 우리 플레이어는 이미 StarterAssets 없이 처음부터 재구성된 `Player Character.prefab`이라 영향이 없다.
+  - 런타임 스크립트(`ThirdPersonController.cs`, `BasicRigidBodyPush.cs`)는 주석/변수명에만 Cinemachine이 등장하고 네임스페이스는 쓰지 않으므로, 문제 범위는 Editor 스크립트 2개뿐이었다. 그래도 폴더 전체를 삭제한 이유는 심볼을 다시 넣는 `PackageChecker`까지 함께 없애야 재발하지 않기 때문이다.
+  - 삭제는 gitignore 대상 폴더라 커밋에 나타나지 않는다. **다른 PC에서도 같은 에러가 나면 같은 조치를 반복해야 한다.**
+- 삭제 후 `recompile`(up_to_date), 콘솔 clear 후 `console_status`로 `compilationFailed: false`, `consoleErrors: 0`을 확인했다. 남은 경고 4건은 기존 것이고 이번 작업과 무관하다(`GrenadeSystem.cs` CS0108 은닉 경고 1건, `GameManager.cs` 2건 + `UIManager.cs` 1건의 `FindObjectOfType` CS0618 폐지 경고 - 요청 범위 밖이라 손대지 않았다).

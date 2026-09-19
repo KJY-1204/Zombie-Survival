@@ -124,3 +124,12 @@
 - [x] `Player Character.prefab`의 정적 `Gun` 자식을 제거하고 `weaponPrefabs`에 3종을 등록한다.
 - [x] Play Mode에서 Pistol/Sniper/Assault Rifle 각각으로 `EquipWeapon()`을 호출해 오른손 그립 거리, 총구 이펙트 정렬, gunPivot 방향을 검증한다.
 - [x] 검증된 변경을 로컬 커밋하고 원격 `main`에 push한다.
+
+## 2026-09-20 - 다른 PC 인계 동기화와 에셋 검증
+
+- [x] `origin/main`을 pull해 다른 PC의 작업을 이어받는다(clone 불필요 - 같은 원격의 깨끗한 저장소였음).
+- [x] `GAME_DESIGN.md` §15의 보유 에셋 19종이 실제 `Assets/` 아래에 전부 있는지 폴더 단위로 대조한다.
+- [x] Unity 컴파일 상태를 확인하고 실패 원인을 실제 콘솔 에러로 특정한다.
+- [x] StarterAssets의 Cinemachine 네임스페이스 컴파일 에러를 해소한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`으로 재검증한다.
+- [x] 검증된 문서 변경을 로컬 커밋하고 원격 `main`에 push한다.
