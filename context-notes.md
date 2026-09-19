@@ -186,3 +186,22 @@
   - `Assets/Scenes/FirstPersonTest.unity`
   - GUID 역참조를 검색한 결과 두 스크립트는 `Assets/Scenes/Main.unity`(교재 원본 씬)에서만 참조되고, 실제 작업 씬 `Prototype.unity`는 참조하지 않는다. 즉 지금 게임플레이에는 영향이 없다. 정리할지는 사용자 판단이 필요하다.
 - 문서만 변경했으므로 컴파일/Play Mode 검증 대상은 없다. 코드는 건드리지 않았다.
+
+## 2026-09-20 - M2 전투 수직 슬라이스 착수 (좀비 = Zombie 에셋 Zombie3)
+
+- 사용자가 "순서대로 진행"을 지시하고 좀비 모델을 구매 에셋 `Assets/Zombie`로 확정했다. 직전에 보고한 1순위(M2 전투 루프)를 그대로 진행한다.
+- **`Zombie` 에셋의 프리팹 3종이 서로 다른 구조라 선택이 중요했다.** 이름만 보고 `Zombie1`을 고르면 안 된다.
+  - `Zombie1`: SkinnedMeshRenderer **14개**(Z_Body/Z_BodyTop/Z_Head/Z_Hip/팔다리 개별). 절단(부위 분리)용 변종이다.
+  - `Zombie2`: 렌더러 2개(Z_Body 51본 + Z_Head), 높이 약 1.65m.
+  - `Zombie3`: 렌더러 **1개**(55본), 높이 약 1.84m.
+  - `Zombie.cs:48`이 `GetComponentInChildren<Renderer>()`로 **첫 번째 렌더러 하나만** 잡아서 `Setup()`에서 `zombieRenderer.material.color = zombieData.skinColor`로 종류별 색을 입힌다. 따라서 렌더러가 여러 개인 `Zombie1`/`Zombie2`는 색이 일부 부위에만 먹는다. 코드 수정 없이 의도대로 동작하는 건 `Zombie3` 하나뿐이어서 이걸로 확정했다.
+  - 세 프리팹 모두 `Zombie1Avatar`와 데모 `Zombie.controller`를 공유하고, 머티리얼 `Zombie.mat`은 이미 `Universal Render Pipeline/Lit`이다.
+  - 구조가 교재 `Zombie.prefab`과 동일하다(루트에 Animator, 그 아래 `Base HumanPelvis` 스켈레톤과 메시 렌더러가 형제). 그래서 플레이어 때처럼 비주얼을 자식으로 넣는 방식이 아니라 **에셋 프리팹을 루트로 삼고 로직 컴포넌트를 붙이는 방식**이 맞다. 플레이어는 루트에 비활성 더미 Animator를 두고 자식 Animator를 쓰지만, `Zombie.cs:43`은 `GetComponent<Animator>()`로 루트에서 가져오므로 그 패턴을 쓸 수 없다(아바타 본 경로도 Animator가 붙은 오브젝트 기준이라 루트에 있어야 맞는다).
+- 교재 `Models/Zombie.fbx`와 에셋 `Zombie1.FBX` 둘 다 `animationType: 3`(Humanoid)이라 리타게팅 자체는 양방향으로 가능하다. 그래도 에셋 전용 클립을 쓰기로 한 이유는 리타게팅 아티팩트가 없고, 교재 컨트롤러에는 **공격 애니메이션이 아예 없기** 때문이다(Move/Idle/Die 3상태뿐). M2 완료 조건에 "좀비가 공격한다"가 있어 `Z_Attack`이 필요하다.
+- 이동 클립은 반드시 `_InPlace` 변종(`Z_Run_InPlace`, `Z_Walk_InPlace`)을 써야 한다. `Z_Run`/`Z_Walk`는 루트 모션이 들어 있어 `NavMeshAgent`의 이동과 충돌한다.
+- **씬 조사에서 찾은 블로커 3개**(이게 이번 작업의 실제 핵심이다).
+  - `Prototype.unity` 루트가 5개(`Main Camera`/`Directional Light`/`Test Ground`/`Player Character`/`HUD Canvas`)뿐이고 전투 요소가 하나도 없다. 교재 씬 `Main.unity`에만 배치돼 있고 3인칭 씬으로 옮겨진 적이 없다.
+  - `NavMesh.CalculateTriangulation().vertices.Length == 0`이고 `Test Ground`의 static flags도 0이다. NavMesh가 없으면 `Zombie.cs:42`의 `NavMeshAgent`가 동작하지 않아 추적이 불가능하다. `Assets/Scenes/Main/NavMesh-Navigation.asset`은 교재 씬 것이라 쓸 수 없다.
+  - **`Player Character`의 레이어가 0(Default)인데 `Zombie.whatIsTarget`은 512 = 레이어 9(`Player`)다.** 즉 지금 좀비를 배치해도 `Physics.OverlapSphere(..., whatIsTarget)`에 플레이어가 안 걸려서 영원히 탐지하지 못한다. 프리팹을 재작성하면서 레이어 설정이 빠진 것으로 보인다.
+- `Test Ground`는 원점 기준 50x50(scale 5,1,5)이고 `Spawn Points.prefab`의 4개 지점은 ±14 범위라 그 안에 들어간다. 스폰 위치를 새로 만들 필요는 없다.
+- `GameManager.cs:52` `EndGame()`이 `isGameover = true`만 하고 끝난다. UI 삭제 때 `LoadScene` 호출부가 함께 사라져서 지금은 죽으면 `PlayerInput.cs:26`이 입력을 전부 막아 영구 정지한다. 재시작 입력은 `PlayerInput`의 게이팅 밖(=`GameManager` 쪽)에서 읽어야 한다. 사용자가 게임오버 UI를 의도적으로 삭제했으므로 UI는 다시 만들지 않고 키 입력만 붙인다.
