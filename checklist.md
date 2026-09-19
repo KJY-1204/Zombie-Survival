@@ -158,3 +158,16 @@
 - [x] Play Mode에서 탐지/추적/공격/사망/드랍/재시작 전체 루프를 검증한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
 - [x] 검증된 변경을 로컬 커밋하고 원격 `main`에 push한다.
+
+## 2026-09-20 - 캐릭터 파묻힘 회귀와 시체 공격 버그 수정
+
+- [x] 파묻힘 원인을 실제 측정으로 특정한다 (루트/콜라이더는 정상, 비주얼만 약 1.09 아래).
+- [x] `SurvivalistTPS.controller`의 Base Layer 모션 8개가 전부 NULL인 것을 확인한다.
+- [x] 깨진 GUID 7개가 내가 삭제한 StarterAssets 애니메이션 FBX임을 확인한다.
+- [x] Asset Store 캐시의 원본 패키지에서 해당 FBX 7개만 골라 원래 경로로 복구한다 (Editor 폴더는 복구하지 않아 Cinemachine 에러 재발을 막는다).
+- [x] 컨트롤러를 더티 처리해 런타임 데이터를 재빌드하고 Base Layer 가중치 0을 1로 정상화한다.
+- [x] Play Mode에서 발 높이와 이동 블렌드(Idle/Walk_N/Run_N)를 검증한다.
+- [x] `Zombie.cs`의 `OnTriggerStay`에 `!attackTarget.dead` 조건을 추가해 시체를 계속 때리지 않게 한다.
+- [x] Play Mode에서 사망 시 체력이 정확히 0에서 멈추고 좀비가 Idle로 돌아가는지 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 검증된 변경을 로컬 커밋하고 원격 `main`에 push한다.

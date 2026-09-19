@@ -167,8 +167,10 @@ public class Zombie : LivingEntity {
             LivingEntity attackTarget
                 = other.GetComponent<LivingEntity>();
 
-            // 상대방의 LivingEntity가 자신의 추적 대상이라면 공격 실행
-            if (attackTarget != null && attackTarget == targetEntity)
+            // 상대방의 LivingEntity가 살아있는 자신의 추적 대상이라면 공격 실행
+            // 이미 사망한 대상은 때리지 않는다
+            if (attackTarget != null && !attackTarget.dead
+                && attackTarget == targetEntity)
             {
                 // 최근 공격 시간을 갱신
                 lastAttackTime = Time.time;

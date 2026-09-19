@@ -224,3 +224,24 @@
   - 순수 플레이 세션(내가 개입하지 않음) 기준 `consoleErrors: 0`. 남은 경고 1건은 기존에 기록된 루트 더미 Animator 건이다.
   - 검증 중 잠깐 나타났던 `Coroutine couldn't be started ... 'Pistol Gun(Clone)' is inactive` 에러 2건은 내가 `eval`에서 비활성 상태의 총 오브젝트에 `gun.Fire()`를 직접 호출해서 생긴 테스트 아티팩트다. 정상 입력 경로에서는 재현되지 않는다.
 - **발견했지만 고치지 않은 기존 버그(사용자 판단 필요)**: 플레이어가 죽은 뒤에도 옆에 붙어 있던 좀비가 계속 `OnTriggerStay`로 공격한다(`hp=-300`까지 내려감). `Zombie.cs`의 `OnTriggerStay`가 `attackTarget != null && attackTarget == targetEntity`만 보고 `targetEntity.dead`를 확인하지 않기 때문이며, 이번 변경 이전부터 있던 로직이다. 다만 이번에 `SetTrigger("Attack")`을 붙이면서 "시체를 계속 때리는 공격 애니메이션"으로 눈에 보이게 됐다. 조건 하나만 추가하면 되지만 요청 범위 밖이라 기록만 한다.
+
+## 2026-09-20 - 캐릭터 파묻힘(내가 만든 회귀)과 시체 공격 버그 수정
+
+### 파묻힘은 내가 StarterAssets를 삭제해서 생긴 회귀였다
+
+- 증상: 에디트 모드에서는 정상(캡슐 바닥 y=0, 부츠 min.y=-0.04)인데 Play Mode에 들어가면 비주얼 메시만 약 1.09 아래로 내려간다. 루트 Transform과 콜라이더는 계속 y=0이라 물리/판정은 멀쩡하고 겉보기만 파묻힌다.
+- 진단: `Animator.GetCurrentAnimatorClipInfo(0).Length == 0`. 즉 `Base Layer`에서 재생 중인 클립이 하나도 없었다. 전신 포즈를 주는 레이어가 비어 있고 팔만 덮는 `Weapon Hold Arms`(Human Arms Mask) 오버라이드 레이어만 돌고 있어서, 힙이 아바타 기본 위치로 떨어진 것이다.
+- 근본 원인: `SurvivalistTPS.controller`의 Base Layer 모션 8개(`Idle Walk Run Blend` 자식 3개, `JumpLand` 자식 3개, `InAir`, `JumpStart`)가 전부 NULL이었다. 컨트롤러가 참조하는 GUID 8개 중 7개가 깨져 있었고, 확인해보니 전부 **이 세션에서 내가 지운 `Assets/Survivalist/StarterAssets/ThirdPersonController/Character/Animations/`의 FBX**였다.
+- **내 검증이 부족했던 지점**: 삭제 전에 GUID 역참조를 검사했지만, 수집한 GUID가 `*.cs.meta` / `*.inputactions.meta` / `*.asset.meta` 뿐이었다. **애니메이션 FBX의 .meta는 수집 대상에 넣지 않았다.** 앞으로 에셋 폴더를 지울 때는 확장자를 한정하지 말고 그 폴더 아래 **모든 .meta의 GUID**를 모아서 역참조를 검사해야 한다.
+- 복구 방법: `Assets/Survivalist/`는 gitignore 대상이라 git으로 되돌릴 수 없다. 대신 Asset Store 캐시(`C:\Users\<user>\AppData\Roaming\Unity\Asset Store-5.x\Slayver\3D ModelsCharacters\Survivalist character.unitypackage`)를 `tar -xzf`로 풀었다. unitypackage는 엔트리 폴더 이름이 곧 GUID라서, 깨진 GUID 7개에 해당하는 폴더에서 `asset`과 `asset.meta`만 원래 `pathname` 경로로 되돌렸다.
+  - **Editor 폴더는 일부러 복구하지 않았다.** 그래야 `StarterAssetsDeployMenu.cs`의 Cinemachine 컴파일 에러와 심볼을 다시 넣는 `PackageChecker`가 돌아오지 않는다. 현재 `Assets/Survivalist/StarterAssets` 아래에는 `ThirdPersonController/Character/Animations`만 있다.
+- **런타임 재빌드 함정**: FBX를 복구하고 `AssetDatabase.Refresh`/`ImportAsset(ForceUpdate)`까지 해서 에디터 쪽 `AnimatorController.layers[..].states[..].motion`은 정상 해석됐는데도, `RuntimeAnimatorController.animationClips`는 계속 1개(`HumanM@WeaponHold_Rifle01`)만 반환하고 Play Mode에서도 여전히 파묻혔다. 컨트롤러의 런타임 데이터가 캐시된 채 갱신되지 않은 것이다. `EditorUtility.SetDirty(ac)` + `SaveAssets()` + 재임포트로 컨트롤러 자체를 더티 처리하니 `animationClips=9`로 재빌드됐다. 외부에서 파일을 되돌린 뒤에는 그 파일을 참조하는 컨트롤러도 함께 더티 처리해야 한다.
+- 같이 정상화한 것: `Base Layer`의 `m_DefaultWeight`가 0이었다. 런타임에서 레이어 0은 항상 1로 취급되어 증상의 원인은 아니었지만 값 자체가 비정상이라 1로 고쳤다(이 수정이 컨트롤러를 더티 처리하는 역할도 했다).
+- 검증: 부츠 `min.y` -1.126 -> -0.060, 모자 `max.y` 1.885(키 약 1.89m), `LeftFoot worldY` -0.711 -> 0.135. `Speed`를 6으로 주면 `Run_N`이 가중치 1.00으로 재생된다. **즉 이 회귀는 파묻힘뿐 아니라 걷기/달리기 애니메이션 자체를 통째로 없앴던 것이고, 지금 함께 복구됐다.**
+
+### 시체를 계속 때리는 버그
+
+- `Zombie.cs`의 `OnTriggerStay`가 `attackTarget != null && attackTarget == targetEntity`만 확인하고 대상의 생사를 보지 않아서, 플레이어가 죽은 뒤에도 0.5초마다 계속 `OnDamage`를 호출했다(체력이 -300, -890까지 내려감). 조건에 `!attackTarget.dead`를 추가했다.
+- 이 로직 자체는 교재 시절부터 있던 것이지만, 이번에 `SetTrigger("Attack")`을 붙이면서 "시체를 영원히 때리는 공격 애니메이션"으로 눈에 보이게 됐다.
+- 검증: 사망 시 플레이어 체력이 정확히 0에서 멈추고(이전 -300), 붙어 있던 좀비(거리 0.41)도 `Attack`에 갇히지 않고 `Idle`로 돌아간다. 부수 효과로 `PlayerHealth.Die()`의 더미 Animator 경고도 반복되지 않고 1회만 난다.
+- 검증 결과 `compilationFailed: false`, `consoleErrors: 0`. 남은 경고 1건은 기존의 루트 더미 Animator 건이다.
