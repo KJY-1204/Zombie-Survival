@@ -13,7 +13,7 @@
 ### 카메라/이동
 - 3인칭 숄더뷰(`ThirdPersonCameraController`, `Main Camera`에 부착)를 사용 중이다. 우클릭(Fire2)으로 ADS 거리/FOV만 전환하며, 조준 자세 자체는 애니메이션으로 바꾸지 않는다(아래 "확정된 설계" 참고).
 - `PlayerMovement.cs`가 `Vertical`/`Horizontal` 입력을 로컬 forward/right로 합성해 스트레이프 이동을 처리한다.
-- **주의**: `GAME_DESIGN.md` §5.1은 "카메라는 1인칭으로 확정"이라고 적혀 있지만 이는 훨씬 이전(`7b001f0`) 커밋의 결정이고 그 이후 실제 코드는 3인칭으로 계속 검증되어 왔다. 문서가 갱신되지 않은 상태이니 카메라 방향을 다시 논의할 일이 있으면 이 불일치부터 사용자와 확인할 것.
+- 카메라는 2026-09-20에 사용자가 **3인칭으로 확정**했고 `GAME_DESIGN.md` §5.1/§5.2, `CLAUDE.md` §11.1, `AGENTS.md`도 여기에 맞춰 갱신했다. 1인칭은 더 이상 검토 대상이 아니다.
 
 ### 플레이어 캐릭터
 - 루트 `Player Character` 아래 `Survivalist Visual/Geometry/SK_Military_Survivalist`가 실제 렌더 모델이며, 이 자식의 `Animator`(`Assets/Animations/SurvivalistTPS.controller` 사용)만 활성화되어 있다. 루트 자체에는 컨트롤러 없는 **비활성 더미 Animator**가 있는데, 이는 `PlayerHealth`/`PlayerMovement`의 `GetComponent<Animator>()` 호출이 예외를 던지지 않게 하기 위함이다(지우지 말 것).
@@ -48,7 +48,7 @@
 
 1. **근접무기(멜리) 전투**: `Crusader Weapon`/`Free medieval weapons` 에셋 사용. 발사가 아닌 스윙/히트박스 기반의 완전히 다른 전투 방식이 필요하다(이번 세션에서 사용자가 총기류를 먼저 요청해 의도적으로 범위에서 제외함). `IDamageable`은 재사용 가능하지만 애니메이션/입력/판정은 새로 설계해야 한다.
 2. **루팅/인벤토리(M3)**: 상자 열기, 인벤토리 화면, 장비 화면에서 무기 장착/해제. 지금의 `weaponPrefabs` 배열은 하드코딩된 3종 고정 목록이라, 실제 인벤토리 시스템이 들어오면 "보유한 무기 목록"으로 대체해야 한다.
-3. `GAME_DESIGN.md` §5.1의 1인칭/3인칭 서술을 실제 코드 상태(3인칭)에 맞춰 갱신할지 사용자와 확인.
+3. (완료) `GAME_DESIGN.md` §5.1의 시점 서술을 3인칭 확정으로 갱신했다.
 
 ## 최근 커밋
 

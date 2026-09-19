@@ -171,3 +171,18 @@
   - 런타임 스크립트(`ThirdPersonController.cs`, `BasicRigidBodyPush.cs`)는 주석/변수명에만 Cinemachine이 등장하고 네임스페이스는 쓰지 않으므로, 문제 범위는 Editor 스크립트 2개뿐이었다. 그래도 폴더 전체를 삭제한 이유는 심볼을 다시 넣는 `PackageChecker`까지 함께 없애야 재발하지 않기 때문이다.
   - 삭제는 gitignore 대상 폴더라 커밋에 나타나지 않는다. **다른 PC에서도 같은 에러가 나면 같은 조치를 반복해야 한다.**
 - 삭제 후 `recompile`(up_to_date), 콘솔 clear 후 `console_status`로 `compilationFailed: false`, `consoleErrors: 0`을 확인했다. 남은 경고 4건은 기존 것이고 이번 작업과 무관하다(`GrenadeSystem.cs` CS0108 은닉 경고 1건, `GameManager.cs` 2건 + `UIManager.cs` 1건의 `FindObjectOfType` CS0618 폐지 경고 - 요청 범위 밖이라 손대지 않았다).
+
+## 2026-09-20 - 카메라 시점 3인칭 확정 문서 갱신
+
+- 직전 항목에서 보고한 문서-코드 불일치를 사용자가 "3인칭으로 확정할거야 문서갱신해"로 결론냈다. 즉 `GAME_DESIGN.md` §5.1의 "1인칭으로 결정"이 오류였고, 여러 세션에 걸쳐 실제로 구현/검증돼 온 3인칭이 정답이다. 이제 1인칭은 검토 대상이 아니다.
+- 갱신 범위를 먼저 grep으로 특정했다(`1인칭|3인칭|1P/3P|미확정|결정 전`). 시점 서술이 `GAME_DESIGN.md` 한 곳이 아니라 4개 문서에 흩어져 있었다. 한 곳만 고치면 방금 겪은 불일치가 그대로 재발하므로 전부 함께 고쳤다.
+  - `GAME_DESIGN.md`: 헤더 메타(`카메라:` 줄), §1 개요, §5.1 결정 상태, §5.2 기술 원칙, §15 에셋 메모 2건(Survivalist / Too Many Crosshairs), §16 PART 06 매핑표, §20 M1 완료 조건.
+  - `CLAUDE.md` §11.1, `AGENTS.md`(핵심 방향 + 구현 우선순위), `CLAUDE_HANDOFF.md`(불일치 경고 + 권장 다음 작업 3번).
+- §5.2는 교체 가능한 `FirstPerson`/`ThirdPerson` 전략 요구를 빼고 `ThirdPersonCameraController` 단일 구현으로 바꿨지만, "게임플레이 코어가 카메라 타입을 직접 참조하지 않는다"는 분리 원칙은 유지했다(`CLAUDE.md` §11.6의 경계 규칙과 일치). 시점이 고정됐다고 결합을 허용하면 안 된다.
+- §5.2에 "조준 시 전신 포즈를 애니메이션으로 바꾸지 않는다"를 기획서 레벨 원칙으로 올렸다. 지금까지 `CLAUDE_HANDOFF.md`에만 있던 확정 설계인데, 이게 3인칭 ADS 설계의 핵심 제약이라 기획서에 있어야 다음 세션이 다시 같은 버그(척추 각도 변화로 총이 처지는 문제)를 반복하지 않는다.
+- **1인칭 확정 제외로 죽은 코드가 된 것(사용자 확인 없이 삭제하지 않고 기록만 함)**:
+  - `Assets/Scripts/Camera/FirstPersonLook.cs`
+  - `Assets/Scripts/Camera/CameraRigController.cs` (1P/3P 전환 리그)
+  - `Assets/Scenes/FirstPersonTest.unity`
+  - GUID 역참조를 검색한 결과 두 스크립트는 `Assets/Scenes/Main.unity`(교재 원본 씬)에서만 참조되고, 실제 작업 씬 `Prototype.unity`는 참조하지 않는다. 즉 지금 게임플레이에는 영향이 없다. 정리할지는 사용자 판단이 필요하다.
+- 문서만 변경했으므로 컴파일/Play Mode 검증 대상은 없다. 코드는 건드리지 않았다.
