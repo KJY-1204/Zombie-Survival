@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement; // 게임 오버 후 씬 재시작
 
 // 점수와 게임 오버 여부를 관리하는 게임 매니저
 public class GameManager : MonoBehaviour {
@@ -45,6 +46,16 @@ public class GameManager : MonoBehaviour {
         {
             // 점수 추가
             score += newScore;
+        }
+    }
+
+    private void Update() {
+        // 게임 오버 상태에서는 PlayerInput이 모든 입력을 막으므로
+        // 재시작 입력만 여기서 직접 감지한다
+        if (isGameover && Input.GetKeyDown(KeyCode.R))
+        {
+            // 현재 씬을 다시 로드해 처음 상태로 되돌린다
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
     }
 

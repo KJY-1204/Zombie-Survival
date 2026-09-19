@@ -205,3 +205,22 @@
   - **`Player Character`의 레이어가 0(Default)인데 `Zombie.whatIsTarget`은 512 = 레이어 9(`Player`)다.** 즉 지금 좀비를 배치해도 `Physics.OverlapSphere(..., whatIsTarget)`에 플레이어가 안 걸려서 영원히 탐지하지 못한다. 프리팹을 재작성하면서 레이어 설정이 빠진 것으로 보인다.
 - `Test Ground`는 원점 기준 50x50(scale 5,1,5)이고 `Spawn Points.prefab`의 4개 지점은 ±14 범위라 그 안에 들어간다. 스폰 위치를 새로 만들 필요는 없다.
 - `GameManager.cs:52` `EndGame()`이 `isGameover = true`만 하고 끝난다. UI 삭제 때 `LoadScene` 호출부가 함께 사라져서 지금은 죽으면 `PlayerInput.cs:26`이 입력을 전부 막아 영구 정지한다. 재시작 입력은 `PlayerInput`의 게이팅 밖(=`GameManager` 쪽)에서 읽어야 한다. 사용자가 게임오버 UI를 의도적으로 삭제했으므로 UI는 다시 만들지 않고 키 입력만 붙인다.
+
+### M2 구현 결과 (2026-09-20)
+
+- **씬 배치**: 교재 `Main.unity`의 이름 규칙을 그대로 따라 `Game Manager` / `Spawn Points` / `Zombie Spawner` / `Item Spawner`를 `Prototype.unity`에 추가했다. `ItemSpawner.items`도 교재와 동일하게 AmmoPack/HealthPack/Coin 3종으로 맞췄다.
+- **NavMesh**: `Test Ground`에 `StaticEditorFlags.NavigationStatic`을 주고 레거시 `NavMeshBuilder` 베이크를 썼다(교재 `Main` 씬과 동일 방식, `Assets/Scenes/Prototype/NavMesh.asset` 생성). AI Navigation 패키지의 `NavMeshSurface` 방식도 가능했지만 프로젝트에 이미 있는 방식을 따랐다. 결과는 48.66 x 48.66, 정점 16개이고 스폰 지점 4개 모두 위에 올라간다.
+- **좀비 프리팹**: `Assets/Prefabs/Zombie Character.prefab`을 새로 만들었다. 교재 `Zombie.prefab`은 `Main.unity`가 참조하므로 건드리지 않고 그대로 뒀다(이름은 `Player Character.prefab` 규칙에 맞춤).
+  - `Zombie3.prefab`을 인스턴스화한 뒤 `PrefabUnpackMode.Completely`로 언팩해 자체 계층으로 만들고 루트에 로직 컴포넌트를 붙였다. 프리팹 배리언트를 쓰지 않은 이유는 교재 프리팹과 같은 자기완결 구조를 유지하기 위해서다.
+  - 콜라이더/NavMeshAgent 수치는 교재 `Zombie.prefab`에서 그대로 가져왔다(CapsuleCollider 솔리드 center(0,0.75,0) r0.2 h1.5, BoxCollider 트리거 center(0,1,0.25) size0.5, Agent r0.5 h2 speed3.5 accel8 angular120). 교재 좀비 키 1.79m와 Zombie3 1.84m가 거의 같아 그대로 맞는다.
+  - `applyRootMotion=false`로 뒀다. 루트 모션이 켜지면 `NavMeshAgent` 이동과 충돌한다.
+  - **주의**: `Zombie.cs:48`의 `GetComponentInChildren<Renderer>()`는 자식 순서에 의존한다. `BloodSprayEffect`를 마지막 자식으로 넣어야 본체 `SkinnedMeshRenderer`가 먼저 잡힌다(교재 프리팹도 같은 순서). 자식 순서를 바꾸면 `skinColor`가 파티클에 적용되는 버그가 생긴다.
+- **애니메이터**: `Assets/Animations/Zombie Character.controller`를 새로 만들었다. 파라미터 `HasTarget`(Bool) / `Attack`(Trigger) / `Die`(Trigger), 상태 Idle(Z_Idle) / Move(Z_Run_InPlace) / Attack(Z_Attack) / Die(Z_FallingForward).
+  - **`Z_Attack`은 에셋에서 `loopTime=true`로 들어와 있다.** 에셋 클립의 임포트 설정을 고치는 대신 Attack -> Idle/Move 전환에 `hasExitTime=true, exitTime=0.9`를 줘서 한 번만 재생되고 빠져나오게 했다. 서드파티 에셋을 수정하지 않는 쪽을 택했다.
+  - Die는 `AnyState -> Die`에 `canTransitionToSelf=false`로 걸었다. Attack은 Idle/Move에서만 들어가게 해서 사망 후 공격 상태로 되돌아가지 않게 했다.
+- **코드 변경 2줄**: `Zombie.cs`의 `OnTriggerStay` 공격 성공 지점에 `zombieAnimator.SetTrigger("Attack")` 추가, `GameManager.cs`에 `Update()`로 게임오버 상태에서 `R` 키 재시작(`SceneManager.LoadScene(buildIndex)`) 추가. 재시작 입력을 `GameManager`에 둔 이유는 `PlayerInput.cs:26`이 게임오버 상태에서 모든 입력을 차단하기 때문이다. `Prototype.unity`는 Build Settings 인덱스 2로 이미 등록돼 있어 `LoadScene`이 동작한다.
+- **플레이어 레이어 수정**: `Player Character.prefab`의 레이어가 0(Default)이었다. `Zombie.whatIsTarget`이 512(레이어 9 `Player`)라 이대로면 좀비가 영원히 플레이어를 못 찾는다. 프리팹 자산의 레이어를 9로 바꿨고 씬 인스턴스도 따라 갱신됐다.
+- **Play Mode 검증 결과**: 웨이브 1에 좀비 2마리 스폰 -> 탐지(HasTarget) -> NavMesh 추적(`isOnNavMesh=true`, `hasPath=true`) -> 접촉 시 Attack 상태 재생 + 플레이어 피해 -> 사망 시 Die 상태 + 콜라이더/Agent 비활성 + 스포너 목록에서 제거. `ZombieData`별 `skinColor`도 정상(Fast=빨강 dmg10 speed4, Default=흰색 dmg20 speed2). 총기 실사격으로 hp 100->82(Pistol 18 데미지), 혈흔 재생, 탄약 12->11 확인. `ItemSpawner`가 플레이어 0.81 거리 NavMesh 위에 AmmoPack 드랍. 씬 재로드 후 wave 리셋, 플레이어 부활, `gameover=false` 확인.
+  - 순수 플레이 세션(내가 개입하지 않음) 기준 `consoleErrors: 0`. 남은 경고 1건은 기존에 기록된 루트 더미 Animator 건이다.
+  - 검증 중 잠깐 나타났던 `Coroutine couldn't be started ... 'Pistol Gun(Clone)' is inactive` 에러 2건은 내가 `eval`에서 비활성 상태의 총 오브젝트에 `gun.Fire()`를 직접 호출해서 생긴 테스트 아티팩트다. 정상 입력 경로에서는 재현되지 않는다.
+- **발견했지만 고치지 않은 기존 버그(사용자 판단 필요)**: 플레이어가 죽은 뒤에도 옆에 붙어 있던 좀비가 계속 `OnTriggerStay`로 공격한다(`hp=-300`까지 내려감). `Zombie.cs`의 `OnTriggerStay`가 `attackTarget != null && attackTarget == targetEntity`만 보고 `targetEntity.dead`를 확인하지 않기 때문이며, 이번 변경 이전부터 있던 로직이다. 다만 이번에 `SetTrigger("Attack")`을 붙이면서 "시체를 계속 때리는 공격 애니메이션"으로 눈에 보이게 됐다. 조건 하나만 추가하면 되지만 요청 범위 밖이라 기록만 한다.

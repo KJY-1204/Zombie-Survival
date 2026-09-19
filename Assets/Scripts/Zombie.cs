@@ -173,6 +173,9 @@ public class Zombie : LivingEntity {
                 // 최근 공격 시간을 갱신
                 lastAttackTime = Time.time;
 
+                // 공격 애니메이션 재생
+                zombieAnimator.SetTrigger("Attack");
+
                 // 상대방의 피격 위치와 피격 방향을 근삿값으로 계산
                 Vector3 hitPoint
                     = other.ClosestPoint(transform.position);

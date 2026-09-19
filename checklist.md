@@ -148,13 +148,13 @@
 
 - [x] 좀비 모델(Zombie3)과 애니메이션 구성(에셋 클립 + 공격 포함)을 사용자에게 확인한다.
 - [x] `plan.md`에 목표/완료 조건/구현 순서/제외 범위를 기록한다.
-- [ ] `Player Character`의 레이어를 `Player`(9)로 변경한다 (현재 Default라 좀비가 탐지 못 함).
-- [ ] `Test Ground`에 Navigation Static을 설정하고 NavMesh를 베이크한다.
-- [ ] `Zombie3` 기반 좀비 프리팹을 만들고 NavMeshAgent/AudioSource/콜라이더/Zombie.cs/BloodSprayEffect를 구성한다.
-- [ ] 에셋 클립(`Z_Idle`/`Z_Run_InPlace`/`Z_Attack`/`Z_FallingForward`)으로 `HasTarget`/`Die`/`Attack` 애니메이터 컨트롤러를 만든다.
-- [ ] `Zombie.cs`의 `OnTriggerStay`에 `SetTrigger("Attack")`를 추가한다.
-- [ ] `GameManager`/`ZombieSpawner`/`ItemSpawner`/`Spawn Points`를 `Prototype` 씬에 배치하고 참조를 연결한다.
-- [ ] `GameManager`에 게임오버 상태에서의 씬 재시작 입력을 추가한다 (UI는 다시 만들지 않는다).
-- [ ] Play Mode에서 탐지/추적/공격/사망/드랍/재시작 전체 루프를 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] `Player Character`의 레이어를 `Player`(9)로 변경한다 (현재 Default라 좀비가 탐지 못 함).
+- [x] `Test Ground`에 Navigation Static을 설정하고 NavMesh를 베이크한다.
+- [x] `Zombie3` 기반 좀비 프리팹을 만들고 NavMeshAgent/AudioSource/콜라이더/Zombie.cs/BloodSprayEffect를 구성한다.
+- [x] 에셋 클립(`Z_Idle`/`Z_Run_InPlace`/`Z_Attack`/`Z_FallingForward`)으로 `HasTarget`/`Die`/`Attack` 애니메이터 컨트롤러를 만든다.
+- [x] `Zombie.cs`의 `OnTriggerStay`에 `SetTrigger("Attack")`를 추가한다.
+- [x] `GameManager`/`ZombieSpawner`/`ItemSpawner`/`Spawn Points`를 `Prototype` 씬에 배치하고 참조를 연결한다.
+- [x] `GameManager`에 게임오버 상태에서의 씬 재시작 입력을 추가한다 (UI는 다시 만들지 않는다).
+- [x] Play Mode에서 탐지/추적/공격/사망/드랍/재시작 전체 루프를 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
 - [ ] 검증된 변경을 로컬 커밋하고 원격 `main`에 push한다.
