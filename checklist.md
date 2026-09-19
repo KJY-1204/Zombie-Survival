@@ -157,4 +157,4 @@
 - [x] `GameManager`에 게임오버 상태에서의 씬 재시작 입력을 추가한다 (UI는 다시 만들지 않는다).
 - [x] Play Mode에서 탐지/추적/공격/사망/드랍/재시작 전체 루프를 검증한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 검증된 변경을 로컬 커밋하고 원격 `main`에 push한다.
+- [x] 검증된 변경을 로컬 커밋하고 원격 `main`에 push한다.
