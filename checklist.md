@@ -358,3 +358,54 @@
       MCP 파이프라인은 키 입력을 합성할 수 없다. 코드 경로(`Mount`/`Dismount`/`Refuel`/`Repair`)와 주행 리그는 전부 검증했고 남은 것은 입력 바인딩 자체뿐이다.
 - [ ] 실제 주행감 확인 (에셋 기본값 `motorForce=500`, `brakeForce=2000`, `maxSteeringAngle=45`, `maxLeanAngle=35`). 너무 빠르거나 느리면 알려주면 조정한다.
 - [ ] 라이더 자세 육안 확인 (다리가 약간 길게 내려오는 리타게팅 아티팩트가 거슬리는지).
+
+## 2026-09-20 - M6 시드 월드와 스트리밍
+
+### 착수 준비
+
+- [x] 씬 구성(새 `World.unity`), 청크/월드 크기(50m x 20x20), NavMesh 방식(`NavMeshSurface`), POI(School 추출)를 사용자에게 확인한다.
+- [x] 월드 에셋의 실제 치수와 연결 타입을 확인한다 (Grounds/Cross가 50.2m로 일치).
+- [x] `NavMeshSurface`/`NavMeshModifier` 사용 가능 여부를 확인한다.
+- [x] `School Scene`이 프리팹이 아니라 씬이라는 것을 확인한다.
+- [x] `plan.md`에 목표/결정/완료 조건/구현 순서/제외 범위를 기록한다.
+
+### 1단계. 결정론적 시드 생성기와 연결성 검증
+
+- [ ] `ChunkType` enum을 만든다 (도시/도로/산/초원/POI).
+- [ ] `WorldChunkData`(순수 데이터: 좌표/타입/회전/청크 시드)를 만든다.
+- [ ] `WorldGenerator`를 만든다 (`WorldSeed` + `GeneratorVersion` -> 결정론적 청크 맵).
+- [ ] 연결 규칙과 가중치로 청크 타입을 배치한다.
+- [ ] 시작 지점 기준 도로 연결성 검사를 만든다.
+- [ ] Play Mode에서 같은 시드 = 같은 맵, 다른 시드 = 다른 맵을 검증한다.
+- [ ] 연결성 검사가 통과하는지와 20x20 생성 시간을 측정한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 2단계. 청크 프리팹과 스트리밍, World.unity
+
+- [ ] 청크 타입별 프리팹을 만든다 (초원/도로/도시/산).
+- [ ] 도로 조각이 50m 격자에 맞도록 배치 오프셋/스케일을 보정한다.
+- [ ] `WorldStreamer`를 만든다 (플레이어 반경 기준 활성/비활성).
+- [ ] `World.unity`를 만들고 플레이어/HUD/매니저를 배치한다.
+- [ ] 빌드 설정에 `World.unity`를 등록한다.
+- [ ] Play Mode에서 이동에 따른 청크 활성/비활성과 활성 개수를 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 3단계. NavMeshSurface 전환
+
+- [ ] 청크 프리팹에 `NavMeshSurface`를 넣고 로드 시 베이크한다.
+- [ ] 건설물 프리팹 4종에 `NavMeshObstacle`(carve)을 추가한다.
+- [ ] Play Mode에서 좀비가 새 지형을 추적하는지 검증한다.
+- [ ] 벽을 세웠을 때 좀비 경로가 실제로 바뀌는지 검증한다 (M4에서 남긴 제약 해소).
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 4단계. 대형 POI (School)
+
+- [ ] `SchoolSceneAbandoned.unity`에서 학교 건물 계층을 확인한다.
+- [ ] 라이트맵/머티리얼 의존성을 확인하고 프리팹으로 추출한다.
+- [ ] POI 청크로 편입하고 시드에 따라 배치되게 한다.
+- [ ] Play Mode에서 POI 배치와 도로 연결을 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
