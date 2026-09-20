@@ -522,7 +522,7 @@
 - [x] 미리보기의 회색 배경을 테두리 채우기로 지우고 감마 보정으로 밝힌다.
 - [x] 생성한 스프라이트의 임포트 설정(Sprite, 투명 배경)을 확인한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 커밋하고 원격 `main`에 push한다. (64c44ff)
 
 ### 2단계. 통합 창과 탭
 
@@ -535,7 +535,7 @@
 - [x] 한 번에 한 화면만 열리는 규칙과 커서 잠금이 유지되는지 확인한다.
 - [x] `CLAUDE.md` §11.1과 `GAME_DESIGN.md` §10의 "화면 분리" 규칙을 갱신한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 커밋하고 원격 `main`에 push한다. (a6694db)
 
 ### 3단계. 팰월드풍 인벤토리 탭
 
@@ -544,7 +544,7 @@
 - [ ] 무게를 막대 그래프로 보여주고 과적이면 색이 바뀐다.
 - [ ] 선택 유지: 사용/버리기 후에도 목록이 튀지 않는지 확인한다.
 - [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 커밋하고 원격 `main`에 push한다. (27c9583)
 
 ### 4단계. 나머지 화면 통일
 
@@ -556,7 +556,7 @@
 - [x] 저장 슬롯 화면을 같은 테마로 바꾸고 요약 문구가 잘리지 않게 줄인다 (278px < 318px).
 - [x] Play Mode에서 장착/해제, 상자 넣기/꺼내기, 건설 선택을 검증한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 커밋하고 원격 `main`에 push한다. (6484d19)
 
 ### 5단계. HUD
 
@@ -568,4 +568,4 @@
 - [x] Play Mode에서 값이 실제로 바뀌는지 검증한다 (체력 72/100, 탄약 30/120, 연료 32/100 노랑, 내구 18/100 빨강).
 - [x] `Prototype.unity`도 같은 프리팽을 쓰므로 참조가 깨지지 않았는지 확인한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 커밋하고 원격 `main`에 push한다. (7b78149)
