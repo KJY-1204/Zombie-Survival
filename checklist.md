@@ -470,15 +470,17 @@
 - [x] Play Mode에서 시드 월드 탑승과 좀비 스폰을 검증한다 (탑승/하차 성공, 좀비 8/8 유지, 모두 NavMesh 위 25.7~43.6m).
 - [x] 플레이어가 멀리 이동하면 멀어진 좀비가 정리되는지 검증한다 (275m 이동 후 기존 8마리 제거, 새 고리에 재생성).
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 커밋하고 원격 `main`에 push한다. (95da256)
 
 ### 3단계. 저장 데이터 모델과 파일 입출력
 
-- [ ] `SaveRegistry`(id -> ItemData/BuildableData)를 만든다.
-- [ ] `SaveData` 계열 순수 데이터와 `SaveVersion`을 만든다.
-- [ ] `SaveSystem`을 만든다 (슬롯 파일 경로, 원자적 저장, 목록 조회, 삭제).
-- [ ] Play Mode에서 쓰기/읽기 왕복과 원자적 저장을 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] `SaveRegistry`(id -> ItemData/BuildableData)를 만든다 (아이템 13개/건설물 4개, 중복·빈 id 없음).
+- [x] `SaveData` 계열 순수 데이터와 `SaveVersion`을 만든다.
+- [x] `SaveSystem`을 만든다 (슬롯 파일 경로, 원자적 저장, 목록 조회, 삭제).
+- [x] 쓰기/읽기 왕복을 검증한다 (시드·플레이어·인벤토리·장비·건설물·보관상자·오토바이·채집/루팅 전부 일치).
+- [x] 저장 실패가 기존 저장을 손상시키지 않는지 검증한다 (읽기 전용 파일로 교체 실패 유도 → 반환 false, 원본 그대로, 임시 파일 잔류 없음).
+- [x] 10슬롯 목록과 수동/자동 구분, 삭제를 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
 - [ ] 커밋하고 원격 `main`에 push한다.
 
 ### 4단계. 수집과 복원
