@@ -4,7 +4,7 @@
 
 ## 시작 상태
 
-- 기준 커밋은 `e8cd084 건설물 철거와 저장 DTO 형태 확인`이며 `main`과 `origin/main`은 동기화되어 있다. 원격은 `https://github.com/KJY-1204/Zombie-Survival.git`이다.
+- 기준 커밋은 `693a879 오토바이 저장 데이터 표현과 주행 HUD 구현`이며 `main`과 `origin/main`은 동기화되어 있다. 원격은 `https://github.com/KJY-1204/Zombie-Survival.git`이다.
 - 사용자 소유의 미커밋 변경(있다면 되돌리거나 커밋하지 않는다): `ProjectSettings/ProjectSettings.asset`, `ProjectSettings/ShaderGraphSettings.asset`, `.vsconfig`.
 - 작업 씬은 `Assets/Scenes/Prototype.unity`(Build Settings 인덱스 2), 플레이어 프리팹은 `Assets/Prefabs/Player Character.prefab`, 좀비 프리팹은 `Assets/Prefabs/Zombie Character.prefab`이다.
 - 교재 씬 `Assets/Scenes/Main.unity`와 교재 `Assets/Prefabs/Zombie.prefab`은 참조 관계가 남아 있어 그대로 두었다. 건드리지 말 것.
@@ -16,7 +16,26 @@
 - M2 전투 수직 슬라이스 - 완료(2026-09-20).
 - M3 루팅과 캐릭터 관리 - 완료(2026-09-20). 무게제 인벤토리, 6슬롯 장비, 방어 계산, 인벤토리/장비/상태 화면, 상자 루팅까지 구현했다.
 - M4 파밍과 거점 MVP - 완료(2026-09-20). 자원 채집, 자유 배치 건설, 건설물 4종, 철거, 저장 DTO 표현까지 구현했다.
-- M5 오토바이 - 미착수.
+- M5 오토바이 - 완료(2026-09-20). 탑승/하차, 주행, 연료·내구도, 저장 DTO 표현, 주행 HUD까지 구현했다.
+- M6 시드 월드와 스트리밍 - 미착수.
+
+## M5에서 만든 것 (2026-09-20)
+
+- **오토바이 프리팹** `Assets/Prefabs/Motorcycle.prefab`. 에셋 `P_RSG_Bike_B_Dirty_URP`(Rigidbody + `Gadd420.BicycleVehicle` + WheelCollider 2 + 콜라이더 17 + CenterOfMass)를 언팩해 쓰고 `Seat`/`Exit Point`/`Motorcycle`을 붙였다.
+  - **서드파티 코드는 한 줄도 수정하지 않았다.** `Motorcycle.Awake`가 `BicycleVehicle`을 타입 이름으로 찾아 `enabled`만 토글한다. 프리팹의 `Input_Manager`는 꺼두고 `Input_Compat` 폴백(레거시 `Horizontal`/`Vertical` 축)을 쓰게 했다.
+  - 오토바이는 런타임에 움직이므로 `NavigationStatic`을 주지 않는다. NavMesh 재베이크도 필요 없다.
+- **`Motorcycle`**(차량) / **`RiderControl`**(플레이어)로 책임을 나눴다. 차량은 탑승 상태·연료·내구도의 소유자이고, 플레이어의 조작·물리·애니메이션·카메라 전환은 `RiderControl`이 한다.
+  - 탑승 시: `PlayerMovement`/`PlayerShooter`/`BuildPlacer` 비활성, `Rigidbody.isKinematic = true`, 콜라이더 끄기, `Seat`에 부착, `Mounted` 포즈, **`Weapon Hold Arms` 레이어 가중치 0**, 카메라 `target`만 오토바이로 교체.
+  - `PlayerInteractor`는 끄지 않는다(끄면 `E`로 못 내린다). 대신 타고 있는 동안 `currentTarget`을 차량으로 고정한다.
+- **연료/내구도**. 연료는 **입력이 아니라 실제 이동 거리**로 소모한다(`fuelPerMeter`). 둘 중 하나라도 0이면 `canDrive`가 거짓이 되어 `BicycleVehicle`이 꺼진다. 타는 것 자체는 막지 않고 안내가 `(연료 없음)`/`(고장)`으로 바뀐다.
+  - 주유 `R`(휘발유통 1개당 40), 수리 `F`(고철 5개당 30). 입력은 `PlayerInteractor`에 있고 `Motorcycle`은 `Refuel`/`Repair`만 공개한다.
+- **`MotorcycleSaveData`**(위치/회전Y/연료/내구/탑승 여부)와 `ToSaveData`/`LoadFromSaveData`/`ToJson`. M4의 `PlacedBuilding`과 같은 형태라 M7에서 한 파일로 묶기 쉽다. 복원은 `Mathf.Clamp`로 범위를 가둔다.
+- **`VehicleHudUI`** - 탑승 중 연료/내구도 표시, 고갈 시 경고.
+- **주의할 함정**
+  - **복합 콜라이더 물체의 충돌 콜백은 여러 번 들어온다.** 오토바이는 콜라이더가 17개라 한 번 부딪혀도 `OnCollisionEnter`가 여러 번 호출돼 내구도가 계산값의 두 배(45.6 vs 25)로 깎였다. `crashCooldown = 0.5초`로 막았다.
+  - **캐릭터 치수는 본이 아니라 메시 렌더러 bounds로 재라.** 이 프로젝트의 플레이어에는 Survivalist 본(`Hips`/`Left_Foot`)과 마네킹 본(`pelvis`/`foot_l`) 두 벌이 섞여 있고, 아바타가 `Hips`를 루트 근처(y≈0)에 매핑해서 "머리-엉덩이 거리" 같은 지표가 전혀 맞지 않는다. 부츠(`SK_Military_Boots3`)와 모자(`SK_Military_Cap1`)의 bounds를 쓸 것(키 약 1.89m).
+  - **물리로 계속 움직이는 대상의 왕복 테스트는 한 eval 안에서 끝내라.** 프레임이 지나면 위치도 연료도 실제로 변해서 스냅샷과 어긋난 것처럼 보인다.
+  - 라이더의 **다리가 약간 길게 내려온다.** Survivalist와 원본 마네킹의 비율 차이에서 오는 리타게팅 아티팩트다. 손·발 IK는 폴리싱 단계로 미뤘다.
 
 ## M4에서 만든 것 (2026-09-20)
 
@@ -116,7 +135,8 @@
 - **사용자 수동 확인 필요**: 마우스 우클릭 ADS 전환과 이동·사격의 육안 확인. MCP 파이프라인은 마우스 입력을 합성할 수 없어 자동 검증이 불가능하다. `checklist.md`에 미완료로 남아 있다.
 - **사용자 수동 확인 필요**: 키 바인딩 전체. 같은 이유로 키/마우스 입력을 합성할 수 없다. 코드 경로와 UI 버튼 클릭은 전부 검증했고 남은 것은 바인딩 자체뿐이다.
   - `I` 인벤토리 / `O` 장비 / `K` 상태 / `B` 건설 메뉴 / `T` 보관 상자 닫기
-  - `E` 상호작용(루팅 상자·보관 상자·문) / `X` 철거 / `1`·`2` 주무기·보조무기
+  - `E` 상호작용(루팅 상자·보관 상자·문·오토바이 타기/내리기) / `X` 철거 / `1`·`2` 주무기·보조무기
+  - `R` 오토바이 주유 / `F` 오토바이 수리 / `WASD` 주행
   - 건설 모드: 휠 회전 / 좌클릭 설치 / 우클릭·ESC 취소
 - **사용자 판단 필요**: 총으로 자원을 부수는 채집 방식의 조작감. 사용자가 이 방식을 택했지만 실제로 해보고 어색하면 `E` 즉시 채집으로 바꾸는 비용은 작다(`ResourceNode`의 진입점만 교체).
 - `FindObjectOfType` 폐지 경고 정리. 기능 영향 없음, 폴리싱 단계로 미뤘다.
@@ -125,22 +145,24 @@
 
 ## 권장 다음 작업
 
-**M5 오토바이.** 완료 조건은 탑승/하차/주행, 안정적인 카메라 전환, 저장 후 위치/상태 복원이다.
+**M6 시드 월드와 스트리밍.** 완료 조건은 같은 시드에서 같은 초기 맵, 여러 환경 청크와 대형 POI 1개 이상, 도로 연결성 검증, 플레이어 이동에 따른 청크 활성/비활성이다(`GAME_DESIGN.md` §20, 설계 기준은 §6과 `CLAUDE.md` §11.7).
 
 착수 전에 정할 것.
-- 에셋은 `Post Apocalyptic Motorcycle 3D Model Rigged Off Road`(모델)와 `MotoInteractionAnimsFREE`(탑승/주행 애니메이션)다. 실제 폴더와 리그 구조를 먼저 확인할 것 - 이름만 보고 API를 추정하지 말 것(`CLAUDE.md` §11.3).
-- 주행 물리 방식(`WheelCollider` vs 단순 Rigidbody 조작)을 사용자에게 확인할 것. 작업량과 조작감이 크게 갈린다.
-- `GAME_DESIGN.md` §21에 오토바이 연료/내구도 도입 여부가 미정으로 남아 있다.
-- 탑승 중에는 `PlayerInput`/`PlayerMovement`/`BuildPlacer`/`PlayerInteractor`를 모두 게이팅해야 한다. `UIManager.isScreenOpen`과 같은 방식을 쓸지, 별도 상태를 둘지 정할 것.
-- 카메라는 `ThirdPersonCameraController`가 플레이어를 따라가게 되어 있다. 오토바이를 타면 타깃을 바꾸는 방식이 가장 작은 수정이다(`CLAUDE.md` §11.6 "카메라 모드가 바뀌어도 코어는 바뀌지 않는다").
+- **지금 월드는 `Test Ground` 하나(50x50)뿐이다.** 청크 시스템을 넣으면 기존 씬 배치(자원 노드, 상자, 건설물, 오토바이)를 어떻게 다룰지 정해야 한다.
+- 청크 크기와 월드 크기가 `GAME_DESIGN.md` §21에 미정으로 남아 있다.
+- 쓸 수 있는 에셋은 `Apocalyptic_World`(건물/도로/지형/프롭)와 `School Scene`(대형 POI 후보)이다. 실제 폴더 구조를 먼저 확인할 것.
+- **NavMesh 처리를 반드시 같이 정해야 한다.** 지금은 레거시 `NavMeshBuilder`로 씬 전체를 한 번 굽는 방식이라 청크 스트리밍과 맞지 않는다. `NavMeshSurface`(AI Navigation 패키지) 기반 청크별 베이크로 갈지 결정할 것. 이 결정이 M4의 "건설물이 NavMesh에 반영되지 않는다" 제약도 같이 푼다.
 
-**M4에서 남겨둔 것 중 M7에 필요한 것**: 보관 상자의 내용물이 아직 `BaseBuildState.ToJson()`에 포함되지 않는다. `StorageContainer`의 `Inventory`를 `PlacedBuilding`에 붙이거나 별도 목록으로 저장해야 한다.
+**M7 저장을 위해 이미 준비된 것과 남은 것**
+- 준비됨: `BaseBuildState.ToJson()`(건설물), `Motorcycle.ToJson()`(오토바이). 둘 다 씬 참조 없는 순수 데이터다.
+- 남음: **보관 상자의 내용물**이 `BaseBuildState.ToJson()`에 없다. `StorageContainer`의 `Inventory`를 `PlacedBuilding`에 붙이거나 별도 목록으로 저장해야 한다.
+- 남음: 플레이어 인벤토리/장비, 자원 노드의 채집 상태, 오토바이 탑승 상태 복원 순서.
 
 ## 최근 커밋
 
-- `e8cd084 건설물 철거와 저장 DTO 형태 확인`
-- `f458c40 바리케이드/보관 상자/문 건설물과 상호작용 일반화`
-- `d1102cc 자유 배치 건설 시스템과 벽 건설물 구현`
-- `1165f2b 재료 아이템과 자원 채집 구현`
-- `8025311 M4 파밍/거점 계획과 체크리스트 작성`
-- `1668b58 인수인계 메모를 M3 완료 시점 기준으로 갱신`
+- `693a879 오토바이 저장 데이터 표현과 주행 HUD 구현`
+- `a828c1f 오토바이 연료와 내구도 구현`
+- `5811c90 오토바이 주행 검증과 체크리스트 반영`
+- `d9dbda8 오토바이 탑승과 하차 구현`
+- `4bbe2ad M5 오토바이 계획과 체크리스트 작성`
+- `7123749 인수인계 메모를 M4 완료 시점 기준으로 갱신`
