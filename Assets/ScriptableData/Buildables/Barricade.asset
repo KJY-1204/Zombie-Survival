@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c25c8af2268b644b82f080f5646f870, type: 3}
+  m_Name: Barricade
+  m_EditorClassIdentifier: Assembly-CSharp::BuildableData
+  buildableId: barricade
+  displayName: "\uBC14\uB9AC\uCF00\uC774\uB4DC"
+  description: "\uC880\uBE44\uC758 \uC811\uADFC\uC744 \uB2A6\uCD98\uB2E4."
+  prefab: {fileID: 4668674985401916907, guid: dd3557fab94f2e84a96e1bdc53d91a1c, type: 3}
+  costs:
+  - data: {fileID: 11400000, guid: eb6efa28caf752643b13830fd570afd8, type: 2}
+    count: 6
+  - data: {fileID: 11400000, guid: 129ce134630f12a4fae1132c5c88376f, type: 2}
+    count: 4
+  checkCenter: {x: 0, y: 0.6910256, z: -0.00000017881393}
+  checkSize: {x: 2.9510324, y: 1.1820512, z: 0.6582402}

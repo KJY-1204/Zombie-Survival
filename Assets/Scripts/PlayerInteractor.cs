@@ -5,16 +5,10 @@ public class PlayerInteractor : MonoBehaviour {
     public float interactRange = 2.5f; // 상호작용할 수 있는 거리
     public KeyCode interactKey = KeyCode.E; // 상호작용 키
 
-    public LootContainer currentTarget { get; private set; } // 지금 상호작용할 수 있는 대상
-
-    private Inventory inventory; // 내용물을 받을 인벤토리
-
-    private void Start() {
-        inventory = GetComponent<Inventory>();
-    }
+    public IInteractable currentTarget { get; private set; } // 지금 상호작용할 수 있는 대상
 
     private void Update() {
-        currentTarget = FindNearestContainer();
+        currentTarget = FindNearestInteractable();
 
         // 전체 화면이 열려 있거나 게임오버면 상호작용하지 않는다
         if (currentTarget == null
@@ -24,33 +18,35 @@ public class PlayerInteractor : MonoBehaviour {
             return;
         }
 
-        if (Input.GetKeyDown(interactKey))
+        if (Input.GetKeyDown(interactKey) && currentTarget.CanInteract(gameObject))
         {
-            currentTarget.Loot(inventory);
+            currentTarget.Interact(gameObject);
         }
     }
 
-    // 사정거리 안에서 가장 가까운 상자를 찾는다 (빈 상자도 대상에 포함해 안내를 띄운다)
-    private LootContainer FindNearestContainer() {
-        LootContainer nearest = null;
+    // 사정거리 안에서 가장 가까운 상호작용 대상을 찾는다
+    // 지금 다룰 수 없는 대상(빈 상자 등)도 포함해 안내를 띄운다
+    private IInteractable FindNearestInteractable() {
+        IInteractable nearest = null;
         float nearestDistance = float.MaxValue;
 
         foreach (Collider collider in
             Physics.OverlapSphere(transform.position, interactRange))
         {
-            LootContainer container = collider.GetComponentInParent<LootContainer>();
+            var interactable = collider.GetComponentInParent<IInteractable>();
 
-            if (container == null)
+            if (interactable == null)
             {
                 continue;
             }
 
-            float distance =
-                Vector3.Distance(transform.position, container.transform.position);
+            var behaviour = interactable as MonoBehaviour;
+            float distance = Vector3.Distance(
+                transform.position, behaviour.transform.position);
 
             if (distance < nearestDistance)
             {
-                nearest = container;
+                nearest = interactable;
                 nearestDistance = distance;
             }
         }

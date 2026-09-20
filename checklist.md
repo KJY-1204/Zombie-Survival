@@ -279,12 +279,12 @@
 
 ### 3단계. 나머지 건설물 3종
 
-- [ ] 바리케이드 `BuildableData`와 프리팹을 만든다.
-- [ ] 보관 상자를 만든다 (`StorageContainer` + 넣기/꺼내기 화면).
-- [ ] 문을 만든다 (`BuildableDoor` 열림/닫힘, `E` 상호작용, 닫힘 시 물리 차단).
-- [ ] Play Mode에서 각 건설물의 고유 동작을 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 바리케이드 `BuildableData`와 프리팹을 만든다.
+- [x] 보관 상자를 만든다 (`StorageContainer` + 넣기/꺼내기 화면).
+- [x] 문을 만든다 (`BuildableDoor` 열림/닫힘, `E` 상호작용, 닫힘 시 물리 차단).
+- [x] Play Mode에서 각 건설물의 고유 동작을 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
 
 ### 4단계. 철거와 저장 데이터 표현
 

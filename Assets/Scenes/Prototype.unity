@@ -1961,6 +1961,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseBuildState
   catalog:
   - {fileID: 11400000, guid: 47cd06cad32f6f34893f8693d0791f2d, type: 2}
+  - {fileID: 11400000, guid: 7f8c98f95f4afa7439e05eae44498323, type: 2}
+  - {fileID: 11400000, guid: 8e093f52af6e5d24daab1c2da89c1dcf, type: 2}
+  - {fileID: 11400000, guid: 280d37e6f981b694dbae04df2d6eddf3, type: 2}
 --- !u!4 &1824091039
 Transform:
   m_ObjectHideFlags: 0

@@ -14,7 +14,7 @@ public class InteractionPromptUI : MonoBehaviour {
 
     private void Update() {
         // 전체 화면이 열려 있는 동안에는 안내를 숨긴다
-        LootContainer target = interactor != null && !UIManager.isScreenOpen
+        IInteractable target = interactor != null && !UIManager.isScreenOpen
             ? interactor.currentTarget
             : null;
 
@@ -24,8 +24,9 @@ public class InteractionPromptUI : MonoBehaviour {
             return;
         }
 
-        promptText.text = target.isEmpty
-            ? $"{target.displayName} (비어 있음)"
-            : $"[{interactor.interactKey}] {target.displayName} 열기";
+        // 지금 다룰 수 있는 대상에만 키 안내를 붙인다
+        promptText.text = target.CanInteract(interactor.gameObject)
+            ? $"[{interactor.interactKey}] {target.GetInteractionLabel()}"
+            : target.GetInteractionLabel();
     }
 }

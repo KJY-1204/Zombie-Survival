@@ -207,14 +207,20 @@ public class BuildPlacer : MonoBehaviour {
         preview = Instantiate(selected.prefab);
         preview.name = selected.displayName + " Preview";
 
+        // 콜라이더도 지우지 않고 끈다
+        // Destroy는 프레임 끝에야 처리되므로, 그 프레임 동안 프리뷰가 자기 콜라이더에
+        // 막혀 설치 불가로 보이거나 조준 레이를 가로챌 수 있다
         foreach (Collider collider in preview.GetComponentsInChildren<Collider>(true))
         {
-            Destroy(collider);
+            collider.enabled = false;
         }
 
+        // 스크립트는 지우지 않고 끈다
+        // RequireComponent로 묶인 컴포넌트(예: StorageContainer -> Inventory)는
+        // 의존하는 쪽이 남아 있으면 제거가 거부되고 에러만 남는다
         foreach (MonoBehaviour behaviour in preview.GetComponentsInChildren<MonoBehaviour>(true))
         {
-            Destroy(behaviour);
+            behaviour.enabled = false;
         }
 
         if (previewMaterial == null)

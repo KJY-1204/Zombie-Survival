@@ -522,3 +522,52 @@
 - 회전: `previewRotationY=90`으로 설치하면 기록에 `rotY=90`이 남는다.
 - 재료가 남아 있으면 건설 모드를 유지해 연속 설치가 가능하다.
 - `compilationFailed: false`, `groundTruth.consoleErrors: 0`.
+
+### M4 3단계 구현 결과 (2026-09-20)
+
+#### 상호작용을 인터페이스로 일반화했다
+
+- M3에서 `PlayerInteractor`는 `LootContainer` 하나만 찾았다. 이제 대상이 루팅 상자 / 보관 상자 / 문 3종이라 `IInteractable`(`CanInteract` / `GetInteractionLabel` / `Interact`)을 만들고 셋 다 구현하게 했다.
+- 상호작용 키(`E`)는 인터페이스에 넣지 않았다. 키는 `PlayerInteractor`의 설정이고, `InteractionPromptUI`가 `CanInteract`가 참일 때만 `[E]`를 앞에 붙인다. 빈 상자처럼 지금 다룰 수 없는 대상은 키 없이 상태만 보여준다.
+- `GetComponentInParent<IInteractable>()`로 찾으므로 콜라이더가 자식에 있어도 된다. **자원 노드(`IDamageable`)와 규칙이 반대라는 점을 계속 기억할 것.**
+
+#### 보관 상자는 Inventory를 재사용한다
+
+- `StorageContainer`가 자기 내용물을 새로 관리하지 않고 **같은 오브젝트의 `Inventory` 컴포넌트**를 쓴다(`[RequireComponent]`). `Add`/`Remove`/`CountOf`/`onChanged`가 전부 그대로 필요했다. `maxWeight=500`으로 사실상 무게 제한을 걸지 않는다.
+- 보관 상자는 UI를 모른다. `Interact`가 `static event onOpenRequested`를 쏘고 `StorageUI`가 구독해서 연다. 상자가 UI를 직접 열면 §11.6이 깨진다.
+- `StorageUI`는 다른 화면과 달리 **토글 키로 열리지 않는다.** 상자에서만 열리고 `T` 키로는 닫기만 한다. `ScreenPanel.Update`를 오버라이드해 base를 호출하지 않는 방식으로 처리했다.
+- 아이템 이동은 한 번에 한 묶음씩 통째로 옮긴다. 개수 선택 UI는 M4 완료 조건에 없다.
+
+#### 문은 경첩을 돌린다
+
+- `Door Building` 프리팹은 루트 > `Hinge` > 문짝 메시 구조다. **콜라이더를 `Hinge`에 붙여서** 문이 열리면 콜라이더도 같이 돌아간다. 열릴 때 콜라이더를 끄는 방식이 아니라 실제로 비켜나는 방식이다.
+- 문짝 메시의 bounds가 `min=(-1.42, -1.02, -0.08)`로 원점 기준이 아니라, 경첩이 문짝 왼쪽 모서리·바닥에 오도록 문짝을 `(1.42, 1.02, 0.03)`만큼 밀어 붙였다.
+- 열림 상태는 `PlacedBuildingLink.record.isOpen`에 반영된다. `Start`에서 기록된 값을 읽어 복원하므로 M7 불러오기가 바로 붙는다.
+- **문틀이 없다.** 문짝만 있어서 옆으로 돌아갈 수 있다. 벽과 조합해서 쓰는 전제이고, 문틀 에셋을 찾거나 벽 사이에 끼우는 스냅은 M4 범위 밖이다.
+
+#### 잡은 버그 2개 (둘 다 프리뷰 생성에서 나왔다)
+
+**1. `Can't remove Inventory (Script) because StorageContainer (Script) depends on it`**
+- `CreatePreview`가 프리뷰의 MonoBehaviour를 전부 `Destroy`하는데, `StorageContainer`가 `[RequireComponent(typeof(Inventory))]`라 의존하는 쪽이 남아 있는 동안 `Inventory` 제거가 거부된다. 콘솔에 에러만 남고 컴포넌트는 그대로 살아 있었다.
+- 해결: 제거하지 않고 `enabled = false`로 끈다. 프리뷰는 동작만 멈추면 되지 컴포넌트를 지울 이유가 없었다.
+- **이 에러는 eval 결과로는 전혀 안 보였다.** 프리뷰도 정상으로 보이고 설치도 됐다. `console_status`의 `groundTruth.consoleErrors`가 1로 바뀐 것만이 단서였다. M3의 IKHelperTool 건과 같은 패턴이다.
+
+**2. 프리뷰가 자기 콜라이더에 막힐 수 있었다**
+- 콜라이더도 `Destroy`로 지웠는데 `Destroy`는 프레임 끝에야 처리된다. 그 프레임 동안 프리뷰의 콜라이더가 살아 있어 `IsBlocked`의 `OverlapBox`에 잡히거나 조준 레이를 가로챌 수 있다. 측정해보니 실제로 `켜진콜라이더=1`이었다.
+- 해결: 콜라이더도 `enabled = false`로 끈다. 즉시 반영되고 `OverlapBox`/`Raycast` 모두 꺼진 콜라이더를 무시한다.
+- 이번 세션에서 `Destroy`의 지연 때문에 문제가 생긴 게 **세 번째**다(인벤토리 줄 중복, 프리뷰 콜라이더, 그리고 UI 공통 `ClearRows`). 런타임에 무언가를 즉시 없앤 것처럼 취급하면 안 된다.
+
+#### 검증 결과
+
+- 건설물 4종을 서로 떨어진 자리에 설치: 벽/바리케이드/문/보관 상자 전부 성공, 재료가 정확히 차감(목재 100->61, 돌 50->45, 고철 50->40).
+- 문: `Interact`로 경첩이 0도 <-> 90도로 돌고 `record.isOpen`이 따라 바뀐다. 안내 문구도 "문 열기" <-> "문 닫기".
+- 문 차단: 닫힌 문을 가로지르는 레이가 `Hinge` 콜라이더에 막히고(True), 열면 같은 경로가 통과한다(맞은 것 없음).
+- 보관 상자: `E` 탐지 -> 화면 열림(제목 "보관 상자"), 돌 45개 넣기(내 무게 249->136.5kg), 꺼내기로 원복. 넣고 꺼낼 때 양쪽 목록이 같이 갱신된다.
+- 화면 배타: 인벤토리가 열린 상태에서 상자를 열면 인벤토리가 닫힌다.
+- 프리뷰 4종 전부 켜진 콜라이더 0, 켜진 스크립트 0. 설치된 실물은 전부 활성.
+- `compilationFailed: false`, `groundTruth.consoleErrors: 0`.
+
+#### 검증 중 착각한 것 (기록용)
+
+- 문 옆에서 상호작용 대상이 `LootContainer`로 잡혀 버그인 줄 알았는데, 문(6,0,3)을 M3에서 놓은 보급 상자(6,0,4) 바로 옆에 지어서 **상자가 실제로 더 가까웠다**(1.22m vs 1.70m). 탐지 로직은 정상이었다.
+- 문 차단 테스트에서 레이가 `Player Character`에 맞았다. 플레이어가 레이 경로에 서 있었던 것이고, 비켜서니 정상적으로 `Hinge`에 맞았다.
