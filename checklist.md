@@ -409,3 +409,16 @@
 - [ ] Play Mode에서 POI 배치와 도로 연결을 검증한다.
 - [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
 - [ ] 커밋하고 원격 `main`에 push한다.
+
+## 2026-09-20 - 좀비 탐지 방식 변경 (시야 + 청각)
+
+- [x] 기존 탐지(`OverlapSphere` 20m, 벽 무시, 즉시 추적)의 문제를 확인한다.
+- [x] `NoiseEvent`(정적 소리 전파 통로)를 만든다.
+- [x] `Gun.Fire`가 총소리를 `NoiseEvent`로 알리게 한다.
+- [x] `Zombie`를 시야 기반 발견(거리 + 시야각 + 시야 차단)으로 바꾼다.
+- [x] 소리를 들으면 그 지점으로 가서 조사하게 한다.
+- [x] 대상을 일정 시간 놓치면 추적을 포기하고 마지막 위치를 조사하게 한다.
+- [x] 조사 지점이 NavMesh 밖이면 갈 수 있는 자리로 보정한다.
+- [x] Play Mode에서 사거리 밖/등 뒤/정면/총소리/추적 포기/공격을 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.

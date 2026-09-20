@@ -26,7 +26,9 @@ public class Gun : MonoBehaviour {
     private Transform ownerRoot; // 자기 자신(총을 든 사람)의 콜라이더를 조준 레이에서 제외하기 위한 루트 트랜스폼
 
     public GunData gunData; // 총의 현재 데이터
-    
+
+    public float noiseRadius = 35f; // 총소리가 좀비에게 들리는 반경
+
     private float fireDistance = 50f; // 사정거리
 
     public int ammoRemain = 100; // 남은 전체 탄약
@@ -90,6 +92,9 @@ public class Gun : MonoBehaviour {
             lastFireTime = Time.time;
             // 실제 발사 처리 실행
             Shot();
+
+            // 총소리를 월드에 알린다. 근처 좀비가 그 지점으로 몰려온다
+            NoiseEvent.Emit(fireTransform.position, noiseRadius);
         }
     }
 

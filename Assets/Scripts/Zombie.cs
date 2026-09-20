@@ -6,8 +6,22 @@ using UnityEngine.AI; // AI, 내비게이션 시스템 관련 코드를 가져�
 public class Zombie : LivingEntity {
     public LayerMask whatIsTarget; // 추적 대상 레이어
 
+    [Header("시야")]
+    public float sightRange = 15f; // 눈으로 발견할 수 있는 거리
+    public float sightAngle = 110f; // 시야각(전체 각도)
+    public float loseSightTime = 4f; // 대상을 놓친 뒤 추적을 포기하기까지의 시간
+
+    [Header("청각")]
+    public float investigateStopDistance = 2f; // 소리 난 지점에 이 거리까지 가면 도착으로 본다
+    public float investigateGiveUpTime = 8f; // 소리를 쫓다가 포기하기까지의 시간
+
     private LivingEntity targetEntity; // 추적할 대상
     private NavMeshAgent navMeshAgent; // 경로계산 AI 에이전트
+
+    private bool isInvestigating; // 소리가 난 지점으로 가는 중인지
+    private Vector3 investigatePosition; // 소리가 난 지점
+    private float investigateUntil; // 이 시점이 지나면 조사를 포기한다
+    private float lastSeenTime = float.NegativeInfinity; // 대상을 마지막으로 본 시점
 
     public ParticleSystem hitEffect; // 피격시 재생할 파티클 효과
     public AudioClip deathSound; // 사망시 재생할 소리
@@ -66,9 +80,112 @@ public class Zombie : LivingEntity {
         StartCoroutine(UpdatePath());
     }
 
+    protected override void OnEnable() {
+        // LivingEntity의 상태 초기화(체력 복구, dead 해제)를 그대로 실행한다
+        base.OnEnable();
+        // 총소리 같은 큰 소리를 듣는다
+        NoiseEvent.onNoise += OnHearNoise;
+    }
+
+    private void OnDisable() {
+        NoiseEvent.onNoise -= OnHearNoise;
+    }
+
     private void Update() {
-        // 추적 대상의 존재 여부에 따라 다른 애니메이션을 재생
-        zombieAnimator.SetBool("HasTarget", hasTarget);
+        // 쫓아가는 대상이 있거나 소리를 쫓는 중이면 걷는 애니메이션을 재생
+        zombieAnimator.SetBool("HasTarget", hasTarget || isInvestigating);
+    }
+
+    // 소리가 들리면 그 지점으로 가본다 (이미 대상을 쫓는 중이면 무시)
+    private void OnHearNoise(Vector3 position, float radius) {
+        if (dead || hasTarget)
+        {
+            return;
+        }
+
+        if (Vector3.Distance(transform.position, position) > radius)
+        {
+            return;
+        }
+
+        StartInvestigating(position);
+    }
+
+    // 소리가 난 지점(또는 마지막으로 본 자리)으로 가도록 설정한다
+    // 그 지점이 NavMesh 밖이면 가장 가까운 갈 수 있는 자리로 바꿔 잡는다
+    private void StartInvestigating(Vector3 position) {
+        if (NavMesh.SamplePosition(position, out NavMeshHit hit, 8f, NavMesh.AllAreas))
+        {
+            investigatePosition = hit.position;
+        }
+        else
+        {
+            // 갈 수 없는 자리면 조사하지 않는다
+            isInvestigating = false;
+            return;
+        }
+
+        isInvestigating = true;
+        investigateUntil = Time.time + investigateGiveUpTime;
+    }
+
+    // 눈으로 볼 수 있는 대상을 찾는다
+    // 거리 + 시야각 + 시야 차단을 모두 확인하므로 벽 너머의 플레이어는 보지 못한다
+    private LivingEntity FindVisibleTarget() {
+        Collider[] colliders =
+            Physics.OverlapSphere(transform.position, sightRange, whatIsTarget);
+
+        foreach (Collider collider in colliders)
+        {
+            LivingEntity candidate = collider.GetComponent<LivingEntity>();
+
+            if (candidate == null || candidate.dead)
+            {
+                continue;
+            }
+
+            if (IsVisible(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    // 대상이 시야각 안에 있고 사이에 막히는 것이 없는지
+    private bool IsVisible(LivingEntity candidate) {
+        // 발끝이 아니라 가슴 높이를 기준으로 본다
+        Vector3 eye = transform.position + Vector3.up * 1.5f;
+        Vector3 targetPoint = candidate.transform.position + Vector3.up * 1.0f;
+        Vector3 toTarget = targetPoint - eye;
+
+        if (toTarget.magnitude > sightRange)
+        {
+            return false;
+        }
+
+        // 시야각 밖이면 보지 못한다
+        float angle = Vector3.Angle(transform.forward, new Vector3(toTarget.x, 0f, toTarget.z));
+
+        if (angle > sightAngle * 0.5f)
+        {
+            return false;
+        }
+
+        // 사이에 벽 같은 것이 있으면 보지 못한다
+        if (Physics.Raycast(eye, toTarget.normalized, out RaycastHit hit,
+            toTarget.magnitude, ~0, QueryTriggerInteraction.Ignore))
+        {
+            // 맞은 것이 대상 자신이 아니면 가려진 것이다
+            if (!hit.transform.IsChildOf(candidate.transform)
+                && hit.transform != candidate.transform)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     // 주기적으로 추적할 대상의 위치를 찾아 경로를 갱신
@@ -76,39 +193,50 @@ public class Zombie : LivingEntity {
         // 살아있는 동안 무한 루프
         while (!dead)
         {
+            // 눈에 보이는 대상이 있으면 그것을 쫓는다. 소리를 쫓던 중이어도 눈이 우선이다
+            LivingEntity visible = FindVisibleTarget();
+
+            if (visible != null)
+            {
+                targetEntity = visible;
+                lastSeenTime = Time.time;
+                isInvestigating = false;
+            }
+            else if (hasTarget && Time.time > lastSeenTime + loseSightTime)
+            {
+                // 한동안 못 보면 놓친 것으로 보고, 마지막으로 본 자리를 조사한다
+                StartInvestigating(targetEntity.transform.position);
+                targetEntity = null;
+            }
+
             if (hasTarget)
             {
-                // 추적 대상 존재 : 경로를 갱신하고 AI 이동을 계속 진행
+                // 쫓는 대상이 있으면 계속 따라간다 (잠깐 시야에서 사라져도 loseSightTime 동안은 쫓는다)
                 navMeshAgent.isStopped = false;
-                navMeshAgent.SetDestination(
-                    targetEntity.transform.position);
+                navMeshAgent.SetDestination(targetEntity.transform.position);
+            }
+            else if (isInvestigating)
+            {
+                // 소리가 난 지점으로 간다
+                bool arrived = Vector3.Distance(transform.position, investigatePosition)
+                    <= investigateStopDistance;
+
+                if (arrived || Time.time > investigateUntil)
+                {
+                    // 도착했거나 너무 오래 걸렸으면 포기하고 제자리에 선다
+                    isInvestigating = false;
+                    navMeshAgent.isStopped = true;
+                }
+                else
+                {
+                    navMeshAgent.isStopped = false;
+                    navMeshAgent.SetDestination(investigatePosition);
+                }
             }
             else
             {
-                // 추적 대상 없음 : AI 이동 중지
+                // 아무것도 못 보고 못 들었으면 제자리에서 기다린다
                 navMeshAgent.isStopped = true;
-
-                // 20 유닛의 반지름을 가진 가상의 구를 그렸을때, 구와 겹치는 모든 콜라이더를 가져옴
-                // 단, whatIsTarget 레이어를 가진 콜라이더만 가져오도록 필터링
-                Collider[] colliders =
-                    Physics.OverlapSphere(transform.position, 20f, whatIsTarget);
-
-                // 모든 콜라이더들을 순회하면서, 살아있는 LivingEntity 찾기
-                for (int i = 0; i < colliders.Length; i++)
-                {
-                    // 콜라이더로부터 LivingEntity 컴포넌트 가져오기
-                    LivingEntity livingEntity = colliders[i].GetComponent<LivingEntity>();
-
-                    // LivingEntity 컴포넌트가 존재하며, 해당 LivingEntity가 살아있다면,
-                    if (livingEntity != null && !livingEntity.dead)
-                    {
-                        // 추적 대상을 해당 LivingEntity로 설정
-                        targetEntity = livingEntity;
-
-                        // for문 루프 즉시 정지
-                        break;
-                    }
-                }
             }
 
             // 0.25초 주기로 처리 반복
