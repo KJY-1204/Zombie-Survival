@@ -4,12 +4,13 @@ using UnityEngine.UI;
 
 public class InteractionPromptUI : MonoBehaviour {
     public Text promptText; // 안내를 표시할 텍스트
+    public GameObject background; // 안내가 있을 때만 보일 배경 배지
 
     private PlayerInteractor interactor; // 대상을 알려주는 컴포넌트
 
     private void Start() {
-        interactor = FindObjectOfType<PlayerInteractor>();
-        promptText.text = string.Empty;
+        interactor = FindFirstObjectByType<PlayerInteractor>();
+        SetPrompt(string.Empty);
     }
 
     private void Update() {
@@ -20,7 +21,7 @@ public class InteractionPromptUI : MonoBehaviour {
 
         if (target == null)
         {
-            promptText.text = string.Empty;
+            SetPrompt(string.Empty);
             return;
         }
 
@@ -30,8 +31,18 @@ public class InteractionPromptUI : MonoBehaviour {
             : target.GetInteractionLabel();
 
         // 추가 조작이 있으면 아랫줄에 함께 보여준다
-        promptText.text = string.IsNullOrEmpty(interactor.serviceHint)
+        SetPrompt(string.IsNullOrEmpty(interactor.serviceHint)
             ? label
-            : label + "\n" + interactor.serviceHint;
+            : label + "\n" + interactor.serviceHint);
+    }
+
+    // 문구가 비어 있으면 배경까지 감춘다
+    private void SetPrompt(string value) {
+        promptText.text = value;
+
+        if (background != null)
+        {
+            background.SetActive(!string.IsNullOrEmpty(value));
+        }
     }
 }
