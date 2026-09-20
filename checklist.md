@@ -371,15 +371,15 @@
 
 ### 1단계. 결정론적 시드 생성기와 연결성 검증
 
-- [ ] `ChunkType` enum을 만든다 (도시/도로/산/초원/POI).
-- [ ] `WorldChunkData`(순수 데이터: 좌표/타입/회전/청크 시드)를 만든다.
-- [ ] `WorldGenerator`를 만든다 (`WorldSeed` + `GeneratorVersion` -> 결정론적 청크 맵).
-- [ ] 연결 규칙과 가중치로 청크 타입을 배치한다.
-- [ ] 시작 지점 기준 도로 연결성 검사를 만든다.
-- [ ] Play Mode에서 같은 시드 = 같은 맵, 다른 시드 = 다른 맵을 검증한다.
-- [ ] 연결성 검사가 통과하는지와 20x20 생성 시간을 측정한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] `ChunkType` enum을 만든다 (도시/도로/산/초원/POI).
+- [x] `WorldChunkData`(순수 데이터: 좌표/타입/회전/청크 시드)를 만든다.
+- [x] `WorldGenerator`를 만든다 (`WorldSeed` + `GeneratorVersion` -> 결정론적 청크 맵).
+- [x] 연결 규칙과 가중치로 청크 타입을 배치한다.
+- [x] 시작 지점 기준 도로 연결성 검사를 만든다.
+- [x] Play Mode에서 같은 시드 = 같은 맵, 다른 시드 = 다른 맵을 검증한다.
+- [x] 연결성 검사가 통과하는지와 20x20 생성 시간을 측정한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
 
 ### 2단계. 청크 프리팹과 스트리밍, World.unity
 
