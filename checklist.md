@@ -581,4 +581,4 @@
 - [x] LivingEntity.RestoreHealth가 최대 체력을 넘기지 않게 한다.
 - [x] 프로젝트 코드의 FindObjectOfType<T>() 호출 5개를 치환한다.
 - [x] Unity 재컴파일과 체력 상한을 검증한다.
-- [x] 커밋하고 원격 main에 push한다. (안정화 커밋 예정)
+- [x] 커밋하고 원격 main에 push한다. (7f9c5e3)
