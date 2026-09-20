@@ -383,14 +383,14 @@
 
 ### 2단계. 청크 프리팹과 스트리밍, World.unity
 
-- [ ] 청크 타입별 프리팹을 만든다 (초원/도로/도시/산).
-- [ ] 도로 조각이 50m 격자에 맞도록 배치 오프셋/스케일을 보정한다.
-- [ ] `WorldStreamer`를 만든다 (플레이어 반경 기준 활성/비활성).
-- [ ] `World.unity`를 만들고 플레이어/HUD/매니저를 배치한다.
-- [ ] 빌드 설정에 `World.unity`를 등록한다.
-- [ ] Play Mode에서 이동에 따른 청크 활성/비활성과 활성 개수를 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 청크 타입별 프리팹을 만든다 (초원/도로/도시/산).
+- [x] 도로 조각이 50m 격자에 맞도록 배치 오프셋/스케일을 보정한다 (하드코딩 대신 bounds 기반 자동 보정).
+- [x] `WorldStreamer`를 만든다 (플레이어 반경 기준 활성/비활성).
+- [x] `World.unity`를 만들고 플레이어/HUD/매니저를 배치한다.
+- [x] 빌드 설정에 `World.unity`를 등록한다.
+- [x] Play Mode에서 이동에 따른 청크 활성/비활성과 활성 개수를 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
 
 ### 3단계. NavMeshSurface 전환
 

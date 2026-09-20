@@ -23,6 +23,7 @@ public class ThirdPersonCameraController : MonoBehaviour {
 
     private Camera targetCamera;
     private float pitch = 12f;
+    private bool hasSnapped; // 첫 프레임에는 보간 없이 바로 제자리로 간다
 
     private void Awake() {
         targetCamera = GetComponent<Camera>();
@@ -64,10 +65,12 @@ public class ThirdPersonCameraController : MonoBehaviour {
         Vector3 pivot = target.position + Vector3.up * height;
         Vector3 desiredPosition = pivot + viewRotation * new Vector3(shoulderOffset, 0f, -distance);
 
-        transform.position = Vector3.Lerp(
-            transform.position,
-            desiredPosition,
-            transitionSpeed * Time.deltaTime);
+        // 시작 지점이 원점에서 멀면(시드 월드는 수백 m 떨어져 있다)
+        // 보간으로 따라가는 동안 몇 초간 엉뚱한 곳을 비춘다. 처음 한 번은 바로 붙인다
+        transform.position = hasSnapped
+            ? Vector3.Lerp(transform.position, desiredPosition, transitionSpeed * Time.deltaTime)
+            : desiredPosition;
+        hasSnapped = true;
         transform.rotation = viewRotation;
         targetCamera.fieldOfView = Mathf.Lerp(
             targetCamera.fieldOfView,
