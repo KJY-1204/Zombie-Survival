@@ -25,8 +25,13 @@ public class InteractionPromptUI : MonoBehaviour {
         }
 
         // 지금 다룰 수 있는 대상에만 키 안내를 붙인다
-        promptText.text = target.CanInteract(interactor.gameObject)
+        string label = target.CanInteract(interactor.gameObject)
             ? $"[{interactor.interactKey}] {target.GetInteractionLabel()}"
             : target.GetInteractionLabel();
+
+        // 추가 조작이 있으면 아랫줄에 함께 보여준다
+        promptText.text = string.IsNullOrEmpty(interactor.serviceHint)
+            ? label
+            : label + "\n" + interactor.serviceHint;
     }
 }

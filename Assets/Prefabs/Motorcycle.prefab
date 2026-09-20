@@ -873,6 +873,18 @@ MonoBehaviour:
   displayName: "\uC624\uD1A0\uBC14\uC774"
   seat: {fileID: 4754737015465833448}
   exitPoint: {fileID: 4935646081964111394}
+  maxFuel: 100
+  fuel: 100
+  fuelPerMeter: 0.06
+  fuelItem: {fileID: 11400000, guid: d0d12bbfad2b15d4b91b979da9c601a8, type: 2}
+  fuelPerCan: 40
+  maxDurability: 100
+  durability: 100
+  crashSpeedThreshold: 4
+  crashDamagePerSpeed: 2.5
+  repairItem: {fileID: 11400000, guid: 129ce134630f12a4fae1132c5c88376f, type: 2}
+  repairItemCount: 5
+  repairAmount: 30
 --- !u!1 &4040310661502566499
 GameObject:
   m_ObjectHideFlags: 0
