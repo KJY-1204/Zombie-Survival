@@ -9,7 +9,21 @@ public class SaveManager : MonoBehaviour {
     public SaveRegistry registry; // id -> 에셋 표
     public WorldStreamer streamer; // 월드 시드와 청크를 담당
 
+    [Header("자동저장")]
+    public float autoSaveInterval = 300f; // 이 주기마다 자동저장한다 (0 이하면 꺼진다)
+
     public float playTime { get; private set; } // 이번 세션까지 누적된 플레이 시간
+
+    // 마지막으로 저장하거나 불러온 슬롯. 자동저장은 이 슬롯의 자동 칸에만 쓴다
+    public int currentSlot { get; private set; }
+
+    public float timeUntilAutoSave => autoSaveInterval > 0f
+        ? Mathf.Max(0f, lastAutoSaveTime + autoSaveInterval - Time.time)
+        : -1f;
+
+    // 마지막 자동저장 시점을 기준으로 재산한다.
+    // 다음 시각을 미리 잡아두면 주기를 바꿔도 다음 번까지 반영되지 않는다
+    private float lastAutoSaveTime;
 
     private PlayerHealth player;
     private Inventory inventory;
@@ -36,10 +50,31 @@ public class SaveManager : MonoBehaviour {
 
     private void Update() {
         playTime += Time.deltaTime;
+
+        if (autoSaveInterval <= 0f || Time.time < lastAutoSaveTime + autoSaveInterval)
+        {
+            return;
+        }
+
+        lastAutoSaveTime = Time.time;
+
+        // 자동저장은 자동 칸에만 쓴다. 수동 저장은 절대 덮지 않는다
+        Save(currentSlot, true);
+    }
+
+    private void OnEnable() {
+        lastAutoSaveTime = Time.time;
     }
 
     public bool Save(int slot, bool auto) {
-        return SaveSystem.Write(slot, auto, Collect());
+        bool ok = SaveSystem.Write(slot, auto, Collect());
+
+        if (ok && !auto)
+        {
+            currentSlot = slot;
+        }
+
+        return ok;
     }
 
     public bool Load(int slot, bool auto) {
@@ -51,6 +86,8 @@ public class SaveManager : MonoBehaviour {
         }
 
         Apply(data);
+        currentSlot = slot;
+        lastAutoSaveTime = Time.time;
         return true;
     }
 
