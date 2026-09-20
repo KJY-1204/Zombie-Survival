@@ -12,12 +12,20 @@ public class PlayerShooter : MonoBehaviour {
     public Transform firstPersonWeaponMount; // 1인칭 모드에서 총을 배치할 기준점
     public bool useFirstPersonMount; // true면 팔꿈치 IK 힌트 대신 firstPersonWeaponMount 위치를 사용
 
-    public GameObject[] weaponPrefabs; // 장착 가능한 총 프리팹 목록(인덱스 0이 기본 장착 무기)
+    // 숫자키로 고를 수 있는 손에 드는 무기 슬롯 (1번=주무기, 2번=보조무기)
+    private static readonly EquipmentSlot[] selectableSlots = {
+        EquipmentSlot.PrimaryWeapon,
+        EquipmentSlot.SecondaryWeapon
+    };
+
+    public EquipmentSlot activeSlot { get; private set; } = EquipmentSlot.PrimaryWeapon; // 현재 손에 든 슬롯
 
     private GameObject currentWeaponInstance; // 현재 gunPivot 아래 생성되어 있는 총 인스턴스
+    private ItemData currentWeaponItem; // 현재 생성되어 있는 총의 아이템 정의
     private SurvivalistWeaponIK weaponIK; // 무기 교체 시 그립 보정을 다시 계산시킬 IK 컴포넌트
     private IKHelperTool ikHelperTool; // 왼손 IK 이펙터를 갱신할 IK Helper Tool 컴포넌트
 
+    private Equipment equipment; // 어떤 무기를 장착 중인지 알려주는 장비 컴포넌트
     private PlayerInput playerInput; // 플레이어의 입력
     private Animator playerAnimator; // 애니메이터 컴포넌트
 
@@ -25,11 +33,20 @@ public class PlayerShooter : MonoBehaviour {
         // 사용할 컴포넌트들을 가져오기
         playerInput = GetComponent<PlayerInput>();
         playerAnimator = GetComponent<Animator>();
+        equipment = GetComponent<Equipment>();
         weaponIK = GetComponentInChildren<SurvivalistWeaponIK>();
         ikHelperTool = GetComponentInChildren<IKHelperTool>();
 
-        // 기본 무기(인덱스 0)를 장착
-        EquipWeapon(0);
+        // 장비 슬롯이 바뀌면 손에 든 총도 따라 바뀐다
+        equipment.onChanged += RefreshWeapon;
+        RefreshWeapon();
+    }
+
+    private void OnDestroy() {
+        if (equipment != null)
+        {
+            equipment.onChanged -= RefreshWeapon;
+        }
     }
 
     private void OnEnable() {
@@ -49,10 +66,18 @@ public class PlayerShooter : MonoBehaviour {
     }
 
     private void Update() {
-        // 무기 교체 입력을 감지하고 처리
-        if (playerInput.selectWeaponIndex >= 0)
+        // 숫자키 입력을 손에 드는 무기 슬롯 선택으로 처리
+        if (playerInput.selectWeaponIndex >= 0
+            && playerInput.selectWeaponIndex < selectableSlots.Length)
         {
-            EquipWeapon(playerInput.selectWeaponIndex);
+            SelectSlot(selectableSlots[playerInput.selectWeaponIndex]);
+        }
+
+        // 아무 무기도 장착하지 않았다면 발사·재장전할 것이 없다
+        if (gun == null)
+        {
+            UpdateUI();
+            return;
         }
 
         // 입력을 감지하고 총 발사하거나 재장전
@@ -75,22 +100,58 @@ public class PlayerShooter : MonoBehaviour {
         UpdateUI();
     }
 
-    // weaponPrefabs의 index번째 총을 gunPivot 아래에 새로 생성해 장착하고
-    // 기존에 장착되어 있던 총은 제거한다
-    public void EquipWeapon(int index) {
-        if (weaponPrefabs == null || index < 0 || index >= weaponPrefabs.Length ||
-            weaponPrefabs[index] == null)
+    // 손에 들 무기 슬롯을 바꾼다
+    public void SelectSlot(EquipmentSlot slot) {
+        if (activeSlot == slot)
         {
             return;
         }
 
+        activeSlot = slot;
+        RefreshWeapon();
+    }
+
+    // 현재 슬롯에 장착된 무기를 실제로 손에 들려준다
+    // 이미 같은 무기를 들고 있으면 아무것도 하지 않는다
+    private void RefreshWeapon() {
+        ItemData equipped = equipment.Get(activeSlot);
+
+        if (equipped == currentWeaponItem)
+        {
+            return;
+        }
+
+        currentWeaponItem = equipped;
+        SpawnWeapon(equipped as WeaponItemData);
+    }
+
+    // 총 인스턴스를 gunPivot 아래에 새로 생성하고 기존 총은 제거한다
+    // weaponItem이 null이면 맨손 상태가 된다
+    private void SpawnWeapon(WeaponItemData weaponItem) {
         if (currentWeaponInstance != null)
         {
             Destroy(currentWeaponInstance);
         }
 
+        currentWeaponInstance = null;
+        gun = null;
+        leftHandMount = null;
+        rightHandMount = null;
+
+        if (weaponItem == null || weaponItem.weaponPrefab == null)
+        {
+            // 총과 함께 파괴된 왼손 이펙터를 IK Helper Tool이 계속 참조하면
+            // 매 프레임 MissingReferenceException이 난다. 맨손 동안에는 꺼둔다
+            if (ikHelperTool != null)
+            {
+                ikHelperTool.enabled = false;
+            }
+
+            return;
+        }
+
         // 새 총을 gunPivot의 자식으로 생성하고 로컬 트랜스폼을 gunPivot과 일치시킨다
-        currentWeaponInstance = Instantiate(weaponPrefabs[index], gunPivot);
+        currentWeaponInstance = Instantiate(weaponItem.weaponPrefab, gunPivot);
         currentWeaponInstance.transform.localPosition = Vector3.zero;
         currentWeaponInstance.transform.localRotation = Quaternion.identity;
         currentWeaponInstance.transform.localScale = Vector3.one;
@@ -108,6 +169,7 @@ public class PlayerShooter : MonoBehaviour {
             var effector = new GameObject("IK Left Hand Effector").transform;
             effector.SetParent(leftHandMount, false);
             ikHelperTool.handEffector = effector;
+            ikHelperTool.enabled = true;
         }
 
         // 오른손-총기 그립 오프셋이 새 총 기준으로 다시 계산되도록 갱신
@@ -128,6 +190,16 @@ public class PlayerShooter : MonoBehaviour {
 
     // 애니메이터의 IK 갱신
     private void OnAnimatorIK(int layerIndex) {
+        // 아무 무기도 장착하지 않은 맨손 상태에서는 손을 맞출 대상이 없다
+        if (leftHandMount == null || rightHandMount == null)
+        {
+            playerAnimator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0f);
+            playerAnimator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0f);
+            playerAnimator.SetIKPositionWeight(AvatarIKGoal.RightHand, 0f);
+            playerAnimator.SetIKRotationWeight(AvatarIKGoal.RightHand, 0f);
+            return;
+        }
+
         if (useFirstPersonMount && firstPersonWeaponMount != null)
         {
             // 1인칭 모드 : 총의 기준점 gunPivot을 1인칭 전용 마운트 위치/회전으로 이동

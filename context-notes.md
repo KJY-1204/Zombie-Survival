@@ -345,3 +345,44 @@
 #### 고치지 않고 기록만 (기존 동작)
 
 - `LivingEntity.RestoreHealth`에 상한이 없어서 붕대를 쓰면 체력이 `startingHealth`(100)를 넘는다(검증에서 105까지 올라감). 교재 시절부터 있던 동작이고 이번 요청 범위 밖이라 그대로 뒀다. 상한을 걸려면 `RestoreHealth`에 `Mathf.Min(health + newHealth, startingHealth)` 한 줄이면 된다.
+
+### M3 3단계 구현 결과 (2026-09-20)
+
+#### 장착해도 아이템은 인벤토리에 남는다
+
+- `Equipment`는 `ItemStack`을 가져가지 않고 **어떤 `ItemData`를 장착 중인지만 가리킨다.** 인벤토리에서 빼가는 방식으로 만들면 무게제에서 장착품의 무게를 누가 세느냐가 애매해지고(장착품 무게도 들고 다니는 무게다) 인벤토리와 장비가 서로의 총 무게를 더해야 한다.
+- 이 방식이면 무게는 인벤토리 한 곳에서만 세어지고 해제도 그냥 참조를 지우면 끝이다.
+- 대신 "인벤토리에서 사라진 장착품"을 처리해야 한다. `Equipment`가 `inventory.onChanged`를 구독해 `ValidateEquipped()`로 검사하고, 버리거나 다 써서 없어진 아이템은 자동으로 해제한다. 검증에서 장착 중인 군모를 버리자 머리 슬롯이 비고 방어력이 8 -> 5로 떨어지는 것을 확인했다.
+- `Equip`은 인벤토리에 없는 아이템을 거부한다(저격총을 인벤토리 없이 장착 시도 -> False, 주무기 슬롯 유지).
+
+#### PlayerShooter의 하드코딩 무기 배열을 없앴다
+
+- `weaponPrefabs`(GameObject[3])와 `EquipWeapon(int)`을 제거하고 `equipment.Get(activeSlot)`에서 `WeaponItemData.weaponPrefab`을 읽는 구조로 바꿨다. `equipment.onChanged`를 구독해 장비가 바뀌면 손에 든 총도 따라 바뀐다.
+- `RefreshWeapon()`이 현재 아이템과 같으면 아무것도 하지 않는다. 방어구를 갈아입을 때마다 총을 다시 생성하면 그립 재보정이 매번 돌아 낭비다.
+- 숫자키 해석은 `PlayerShooter`에 뒀다. `PlayerInput`은 그대로 1~9를 인덱스로 내보내고, `PlayerShooter`가 `selectableSlots` 배열로 0->주무기, 1->보조무기만 받는다. `PlayerInput`을 고치지 않는 쪽이 변경 범위가 작다.
+- **맨손 상태가 새로 생겼다.** 예전에는 `weaponPrefabs[0]`이 항상 있어서 총이 없는 순간이 없었다. 이제 슬롯을 해제하면 총이 없다. `Update`(발사/재장전)와 `OnAnimatorIK`(손 위치)에 가드를 넣었다.
+
+#### 맨손 상태가 서드파티 IK에서 초당 수백 건의 예외를 냈다
+
+- 증상: 3단계 검증 후 `consoleErrors`가 **8,589건**이었다. 전부 같은 예외다.
+  - `MissingReferenceException ... Transform has been destroyed` at `Assets/Kevin Iglesias/IKHelperTool/Scripts/IKHelperTool.cs:41`
+- 원인: `IK Left Hand Effector`는 총 프리팹의 `Left Handle` 아래에 만든다. 무기를 해제하면 총 인스턴스와 함께 이펙터도 파괴되는데, 에셋의 `IKHelperTool.OnAnimatorIK`는 `handEffector.position`을 **null 검사 없이** 매 프레임 참조한다. 내 `PlayerShooter.OnAnimatorIK`에 넣은 가드는 내 컴포넌트만 막지, 비주얼에 따로 붙어 있는 `IKHelperTool`의 콜백은 막지 못한다.
+- 해결: **서드파티 에셋을 수정하지 않고**(`Z_Attack` 때와 같은 방침) 맨손일 때 `ikHelperTool.enabled = false`로 컴포넌트 자체를 끄고, 무기를 생성해 이펙터를 다시 연결할 때 `true`로 되돌린다. `IKHelperTool.Update`도 같이 멈춰서 부수 효과가 없다.
+- **교훈**: 어떤 오브젝트를 파괴할 때는 그걸 참조하는 게 내 스크립트만인지 확인해야 한다. 서드파티 컴포넌트가 같은 트랜스폼을 물고 있으면 내 쪽 가드는 소용이 없다.
+- 이 예외는 `console_status`의 누적 카운트로만 드러났다. **eval 결과만 보고 있으면 전혀 안 보인다**(모든 측정값이 정상이었다). 검증 끝에 `console_status`를 반드시 확인할 것.
+
+#### 화면이 3개가 되면서 공통 베이스를 뺐다
+
+- `ScreenPanel`(abstract)에 여닫기, `toggleKey` 처리, 게임오버 게이팅, **한 번에 하나만 열리는 배타 처리**, 목록 줄 정리(`ClearRows`)를 모았다. `InventoryUI`/`EquipmentUI`가 상속한다.
+- 2단계에서 만든 `InventoryUI`를 이 베이스로 옮겼다. `panel`/`toggleKey` 필드 이름을 그대로 유지해서 `HUD Canvas.prefab`의 기존 연결이 깨지지 않았다(확인함).
+- `ClearRows`의 `SetParent(null)` 선행 분리는 2단계에서 찾은 중복 버그의 해결책을 그대로 공용화한 것이다.
+- static `openPanel`은 `SceneManager.LoadScene`(게임오버 R 재시작)을 거쳐도 살아남으므로 `Awake`에서 초기화한다. 파괴된 패널이 남아도 Unity의 null 비교가 걸러준다.
+
+#### 검증 결과
+
+- 시작 장비: `Equipment.startingItems`에 돌격소총/권총을 넣어 `Start()`에서 인벤토리 추가 + 장착. 인벤토리 무게 5.00kg(3.8+1.2), 주무기=돌격소총, 보조무기=권총, 손에 든 총=`Assault Rifle Gun(Clone)`.
+- 무기 교체: 주무기(돌격소총) 오른손-그립 거리 0.00000, 보조무기(권총) 0.00000, 총구 이펙트-Fire Position 거리 0.00000. 재장착 후에도 0.00000, 왼손 오차 0.024(기존에 기록된 2~3cm 범위).
+- 방어 계산: 방어력 0에서 20 피해 -> 20 감소. 군모+방탄조끼+전투바지(3+12+5=20) 장착 후 20 피해 -> **1 감소**(`Max(1, 20-20)`). 방탄조끼 해제(방어 8) 후 20 피해 -> 12 감소.
+- UI: 슬롯 6줄 + 후보 목록, 빈 슬롯은 해제 버튼이 `interactable=false`. 후보의 "장착" 클릭으로 방어력 5->17, 보조무기에 권총 장착. 슬롯의 "해제" 클릭으로 주무기가 비고 손이 맨손이 되며 돌격소총이 후보 목록으로 돌아옴.
+- 화면 배타: 인벤토리를 연 상태에서 장비를 열면 인벤토리가 자동으로 닫힌다.
+- 수정 후 `compilationFailed: false`, `consoleErrors: 0`, `consoleWarnings: 0`.

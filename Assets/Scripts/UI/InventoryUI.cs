@@ -2,13 +2,10 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class InventoryUI : MonoBehaviour {
-    public GameObject panel; // 열고 닫을 화면 본체
+public class InventoryUI : ScreenPanel {
     public Text weightText; // 현재 무게 / 최대 무게 표시
     public Transform content; // 아이템 줄이 붙을 부모
     public GameObject rowPrefab; // 아이템 한 줄의 프리팹
-
-    public KeyCode toggleKey = KeyCode.I; // 화면을 여닫는 키
 
     private Inventory inventory; // 표시 대상 인벤토리
     private GameObject inventoryOwner; // 아이템 사용 효과가 적용될 대상
@@ -21,8 +18,6 @@ public class InventoryUI : MonoBehaviour {
             inventoryOwner = inventory.gameObject;
             inventory.onChanged += Refresh;
         }
-
-        panel.SetActive(false);
     }
 
     private void OnDestroy() {
@@ -32,28 +27,8 @@ public class InventoryUI : MonoBehaviour {
         }
     }
 
-    private void Update() {
-        // 게임오버 상태에서는 화면을 열지 않는다
-        if (Input.GetKeyDown(toggleKey)
-            && (GameManager.instance == null || !GameManager.instance.isGameover))
-        {
-            SetOpen(!panel.activeSelf);
-        }
-    }
-
-    // 화면을 열거나 닫고, 플레이어 입력·커서 상태를 함께 전환
-    public void SetOpen(bool open) {
-        panel.SetActive(open);
-        UIManager.SetScreenOpen(open);
-
-        if (open)
-        {
-            Refresh();
-        }
-    }
-
     // 보유 목록과 무게 표시를 현재 인벤토리 상태로 다시 그린다
-    private void Refresh() {
+    protected override void Refresh() {
         // 닫혀 있는 동안에는 다시 그릴 필요가 없다
         if (inventory == null || !panel.activeSelf)
         {
@@ -64,15 +39,7 @@ public class InventoryUI : MonoBehaviour {
             $"무게 {inventory.totalWeight:F2} / {inventory.maxWeight:F1} kg"
             + (inventory.isOverweight ? "  (과적)" : "");
 
-        // 기존 줄을 모두 지우고 현재 묶음 수만큼 다시 만든다
-        // Destroy는 프레임 끝에야 처리되므로, 같은 프레임에 Refresh가 두 번 돌면
-        // 파괴 예정인 줄이 그대로 남아 목록이 중복된다. 부모에서 먼저 떼어내야 한다
-        for (int i = content.childCount - 1; i >= 0; i--)
-        {
-            Transform row = content.GetChild(i);
-            row.SetParent(null);
-            Destroy(row.gameObject);
-        }
+        ClearRows(content);
 
         for (int i = 0; i < inventory.items.Count; i++)
         {

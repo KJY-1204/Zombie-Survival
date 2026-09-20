@@ -15,6 +15,7 @@ public class PlayerHealth : LivingEntity {
     private PlayerMovement playerMovement; // 플레이어 움직임 컴포넌트
     private PlayerShooter playerShooter; // 플레이어 슈터 컴포넌트
     private Inventory inventory; // 주운 아이템을 담을 인벤토리
+    private Equipment equipment; // 방어력을 알려주는 장비 컴포넌트
 
     private void Awake() {
         // 사용할 컴포넌트를 가져오기
@@ -24,6 +25,7 @@ public class PlayerHealth : LivingEntity {
         playerMovement = GetComponent<PlayerMovement>();
         playerShooter = GetComponent<PlayerShooter>();
         inventory = GetComponent<Inventory>();
+        equipment = GetComponent<Equipment>();
     }
 
     protected override void OnEnable() {
@@ -58,6 +60,12 @@ public class PlayerHealth : LivingEntity {
         {
             // 사망하지 않은 경우에만 효과음을 재생
             playerAudioPlayer.PlayOneShot(hitClip);
+        }
+
+        // 장착한 방어구의 방어력만큼 피해를 깎되 최소 1은 들어가게 한다
+        if (equipment != null)
+        {
+            damage = Mathf.Max(1f, damage - equipment.totalArmor);
         }
 
         // LivingEntity의 OnDamage() 실행(데미지 적용)

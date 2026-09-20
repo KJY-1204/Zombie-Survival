@@ -208,17 +208,17 @@
 
 ### 3단계. 장비 시스템 6슬롯 + 장비 UI + 방어 계산
 
-- [ ] `Equipment`를 만든다 (6슬롯, 장착/해제, 총 방어력, `OnChanged` 이벤트, UI 무지).
-- [ ] 무기 3종(권총/저격총/돌격소총)의 `WeaponItemData` 에셋을 만든다.
-- [ ] 방어구 `ArmorItemData` 에셋을 머리/상체/하체 각 1종 이상 만든다.
-- [ ] `PlayerShooter.weaponPrefabs` 하드코딩을 장비 슬롯 참조로 대체한다.
-- [ ] `PlayerInput`의 숫자키 무기 선택을 주무기/보조무기 전환으로 바꾼다.
-- [ ] `PlayerHealth.OnDamage`에 `Max(1, damage - armor)`를 적용한다.
-- [ ] 장비 화면을 만들고 `O` 키로 연다.
-- [ ] Play Mode에서 무기 교체 시 오른손 그립 거리 0.00000 유지를 검증한다.
-- [ ] Play Mode에서 방어구 장착 전후 좀비 피해량 차이를 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] `Equipment`를 만든다 (6슬롯, 장착/해제, 총 방어력, `OnChanged` 이벤트, UI 무지).
+- [x] 무기 3종(권총/저격총/돌격소총)의 `WeaponItemData` 에셋을 만든다.
+- [x] 방어구 `ArmorItemData` 에셋을 머리/상체/하체 각 1종 이상 만든다.
+- [x] `PlayerShooter.weaponPrefabs` 하드코딩을 장비 슬롯 참조로 대체한다.
+- [x] 숫자키 무기 선택을 주무기/보조무기 전환으로 바꾼다 (`PlayerInput`은 그대로 두고 `PlayerShooter`에서 해석).
+- [x] `PlayerHealth.OnDamage`에 `Max(1, damage - armor)`를 적용한다.
+- [x] 장비 화면을 만들고 `O` 키로 연다.
+- [x] Play Mode에서 무기 교체 시 오른손 그립 거리 0.00000 유지를 검증한다.
+- [x] Play Mode에서 방어구 장착 전후 좀비 피해량 차이를 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
 
 ### 4단계. 상태 화면
 
