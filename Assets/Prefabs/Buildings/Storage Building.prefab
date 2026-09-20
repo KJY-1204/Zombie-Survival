@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 3806331990612045387}
   - component: {fileID: 4895068130119014707}
   - component: {fileID: 6129968504977258943}
+  - component: {fileID: 7837205113425962659}
   m_Layer: 0
   m_Name: Storage Building
   m_TagString: Untagged
@@ -97,6 +98,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StorageContainer
   displayName: "\uBCF4\uAD00 \uC0C1\uC790"
+--- !u!208 &7837205113425962659
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7003261147399384805}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.26288843, y: 0.30444396, z: 0.62281156}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: -0.008134887, y: 0.3035419, z: -0.000000029802322}
+  m_TimeToStationary: 0.5
 --- !u!1001 &6182800365100795003
 PrefabInstance:
   m_ObjectHideFlags: 0

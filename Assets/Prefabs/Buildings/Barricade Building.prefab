@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5548844147272023434}
   - component: {fileID: 5424368702978407262}
   - component: {fileID: 4693643995846005467}
+  - component: {fileID: 4077375693572033834}
   m_Layer: 0
   m_Name: Barricade Building
   m_TagString: Untagged
@@ -67,6 +68,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 094ca81b05e9c384e8535acee1e5e200, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlacedBuildingLink
+--- !u!208 &4077375693572033834
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4668674985401916907}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 1.6394625, y: 0.6566951, z: 0.365689}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0.54982495, z: -0.00000017881393}
+  m_TimeToStationary: 0.5
 --- !u!1001 &3686309587313717374
 PrefabInstance:
   m_ObjectHideFlags: 0

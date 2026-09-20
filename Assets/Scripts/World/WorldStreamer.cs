@@ -1,4 +1,5 @@
 // 시드로 월드를 생성하고 플레이어 주변 청크만 실제로 씬에 올린다
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,6 +14,10 @@ public class WorldStreamer : MonoBehaviour {
 
     public WorldMap map { get; private set; } // 생성된 청크 맵
     public int loadedCount => loaded.Count; // 지금 씬에 올라와 있는 청크 수
+
+    // 올라와 있는 청크 목록이 실제로 바뀌었을 때 발동
+    // NavMesh를 굽는 쪽은 이 시점을 기다려야 한다. 먼저 구우면 아직 없는 지형을 굽게 된다
+    public event Action onChunksChanged;
 
     private readonly Dictionary<Vector2Int, GameObject> loaded =
         new Dictionary<Vector2Int, GameObject>();
@@ -92,6 +97,8 @@ public class WorldStreamer : MonoBehaviour {
             }
         }
 
+        bool changed = toUnload.Count > 0;
+
         foreach (Vector2Int key in toUnload)
         {
             Destroy(loaded[key]);
@@ -120,7 +127,14 @@ public class WorldStreamer : MonoBehaviour {
                 loaded[key] = WorldChunkBuilder.Build(
                     chunk, library, transform,
                     map.ChunkToWorld(x, z), map.chunkSize);
+                changed = true;
             }
+        }
+
+        // 청크가 다 올라온 뒤에 알린다 (NavMesh를 굽는 쪽이 이걸 기다린다)
+        if (changed && onChunksChanged != null)
+        {
+            onChunksChanged();
         }
     }
 

@@ -394,12 +394,12 @@
 
 ### 3단계. NavMeshSurface 전환
 
-- [ ] 청크 프리팹에 `NavMeshSurface`를 넣고 로드 시 베이크한다.
-- [ ] 건설물 프리팹 4종에 `NavMeshObstacle`(carve)을 추가한다.
-- [ ] Play Mode에서 좀비가 새 지형을 추적하는지 검증한다.
-- [ ] 벽을 세웠을 때 좀비 경로가 실제로 바뀌는지 검증한다 (M4에서 남긴 제약 해소).
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 런타임 NavMesh를 만든다 (`NavMeshSurface`는 볼륨 이동 시 재수집을 하지 않아 저수준 `NavMeshBuilder`로 대체).
+- [x] 건설물 프리팹 4종에 `NavMeshObstacle`(carve)을 추가한다.
+- [x] Play Mode에서 좀비가 새 지형을 추적하는지 검증한다.
+- [x] 벽을 세웠을 때 좀비 경로가 실제로 바뀌는지 검증한다 (M4에서 남긴 제약 해소).
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
 
 ### 4단계. 대형 POI (School)
 

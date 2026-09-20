@@ -891,3 +891,49 @@
 ### 튜닝값 (전부 인스펙터 노출)
 
 `sightRange` 15m / `sightAngle` 110도 / `loseSightTime` 4초 / `investigateStopDistance` 2m / `investigateGiveUpTime` 8초 / `Gun.noiseRadius` 35m.
+
+### M6 3단계 구현 결과 (2026-09-20)
+
+#### NavMeshSurface를 쓰려다 NavMeshBuilder로 갈아탔다
+
+- 계획은 "청크마다 `NavMeshSurface` 하나"였는데 **쓸 수 없다.** `NavMeshSurface`는 각자 별도의 `NavMeshData`를 만들고, **분리된 NavMeshData끼리는 자동으로 이어지지 않는다.** 청크마다 두면 좀비가 청크 경계를 못 넘는다.
+- 그래서 "로드된 영역 전체를 덮는 하나의 볼륨"으로 바꿨는데, 여기서 두 번 막혔다.
+  1. **동기 베이크가 너무 느리다.** 250x250m(25청크) `BuildNavMesh()`가 **596ms**. 50m마다 이만큼 멈추면 오토바이로는 3초에 한 번씩 정지한다. 150x150m로 줄여도 202ms다.
+  2. **`NavMeshSurface.UpdateNavMesh`는 볼륨이 움직이면 지오메트리를 다시 수집하지 않는다.** 플레이어가 150m 이동한 뒤 비동기 갱신을 돌렸더니 정점이 **1160 -> 122**로 떨어지고 발밑 NavMesh가 사라졌다. 같은 자리에서 동기 `BuildNavMesh()`를 부르면 1160이 나온다 - 이걸로 원인을 격리했다.
+- 결론적으로 **저수준 `NavMeshBuilder`를 직접 쓴다.** `NavMeshBuilder.CollectSources`로 월드 bounds 안의 콜라이더를 모으고 `UpdateNavMeshDataAsync`로 비동기 갱신한다. 이게 Unity가 이동하는 NavMesh 볼륨에 대해 권장하는 방식이다. 씬에서 `NavMeshSurface` 컴포넌트는 제거했다.
+
+#### 좌표계를 헷갈려 NavMesh가 통째로 비었다
+
+- `NavMesh.AddNavMeshData(navMeshData)`로 데이터를 **원점에 identity로** 붙여놓고, 빌드 범위에는 **원점 기준 로컬 bounds**를 넘겼다. 수집원은 월드 좌표라 서로 어긋나 정점 0이 나왔다.
+- 데이터가 원점 identity면 **로컬 좌표가 곧 월드 좌표**이므로 월드 bounds를 그대로 넘겨야 한다. 고친 뒤 1012정점.
+
+#### 실행 순서 경쟁 상태
+
+- 처음엔 `Start()`에서 구웠는데 `WorldStreamer.Start()`와 순서가 정해져 있지 않아 **청크가 지어지기 전에 구워 빈 NavMesh**가 나왔다.
+- `WorldStreamer.onChunksChanged` 이벤트를 만들어 **청크가 다 올라온 뒤에만** 굽게 했다. 플레이어 위치만 보고 구우면 같은 문제가 반복된다.
+
+#### 빌드하면 깨질 뻔한 문제를 잡았다
+
+- 콘솔에 `RuntimeNavMeshBuilder: Source mesh ... does not allow read access. This will work in playmode in the editor but not in player` 가 **55건** 떴다.
+- **런타임 NavMesh 베이크는 메시에 Read/Write 권한이 필요하다.** 에디터에서는 동작하지만 빌드하면 NavMesh가 안 만들어진다. `groundTruth.consoleErrors`를 안 봤으면 빌드 전까지 몰랐을 문제다.
+- `Assets/Apocalyptic_World`의 모델 **132개 전부에 `isReadable = true`**를 켜고 재임포트했다.
+  - **비용**: 메시가 CPU 메모리에도 남는다. M8 최적화 단계에서 실제로 필요한 메시만 남기는 걸 검토할 것.
+  - 재임포트가 길어 MCP 호출이 한 번 타임아웃됐지만 작업은 완료됐다(132/132 확인).
+
+#### 건설물 NavMeshObstacle - M4 제약 해소
+
+- 건설물 프리팹 4종(벽/바리케이드/보관 상자/문)의 콜라이더가 있는 오브젝트에 `NavMeshObstacle`(carving, Box, `carveOnlyStationary`)을 붙이고 콜라이더 크기를 그대로 복사했다. 문은 콜라이더가 `Hinge`에 있어 거기에 붙었다.
+- **M4에서 "건설물은 NavMesh에 반영되지 않는다"고 남겨둔 제약이 풀렸다.**
+
+#### 검증 결과
+
+- 첫 베이크: 정점 1012, 플레이어 발밑 NavMesh 유효.
+- 150m 이동 -> 구운 중심이 (10,8) -> (13,8)로 따라오고 정점 1120, 발밑 유효. 한 칸 더 이동해도 (14,8)로 따라온다.
+- 좀비가 시드 월드에서 12m -> 3.3m까지 추적, `pathStatus=PathComplete`.
+- **벽 9장을 세우면** 경로가 꺾임 4개 / **17.4m**로 우회하고(직선 14.0m), **철거하면** 꺾임 3개 / **14.1m** 직선으로 돌아온다. 벽 자리가 NavMesh에서 파이는 것도 확인했다.
+- `compilationFailed: false`, `groundTruth.consoleErrors: 0`.
+
+#### 남은 것
+
+- 비동기 베이크 중에는 이전 NavMesh가 그대로 쓰인다. 빠르게 이동하면 아직 안 구워진 영역에 좀비가 설 수 없다. `chunkMargin`으로 로드 반경보다 좁게 구워 완충을 뒀다.
+- 메시 Read/Write를 전부 켠 메모리 비용은 M8 최적화 사안이다.

@@ -71,6 +71,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6439274810446138822}
   - component: {fileID: 3426865496709171043}
+  - component: {fileID: 604062513986096641}
   m_Layer: 0
   m_Name: Hinge
   m_TagString: Untagged
@@ -115,6 +116,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.477215, y: 2.3685203, z: 0.15}
   m_Center: {x: 0.7386075, y: 1.1842601, z: 0}
+--- !u!208 &604062513986096641
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9116082661684214714}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.7386075, y: 1.1842601, z: 0.075}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0.7386075, y: 1.1842601, z: 0}
+  m_TimeToStationary: 0.5
 --- !u!1001 &4871936711454578780
 PrefabInstance:
   m_ObjectHideFlags: 0
