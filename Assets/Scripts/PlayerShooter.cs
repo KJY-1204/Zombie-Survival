@@ -30,6 +30,16 @@ public class PlayerShooter : MonoBehaviour {
     private PlayerInput playerInput; // 플레이어의 입력
     private Animator playerAnimator; // 애니메이터 컴포넌트
 
+    private void Awake() {
+        // 첫 Start 전에 IK가 실행되면 아직 이펙터가 없어 예외가 난다
+        ikHelperTool = GetComponentInChildren<IKHelperTool>();
+
+        if (ikHelperTool != null)
+        {
+            ikHelperTool.enabled = false;
+        }
+    }
+
     private void Start() {
         // 사용할 컴포넌트들을 가져오기
         playerInput = GetComponent<PlayerInput>();
@@ -37,7 +47,6 @@ public class PlayerShooter : MonoBehaviour {
         equipment = GetComponent<Equipment>();
         buildPlacer = GetComponent<BuildPlacer>();
         weaponIK = GetComponentInChildren<SurvivalistWeaponIK>();
-        ikHelperTool = GetComponentInChildren<IKHelperTool>();
 
         // 장비 슬롯이 바뀌면 손에 든 총도 따라 바뀐다
         equipment.onChanged += RefreshWeapon;

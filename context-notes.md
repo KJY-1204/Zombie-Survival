@@ -1142,3 +1142,27 @@
 - RestoreHealth는 저장 복원용 SetHealth와 달리 상한을 적용하지 않아, 붕대 사용 시 체력이 최대치를 넘었다. 회복 경로에서만 startingHealth를 상한으로 제한한다.
 - 기존 FindObjectOfType<T>() 다섯 곳은 모두 단일 씬 객체를 찾는 용도다. 기존 탐색 의미를 유지하는 FindFirstObjectByType<T>()로 치환한다.
 - 검증: 강제 재컴파일은 실패 없이 완료했다. 임시 LivingEntity에서 60 + 50 회복은 100으로 제한되고, 사망 체력 0은 회복되지 않았다. Assets/Scripts의 FindObjectOfType<T>() 호출은 0개다. 외부 GrenadeSystem 예제의 camera 멤버 숨김 경고 1개만 남았다.
+
+### M9 착수 - 게임 시작 흐름 (2026-09-21)
+
+- 기존 `SaveSlotUI`는 플레이 씬의 `SaveManager`를 직접 사용하므로 타이틀에 재사용하지 않는다. 타이틀은 `SaveSystem.ListSlots()`로 저장 유무와 요약만 읽고, 선택한 슬롯 번호와 자동 저장 여부만 월드 씬으로 전달한다.
+- 실제 데이터 복원은 기존 `SaveManager.Load` 경로를 그대로 쓴다. 타이틀이 플레이어·월드·건설물을 알게 하지 않아 저장 시스템의 도메인 경계를 유지한다.
+
+### M9 진행 - 타이틀과 저장 선택 연결 (2026-09-21)
+
+- `Title.unity`를 빌드 첫 씬으로 추가하고 `TitleMenuUI`가 런타임에 Canvas, 메뉴, 10개 슬롯 스크롤 목록을 만든다. 저장이 하나도 없으면 이어하기 버튼은 비활성이다.
+- 타이틀은 `StartupLoadRequest`에 슬롯 번호와 자동 여부만 남긴 뒤 `World.unity`를 연다. `SaveManager.Start`는 한 프레임 뒤 이 요청을 소비해 기존 `Load`를 호출하므로 WorldStreamer의 초기화가 먼저 끝난다.
+- World 첫 프레임에서 `IKHelperTool`이 이펙터 할당 전 실행되던 예외를 발견했다. `PlayerShooter.Awake`에서 먼저 IK를 끄고, 기존 무기 생성 경로에서만 다시 켜도록 고쳤다.
+- 검증에서 새 게임은 Title -> World로 전환됐고 이어하기는 슬롯 10개를 만들었다. 이 컴퓨터에는 기존 저장이 없어 수동/자동 실제 복원은 검증하지 않았다.
+- World 전환 후 RuntimeNavMeshBuilder가 읽기 불가 메시(`SM_Grounds_02_LOD0`, 도로, 건물)를 오류로 기록한다. 에디터에서는 동작해도 플레이어 빌드에서 실패할 수 있는 기존 월드 에셋 설정 문제라 M9 커밋 전에 별도 해결이 필요하다.
+
+### M9 안정화 착수 - 월드 런타임 NavMesh 메시 읽기 (2026-09-21)
+
+- `WorldNavMeshBaker`는 `PhysicsColliders`로 수집한다. RuntimeNavMeshBuilder 오류는 베이커 알고리즘이 아니라 수집된 모델 메시의 Read/Write 비활성화에서 발생한다.
+- 오류에 실제로 나온 모델 임포터만 `isReadable`로 바꾼다. 모든 모델을 일괄 변경해 메모리를 불필요하게 늘리지 않는다.
+
+### M9 안정화 완료 - 월드 런타임 NavMesh 메시 읽기 (2026-09-21)
+
+- Read/Write Enabled를 켠 모델은 네 개다. `SM_Grounds_02.FBX`, `SM_Roads_01_Straight.FBX`, `SM_Building_Low_03.FBX`, `SM_Building_Broken_01.FBX`.
+- Title에서 새 게임으로 World를 열어 재검증했다. RuntimeNavMeshBuilder 읽기 오류는 0개이고, NavMesh는 수집원 167개·정점 1885개·삼각형 833개로 생성됐다.
+- Read/Write는 런타임 메모리 비용이 있으므로, 새 월드 청크 모델을 NavMesh 수집 대상으로 추가하면 같은 오류가 다시 나타나는지 확인하고 필요한 모델만 켠다.

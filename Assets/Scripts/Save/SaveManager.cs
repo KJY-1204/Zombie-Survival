@@ -46,6 +46,21 @@ public class SaveManager : MonoBehaviour {
         {
             streamer = FindFirstObjectByType<WorldStreamer>();
         }
+
+        if (StartupLoadRequest.TryConsume(out int slot, out bool auto))
+        {
+            StartCoroutine(LoadRequestedSave(slot, auto));
+        }
+    }
+
+    // 월드의 Start가 끝난 다음 타이틀에서 선택한 저장을 기존 복원 경로로 적용한다
+    private System.Collections.IEnumerator LoadRequestedSave(int slot, bool auto) {
+        yield return null;
+
+        if (!Load(slot, auto))
+        {
+            Debug.LogError($"시작 저장을 불러오지 못했다. 슬롯 {slot}, 자동={auto}");
+        }
     }
 
     private void Update() {

@@ -582,3 +582,23 @@
 - [x] 프로젝트 코드의 FindObjectOfType<T>() 호출 5개를 치환한다.
 - [x] Unity 재컴파일과 체력 상한을 검증한다.
 - [x] 커밋하고 원격 main에 push한다. (7f9c5e3)
+
+
+## 2026-09-21 - M9 게임 시작 흐름
+
+- [x] 타이틀에서 새 게임·이어하기·종료를 선택할 수 있게 한다.
+- [x] 이어하기에서 수동·자동 저장을 구분한 10개 슬롯 목록을 표시한다.
+- [x] 선택한 저장 요청을 `World.unity`의 `SaveManager`가 소비해 기존 복원 경로를 호출하게 한다.
+- [x] `Title.unity`를 빌드 설정 첫 씬으로 추가한다.
+- [ ] 새 게임과 수동·자동 저장 불러오기를 Play Mode에서 확인한다. (기존 저장이 없어 불러오기는 미검증)
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 main에 push한다.
+
+
+## 2026-09-21 - M9 안정화: 월드 런타임 NavMesh 메시 읽기
+
+- [x] 오류 메시의 실제 모델 에셋과 Read/Write 상태를 확인한다.
+- [x] 필요한 모델 임포터만 Read/Write Enabled로 바꾼다.
+- [x] 새 게임으로 World를 열어 RuntimeNavMeshBuilder 오류가 사라졌는지 확인한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 main에 push한다.
