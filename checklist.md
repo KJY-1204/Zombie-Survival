@@ -268,14 +268,14 @@
 
 ### 2단계. 건설 배치 시스템 + 벽 1종
 
-- [ ] `BuildableData`(id/이름/프리팹/필요 재료/판정 크기)를 만든다.
-- [ ] `PlacedBuilding`(순수 데이터)과 `BaseBuildState`(설치 목록 소유자)를 만든다.
-- [ ] `BuildPlacer`를 만든다 (프리뷰 생성, 바닥 레이캐스트, 휠 회전, 겹침 판정, 재료 소모, 설치).
-- [ ] `BuildMenuUI`를 만들고 `B` 키로 연다 (건설물 목록과 필요 재료 표시).
-- [ ] 벽 `BuildableData`와 건설물 프리팹을 만든다.
-- [ ] Play Mode에서 재료 부족 거부 / 충분 시 설치 / 재료 정확히 차감 / 겹침 거부를 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] `BuildableData`(id/이름/프리팹/필요 재료/판정 크기)를 만든다.
+- [x] `PlacedBuilding`(순수 데이터)과 `BaseBuildState`(설치 목록 소유자)를 만든다.
+- [x] `BuildPlacer`를 만든다 (프리뷰 생성, 바닥 레이캐스트, 휠 회전, 겹침 판정, 재료 소모, 설치).
+- [x] `BuildMenuUI`를 만들고 `B` 키로 연다 (건설물 목록과 필요 재료 표시).
+- [x] 벽 `BuildableData`와 건설물 프리팹을 만든다.
+- [x] Play Mode에서 재료 부족 거부 / 충분 시 설치 / 재료 정확히 차감 / 겹침 거부를 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
 
 ### 3단계. 나머지 건설물 3종
 

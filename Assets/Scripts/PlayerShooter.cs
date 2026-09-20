@@ -26,6 +26,7 @@ public class PlayerShooter : MonoBehaviour {
     private IKHelperTool ikHelperTool; // 왼손 IK 이펙터를 갱신할 IK Helper Tool 컴포넌트
 
     private Equipment equipment; // 어떤 무기를 장착 중인지 알려주는 장비 컴포넌트
+    private BuildPlacer buildPlacer; // 건설 모드인지 알려주는 컴포넌트
     private PlayerInput playerInput; // 플레이어의 입력
     private Animator playerAnimator; // 애니메이터 컴포넌트
 
@@ -34,6 +35,7 @@ public class PlayerShooter : MonoBehaviour {
         playerInput = GetComponent<PlayerInput>();
         playerAnimator = GetComponent<Animator>();
         equipment = GetComponent<Equipment>();
+        buildPlacer = GetComponent<BuildPlacer>();
         weaponIK = GetComponentInChildren<SurvivalistWeaponIK>();
         ikHelperTool = GetComponentInChildren<IKHelperTool>();
 
@@ -73,8 +75,9 @@ public class PlayerShooter : MonoBehaviour {
             SelectSlot(selectableSlots[playerInput.selectWeaponIndex]);
         }
 
-        // 아무 무기도 장착하지 않았다면 발사·재장전할 것이 없다
-        if (gun == null)
+        // 아무 무기도 장착하지 않았거나 건설 모드면 발사·재장전하지 않는다
+        // (건설 모드의 좌클릭은 설치 입력이므로 같이 발사되면 안 된다)
+        if (gun == null || (buildPlacer != null && buildPlacer.isBuilding))
         {
             UpdateUI();
             return;

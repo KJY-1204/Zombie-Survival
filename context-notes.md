@@ -483,3 +483,42 @@
   - **함정**: `Die()`가 이미 코루틴을 시작한 뒤에 `respawnTime`을 바꿔도 소용없다. `WaitForSeconds`가 시작 시점 값을 캡처한다. 살아있을 때 먼저 바꿔야 한다.
 - 텍스처: 나무/바위/고철 에셋 프리팹은 M3의 상자와 달리 URP 머티리얼을 제대로 물고 있어 교체가 필요 없었다. 스크린샷으로 확인.
 - `compilationFailed: false`, `groundTruth.consoleErrors: 0`.
+
+### M4 2단계 구현 결과 (2026-09-20)
+
+#### 구조
+
+- `BuildableData`(정적 정의: 프리팹, 재료, 판정 상자) / `PlacedBuilding`(순수 데이터: id, 위치, 회전, 열림 여부) / `BaseBuildState`(설치 목록의 단일 소유자)로 나눴다. `PlacedBuilding`은 MonoBehaviour가 아니고 `instance` 필드만 `[NonSerialized]`라, M7에서 그대로 저장 DTO로 옮길 수 있다.
+- 씬 오브젝트에서 자기 기록을 찾아야 하는 경우(문의 열림 상태 반영 등)를 위해 `PlacedBuildingLink`라는 얇은 연결고리 컴포넌트를 뒀다. 건설물 프리팹이 `PlacedBuilding`을 직접 들고 있으면 데이터와 씬 객체가 섞인다.
+- 재료 차감은 `BuildableData.Pay(Inventory)`에 뒀다. `CanAfford`로 먼저 전부 확인한 뒤 차감하므로 **일부만 빠지는 일이 없다.** `Refund`도 미리 만들어뒀다(4단계 철거용).
+- `BuildPlacer`는 UI를 모른다. `selected`/`isBuilding`/`canPlaceHere`와 `onStateChanged`만 공개하고 `BuildMenuUI`가 그것만 읽는다.
+
+#### 좌클릭이 발사와 겹치는 문제
+
+- 건설 모드의 좌클릭은 설치 입력인데 `PlayerShooter.Update`가 같은 `Fire1`로 총을 쏜다. `UIManager.isScreenOpen`은 화면이 열렸을 때만 참이라 건설 모드를 못 막는다(건설 중에는 이동도 조준도 해야 하므로 화면 게이트를 쓰면 안 된다).
+- `PlayerShooter`가 `BuildPlacer.isBuilding`을 보고 발사/재장전을 건너뛰게 했다. 조건 하나 추가로 끝난다.
+
+#### 버그 2개를 잡았다
+
+**1. 조준선이 바닥에 닿지 않아 프리뷰가 뜨지 않았다.**
+- 증상: 건설 모드에 들어가도 프리뷰가 비활성이고 `canPlaceHere=False`.
+- 실제 측정: 카메라가 높이 2.22m에서 방향 (-0.03, -0.21, 0.98)로 거의 수평을 보고 있었다. 바닥(y=0)까지 가려면 2.22/0.21 = **10.5m**가 필요한데 `maxPlaceDistance`가 8m였다. 8m 안에서 충돌 0개.
+- 해결: 조준선이 사정거리 안에서 바닥을 못 만나면, 사정거리 끝 지점에서 **아래로 다시 쏴서** 바닥을 찾는다(`TryFindGround`). 카메라 각도와 무관하게 항상 바닥에 놓인다.
+- 같이 고친 것: 첫 레이캐스트가 플레이어 자기 몸에 맞을 수 있으므로 `Gun.cs`의 `TryGetClosestHit`처럼 자기 콜라이더를 건너뛰는 `TryRaycastIgnoringSelf`를 만들었다.
+
+**2. 이미 지은 벽 위에 또 지어졌다 (겹침 판정이 안 먹었다).**
+- 증상: 같은 자리에 두 번째 벽이 그대로 설치되고 재료도 또 빠졌다.
+- 원인: `IsBlocked`에서 "딛고 선 바닥"이라고 생각한 `hit.collider`를 겹침 검사에서 제외했는데, **조준선이 바닥이 아니라 첫 번째 벽에 맞으면 그 벽이 예외 대상이 되어버린다.** 프리뷰 위치가 y=0.61(벽 옆면)이었던 게 단서였다.
+- 해결: 바닥 예외를 **없앴다.** 판정 상자는 `checkCenter`로 접촉 지점보다 0.1 위에서 시작하므로 딛고 선 바닥에는 애초에 닿지 않는다. 예외가 필요 없었다.
+- 벽 메시의 피벗이 x로 0.19 치우쳐 있어서 판정 상자 중심도 콜라이더 중심에 맞췄다. 메시 bounds를 그대로 믿고 (0, h/2, 0)에 두면 실제 벽과 어긋난다.
+
+#### 검증 결과
+
+- 재료 부족: `CanAfford=False`, `Pay=False`이고 **재료가 차감되지 않는다.** 건설 메뉴의 "건설" 버튼도 `interactable=false`, 이름이 붉게 표시된다.
+- 재료 충족: 버튼이 활성화되고, 클릭하면 건설 모드 진입 + 메뉴가 닫힌다(`isScreenOpen=False`라 조준과 좌클릭이 먹는다).
+- 프리뷰: 콜라이더 0개, 스크립트 0개, 반투명 머티리얼(알파 0.45). 설치 가능하면 초록 `(0.35, 1.00, 0.45)`, 불가능하면 빨강 `(1.00, 0.32, 0.28)`.
+- 설치: 목재 30->20, 돌 15->10으로 **정확히 10/5만 차감**. `BaseBuildState`에 `id=wall pos=(0.61,0,2.70) rotY=0`이 기록된다.
+- 겹침 거부: 같은 자리 재시도 시 프리뷰가 빨강, `TryPlace=False`, 건설물 수와 재료 모두 변화 없음.
+- 회전: `previewRotationY=90`으로 설치하면 기록에 `rotY=90`이 남는다.
+- 재료가 남아 있으면 건설 모드를 유지해 연속 설치가 가능하다.
+- `compilationFailed: false`, `groundTruth.consoleErrors: 0`.
