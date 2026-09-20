@@ -68,7 +68,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LootContainer
   displayName: "\uBCF4\uAE09 \uC0C1\uC790"
-  contents: []
+  contents:
+  - data: {fileID: 11400000, guid: 8d77639ee9a449a4b8a1374561c6d0cb, type: 2}
+    count: 1
+  - data: {fileID: 11400000, guid: c48b3735165e22e4e9321653f8fdbe3b, type: 2}
+    count: 1
+  - data: {fileID: 11400000, guid: 129ce134630f12a4fae1132c5c88376f, type: 2}
+    count: 2
 --- !u!1001 &5808670975744074608
 PrefabInstance:
   m_ObjectHideFlags: 0

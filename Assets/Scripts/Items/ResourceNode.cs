@@ -10,6 +10,9 @@ public class ResourceNode : LivingEntity {
 
     public float respawnTime = 60f; // 다시 자라날 때까지 걸리는 시간 (0 이하면 재생성하지 않는다)
 
+    // 청크가 다시 올라와도 채집 상태를 이어받기 위한 id (청크 빌더가 채운다)
+    [System.NonSerialized] public string runtimeId;
+
     public ParticleSystem hitEffect; // 타격할 때 재생할 효과
     public AudioClip hitSound; // 타격 소리
     public AudioClip breakSound; // 부서지는 소리
@@ -22,6 +25,27 @@ public class ResourceNode : LivingEntity {
         audioPlayer = GetComponent<AudioSource>();
         nodeCollider = GetComponent<Collider>();
         nodeRenderers = GetComponentsInChildren<Renderer>();
+    }
+
+    // 이미 채집된 자리에 다시 지어졌다면 채집된 모습으로 시작한다.
+    // 상태는 OnEnable이 초기화하므로 그보다 늦은 Start에서 돌려놓는다
+    private void Start() {
+        if (string.IsNullOrEmpty(runtimeId) || WorldRuntimeState.instance == null
+            || !WorldRuntimeState.instance.IsHarvested(runtimeId))
+        {
+            return;
+        }
+
+        dead = true;
+        health = 0f;
+        SetHarvested(true);
+
+        float remaining = WorldRuntimeState.instance.RemainingRespawn(runtimeId);
+
+        if (remaining > 0f)
+        {
+            StartCoroutine(RespawnAfterDelay(remaining));
+        }
     }
 
     // Gun이 hit.collider.GetComponent<IDamageable>()로 찾으므로
@@ -61,9 +85,14 @@ public class ResourceNode : LivingEntity {
 
         SetHarvested(true);
 
+        if (!string.IsNullOrEmpty(runtimeId) && WorldRuntimeState.instance != null)
+        {
+            WorldRuntimeState.instance.MarkHarvested(runtimeId, respawnTime);
+        }
+
         if (respawnTime > 0f)
         {
-            StartCoroutine(RespawnAfterDelay());
+            StartCoroutine(RespawnAfterDelay(respawnTime));
         }
     }
 
@@ -110,8 +139,8 @@ public class ResourceNode : LivingEntity {
         }
     }
 
-    private IEnumerator RespawnAfterDelay() {
-        yield return new WaitForSeconds(respawnTime);
+    private IEnumerator RespawnAfterDelay(float delay) {
+        yield return new WaitForSeconds(delay);
 
         // OnEnable과 같은 상태 초기화 (dead 해제, 내구도 복구)
         dead = false;

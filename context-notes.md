@@ -1037,3 +1037,13 @@
 - **id -> 에셋 레지스트리가 없다.** `ItemData.itemId`와 `BuildableData.buildableId`는 있지만 id로 에셋을 되찾을 방법이 없어 불러오기가 불가능하다. `SaveRegistry`(ScriptableObject)를 만들어야 한다.
 - **청크 콘텐츠의 상태는 청크 오브젝트에 두면 안 된다.** 스트리밍으로 청크가 내려가면 같이 사라진다. `WorldRuntimeState`가 채집/루팅 상태를 청크 밖에서 들고 있어야 한다(`CLAUDE.md` §11.6).
 - 이미 준비된 것: `BaseBuildState.ToJson()`, `Motorcycle.ToSaveData()/LoadFromSaveData()`, 월드는 시드 + 생성기 버전만으로 재현.
+
+### M7 1단계 — 청크 콘텐츠 배치 (2026-09-20)
+
+- **배치는 칸 시드, 상태는 칸 밖.** `WorldChunkBuilder`가 칸 시드 난수로 자원/상자를 놓고, 배치 순번이 그대로 id(`11_10_res_0`)가 된다. 채집/루팅 여부는 `WorldRuntimeState`가 id로 들고 있으므로 청크가 내려갔다 올라와도 이어진다. 저장 DTO(`WorldRuntimeSaveData`)는 남은 재생성 시간을 절대 시각이 아닌 상대값으로 담는다. 불러오는 시점의 `Time.time`은 저장 시점과 다르기 때문이다.
+- **복원은 `Start`에서 한다.** `LivingEntity.OnEnable`이 `dead`와 체력을 되돌리므로 그보다 늦은 `Start`에서 채집 상태를 다시 적용해야 한다. 청크 빌더가 `Instantiate` 직후에 id를 채우는데, `Awake`/`OnEnable`은 그 전에 끝나고 `Start`는 다음 프레임이라 순서가 맞는다.
+- **지붕/바위 위에 얹히지 않게 거부 샘플링을 쓴다.** 후보 지점 바로 위에서 내려봤을 때 먼저 닿는 것이 바닥 타일(`Grounds`)일 때만 받아들이고, 아니면 최대 8번 다시 뽑는다. 놓을 때마다 `Physics.SyncTransforms()`를 불러야 앞서 놓은 것 위에 겹치지 않는다.
+- **시작 청크 중앙은 비워야 한다.** 첫 검증에서 자원 노드가 스폰 지점 0.6m 옆에 생겼다. `WorldStreamer.startClearRadius`(4m)를 시작 청크에만 넘겨 가장 가까운 콘텐츠가 12.0m로 밀렸다.
+- **상자 프리팹의 내용물이 비어 있었다.** `Loot Chest.prefab`의 `contents`가 0개라 열어도 얻는 것이 없었다. Ammo Box 1 / Bandage 1 / Material Scrap 2를 넣었다. 칸별로 다른 전리품이 나오게 하려면 루팅 테이블이 필요하지만 지금 범위가 아니다.
+- **비용.** 칸당 1.36ms(25칸 33.9ms). 주요 비용은 여전히 NavMesh 베이크다.
+- 검증: 노드 41개/상자 18개 배치, 모두 바닥과 정확히 맞닿음(차이 0.00m), 청크 재생성 후 동일 좌표, 채집/루팅 상태 유지, 재생성 시간이 지나자 부활, `consoleErrors: 0`.

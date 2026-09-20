@@ -42,3 +42,35 @@ MonoBehaviour:
   poiPrefab: {fileID: 498024613309676441, guid: e7871119d0f195d45b3a2673322c0129,
     type: 3}
   poiFootprint: 85
+  resourcePrefabs:
+  - {fileID: 9001952256673990392, guid: 47b3ca7ff01dd2c4899e6a3631e5e169, type: 3}
+  - {fileID: 7997869808676366584, guid: a8379cffc29776f468f6863facac4dbb, type: 3}
+  - {fileID: 8193274804078815795, guid: f1c3c906e11444641a07328504c13d23, type: 3}
+  cratePrefabs:
+  - {fileID: 4589486488816418760, guid: 09dba71058ef34542889ac46897e9569, type: 3}
+  contentRules:
+  - type: 0
+    resourceMin: 2
+    resourceMax: 4
+    crateMin: 0
+    crateMax: 1
+  - type: 1
+    resourceMin: 0
+    resourceMax: 1
+    crateMin: 0
+    crateMax: 1
+  - type: 2
+    resourceMin: 1
+    resourceMax: 2
+    crateMin: 1
+    crateMax: 3
+  - type: 3
+    resourceMin: 2
+    resourceMax: 4
+    crateMin: 0
+    crateMax: 1
+  - type: 4
+    resourceMin: 0
+    resourceMax: 0
+    crateMin: 1
+    crateMax: 3

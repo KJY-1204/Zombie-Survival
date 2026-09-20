@@ -5,9 +5,11 @@ using UnityEngine;
 
 public static class WorldChunkBuilder {
     // chunk 한 칸을 parent 아래에 짓고 루트 오브젝트를 돌려준다
+    // clearRadius가 0보다 크면 칸 중앙 그만큼에는 자원/상자를 놓지 않는다
+    // (시작 청크는 중앙이 플레이어 스폰 지점이라 막히면 안 된다)
     public static GameObject Build(
         WorldChunkData chunk, ChunkLibrary library, Transform parent,
-        Vector3 center, float chunkSize) {
+        Vector3 center, float chunkSize, float clearRadius = 0f) {
         var root = new GameObject($"Chunk {chunk.x},{chunk.z} {chunk.type}");
         root.transform.SetParent(parent, false);
         root.transform.position = center;
@@ -42,7 +44,117 @@ public static class WorldChunkBuilder {
                 break;
         }
 
+        // 건물과 바위가 콜라이더로 잡혀야 그 위에 자원/상자를 놓지 않는다
+        Physics.SyncTransforms();
+        PlaceContents(chunk, library, root.transform, chunkSize, random, clearRadius);
+
         return root;
+    }
+
+    // 자원 노드와 상자를 칸 안에 결정론적으로 놓는다.
+    // 배치 순번이 곧 런타임 상태의 id이므로 같은 시드면 같은 번호가 같은 자리에 온다
+    private static void PlaceContents(
+        WorldChunkData chunk, ChunkLibrary library, Transform parent,
+        float chunkSize, System.Random random, float clearRadius) {
+        ChunkContentRule rule = library.GetContentRule(chunk.type);
+
+        if (rule == null)
+        {
+            return;
+        }
+
+        int resourceCount = random.Next(rule.resourceMin, rule.resourceMax + 1);
+
+        for (int i = 0; i < resourceCount; i++)
+        {
+            GameObject instance = PlaceOnOpenGround(
+                Pick(library.resourcePrefabs, random), parent, chunkSize, random, clearRadius);
+
+            ResourceNode node = instance == null
+                ? null
+                : instance.GetComponentInChildren<ResourceNode>();
+
+            if (node != null)
+            {
+                node.runtimeId = WorldRuntimeState.MakeId(chunk.x, chunk.z, "res", i);
+            }
+        }
+
+        int crateCount = random.Next(rule.crateMin, rule.crateMax + 1);
+
+        for (int i = 0; i < crateCount; i++)
+        {
+            GameObject instance = PlaceOnOpenGround(
+                Pick(library.cratePrefabs, random), parent, chunkSize, random, clearRadius);
+
+            LootContainer crate = instance == null
+                ? null
+                : instance.GetComponentInChildren<LootContainer>();
+
+            if (crate != null)
+            {
+                crate.runtimeId = WorldRuntimeState.MakeId(chunk.x, chunk.z, "crate", i);
+            }
+        }
+    }
+
+    // 빈 땅을 찾아 하나 놓는다. 건물 지붕이나 바위 위에 얹히지 않도록
+    // 바로 위에서 내려봤을 때 가장 먼저 닿는 것이 바닥 타일인 지점만 받아들인다
+    private static GameObject PlaceOnOpenGround(
+        GameObject prefab, Transform parent, float chunkSize, System.Random random,
+        float clearRadius) {
+        if (prefab == null)
+        {
+            return null;
+        }
+
+        float half = chunkSize * 0.5f - 5f;
+
+        for (int attempt = 0; attempt < 8; attempt++)
+        {
+            var offset = new Vector3(
+                (float)(random.NextDouble() * 2.0 - 1.0) * half,
+                0f,
+                (float)(random.NextDouble() * 2.0 - 1.0) * half);
+
+            if (clearRadius > 0f && offset.magnitude < clearRadius)
+            {
+                continue;
+            }
+
+            if (!IsOpenGround(parent.TransformPoint(offset)))
+            {
+                continue;
+            }
+
+            GameObject instance = Place(
+                prefab, parent, offset, (float)random.NextDouble() * 360f,
+                1f, VerticalAlign.BottomOnGround);
+
+            // 다음 배치가 방금 놓은 것 위에 겹치지 않게 콜라이더를 반영한다
+            Physics.SyncTransforms();
+            return instance;
+        }
+
+        return null;
+    }
+
+    // 이 지점 위에서 내려봤을 때 맨 처음 닿는 것이 바닥 타일인지
+    private static bool IsOpenGround(Vector3 worldPosition) {
+        var ray = new Ray(worldPosition + Vector3.up * 200f, Vector3.down);
+        RaycastHit[] hits = Physics.RaycastAll(ray, 400f, ~0, QueryTriggerInteraction.Ignore);
+
+        RaycastHit? topmost = null;
+
+        foreach (RaycastHit hit in hits)
+        {
+            if (topmost == null || hit.distance < topmost.Value.distance)
+            {
+                topmost = hit;
+            }
+        }
+
+        return topmost != null && topmost.Value.collider.name.Contains("Grounds");
     }
 
     // 바닥 타일은 칸을 가득 채우고 윗면이 y=0에 오게 놓는다
@@ -219,7 +331,7 @@ public static class WorldChunkBuilder {
     }
 
     // 프리팹을 청크 안에 놓는다. 피벗이 어디든 bounds 기준으로 중심과 높이를 맞춘다
-    private static void Place(
+    private static GameObject Place(
         GameObject prefab, Transform parent, Vector3 localOffset,
         float yaw, float scale, VerticalAlign align) {
         GameObject instance = Object.Instantiate(prefab, parent);
@@ -233,7 +345,7 @@ public static class WorldChunkBuilder {
         if (bounds.size == Vector3.zero)
         {
             instance.transform.localPosition = localOffset;
-            return;
+            return instance;
         }
 
         Vector3 pivotWorld = instance.transform.position;
@@ -255,6 +367,8 @@ public static class WorldChunkBuilder {
 
         instance.transform.localPosition = localOffset
             + new Vector3(delta.x, delta.y + targetY, delta.z);
+
+        return instance;
     }
 
     // 긴 축이 target에 딱 맞도록 하는 균등 스케일 (비균등 스케일은 텍스처가 늘어난다)

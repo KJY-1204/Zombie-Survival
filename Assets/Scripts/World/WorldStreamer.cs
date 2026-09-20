@@ -10,6 +10,7 @@ public class WorldStreamer : MonoBehaviour {
     [Header("스트리밍")]
     public Transform viewer; // 기준이 될 대상 (보통 플레이어). 비우면 자동으로 찾는다
     public int loadRadius = 2; // 이 격자 반경 안의 청크를 올린다
+    public float startClearRadius = 4f; // 시작 청크 중앙(스폰 지점) 주변을 비워둘 반경
     public float updateInterval = 0.25f; // 몇 초마다 주변을 다시 계산할지
 
     public WorldMap map { get; private set; } // 생성된 청크 맵
@@ -126,7 +127,8 @@ public class WorldStreamer : MonoBehaviour {
 
                 loaded[key] = WorldChunkBuilder.Build(
                     chunk, library, transform,
-                    map.ChunkToWorld(x, z), map.chunkSize);
+                    map.ChunkToWorld(x, z), map.chunkSize,
+                    key == map.startChunk ? startClearRadius : 0f);
                 changed = true;
             }
         }

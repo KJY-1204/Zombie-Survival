@@ -1,5 +1,16 @@
 // 청크를 지을 때 쓸 프리팹 모음 (어떤 타입에 무엇을 놓을지의 정적 정의)
+using System;
 using UnityEngine;
+
+// 청크 타입 하나에 자원 노드와 상자를 몇 개 놓을지
+[Serializable]
+public class ChunkContentRule {
+    public ChunkType type;
+    public int resourceMin;
+    public int resourceMax;
+    public int crateMin;
+    public int crateMax;
+}
 
 [CreateAssetMenu(menuName = "Scriptable/World/Chunk Library", fileName = "Chunk Library")]
 public class ChunkLibrary : ScriptableObject {
@@ -31,4 +42,27 @@ public class ChunkLibrary : ScriptableObject {
     // 한 칸(50m)보다 크게 둔다. 칸에 맞춰 줄이면 도시 건물보다 작아져 "대형"이 아니게 된다
     // 생성기가 POI 주변 칸을 비우므로 넘쳐도 겹치지 않는다
     public float poiFootprint = 85f;
+
+    [Header("파밍 콘텐츠")]
+    public GameObject[] resourcePrefabs; // 채집할 자원 노드 (나무, 바위, 고철)
+    public GameObject[] cratePrefabs; // 루팅할 상자
+    public ChunkContentRule[] contentRules; // 청크 타입별 개수
+
+    // 해당 타입의 배치 규칙. 규칙이 없으면 아무것도 놓지 않는다
+    public ChunkContentRule GetContentRule(ChunkType type) {
+        if (contentRules == null)
+        {
+            return null;
+        }
+
+        foreach (ChunkContentRule rule in contentRules)
+        {
+            if (rule.type == type)
+            {
+                return rule;
+            }
+        }
+
+        return null;
+    }
 }
