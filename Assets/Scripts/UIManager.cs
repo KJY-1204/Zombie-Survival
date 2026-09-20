@@ -9,7 +9,7 @@ public class UIManager : MonoBehaviour {
         {
             if (m_instance == null)
             {
-                m_instance = FindObjectOfType<UIManager>();
+                m_instance = FindFirstObjectByType<UIManager>();
             }
 
             return m_instance;

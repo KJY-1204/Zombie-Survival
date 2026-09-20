@@ -39,7 +39,7 @@ public class LivingEntity : MonoBehaviour, IDamageable {
         }
 
         // 체력 추가
-        health += newHealth;
+        health = Mathf.Clamp(health + newHealth, 0f, startingHealth);
     }
 
     // 저장된 체력을 그대로 되돌린다 (불러오기 전용)

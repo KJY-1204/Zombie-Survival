@@ -33,7 +33,7 @@ public class WorldStreamer : MonoBehaviour {
     private void Start() {
         if (viewer == null)
         {
-            PlayerHealth player = FindObjectOfType<PlayerHealth>();
+            PlayerHealth player = FindFirstObjectByType<PlayerHealth>();
 
             if (player != null)
             {

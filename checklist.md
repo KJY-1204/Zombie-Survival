@@ -574,3 +574,11 @@
 - [x] `Prototype.unity`도 같은 프리팹을 쓰므로 참조가 깨지지 않았는지 확인한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
 - [x] 커밋하고 원격 `main`에 push한다. (7b78149)
+
+
+## 2026-09-20 - 안정화: 체력 상한과 폐지 API
+
+- [x] LivingEntity.RestoreHealth가 최대 체력을 넘기지 않게 한다.
+- [x] 프로젝트 코드의 FindObjectOfType<T>() 호출 5개를 치환한다.
+- [x] Unity 재컴파일과 체력 상한을 검증한다.
+- [x] 커밋하고 원격 main에 push한다. (안정화 커밋 예정)

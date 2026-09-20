@@ -530,3 +530,23 @@
 - **캐릭터 3D 미리보기.** 팰월드는 장비 화면에 캐릭터를 보여주지만, 렌더 텍스쳐 카메라 구성이 필요해 뒤로 미룬다.
 - **파랑글/스킬 트리/지도 탭.** 우리 게임에 없는 시스템이다.
 - **새 폰트 도입.** 한글 지원 폰트 라이선스 문제가 있어 기본 LegacyRuntime을 그대로 쓴다.
+
+
+## 안정화 - 체력 상한과 폐지 API 정리 (2026-09-20)
+
+### 목표
+
+- 회복 효과가 체력을 startingHealth보다 높이지 않게 한다.
+- 프로젝트 코드의 FindObjectOfType<T>() 호출을 현재 Unity API로 바꾼다.
+
+### 완료 조건
+
+- RestoreHealth(50) 호출 뒤 체력이 최대 체력을 넘지 않는다.
+- Assets/Scripts에 FindObjectOfType 호출이 남지 않는다.
+- Unity 재컴파일이 성공하고 새 컴파일 오류가 없다.
+
+### 구현 순서
+
+1. LivingEntity.RestoreHealth에서 Mathf.Clamp로 회복 결과를 제한한다.
+2. 다섯 개 호출을 결과 의미가 같은 FindFirstObjectByType<T>()로 치환한다.
+3. 컴파일과 관련 동작을 검증한다.

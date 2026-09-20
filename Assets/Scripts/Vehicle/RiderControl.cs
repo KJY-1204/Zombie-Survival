@@ -25,7 +25,7 @@ public class RiderControl : MonoBehaviour {
         placer = GetComponent<BuildPlacer>();
         body = GetComponent<Rigidbody>();
         bodyCollider = GetComponent<Collider>();
-        cameraController = FindObjectOfType<ThirdPersonCameraController>();
+        cameraController = FindFirstObjectByType<ThirdPersonCameraController>();
 
         // 아바타가 있는 비주얼 애니메이터를 찾는다 (루트의 것은 컨트롤러 없는 더미다)
         foreach (Animator animator in GetComponentsInChildren<Animator>())
