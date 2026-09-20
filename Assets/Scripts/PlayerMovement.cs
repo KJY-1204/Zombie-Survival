@@ -11,14 +11,23 @@ public class PlayerMovement : MonoBehaviour {
     public float jumpForce = 5f; // 점프 시 위로 가하는 순간 속도
     public float groundCheckDistance = 0.6f; // 캐릭터 중심에서 바닥까지 검사할 거리
 
+    public float overweightSpeedMultiplier = 0.5f; // 인벤토리 과적 상태에서 이동 속도에 곱할 배율
+
     private Animator playerAnimator; // 플레이어 캐릭터의 애니메이터
     private Animator visualAnimator; // Survivalist 비주얼의 애니메이터
     private PlayerInput playerInput; // 플레이어 입력을 알려주는 컴포넌트
     private Rigidbody playerRigidbody; // 플레이어 캐릭터의 리지드바디
     private Collider playerCollider; // 바닥 검사에서 자기 자신을 제외하기 위한 콜라이더
+    private Inventory inventory; // 과적 여부를 알려주는 인벤토리
 
     private bool isGrounded; // 현재 바닥에 닿아 있는지 여부
     private bool jumpRequested; // 다음 FixedUpdate에서 처리할 점프 요청
+
+    // 과적 상태면 느려진 실제 이동 속도
+    private float currentMoveSpeed =>
+        inventory != null && inventory.isOverweight
+            ? moveSpeed * overweightSpeedMultiplier
+            : moveSpeed;
 
     private void Start() {
         // 사용할 컴포넌트들의 참조를 가져오기
@@ -26,6 +35,7 @@ public class PlayerMovement : MonoBehaviour {
         playerRigidbody = GetComponent<Rigidbody>();
         playerAnimator = GetComponent<Animator>();
         playerCollider = GetComponent<Collider>();
+        inventory = GetComponent<Inventory>();
 
         Transform visualRoot = transform.Find("Survivalist Visual");
         if (visualRoot != null)
@@ -117,7 +127,7 @@ public class PlayerMovement : MonoBehaviour {
             return;
         }
 
-        visualAnimator.SetFloat("Speed", moveAmount * moveSpeed);
+        visualAnimator.SetFloat("Speed", moveAmount * currentMoveSpeed);
         visualAnimator.SetFloat("MotionSpeed", moveAmount > 0f ? 1f : 0f);
         visualAnimator.SetBool("Grounded", isGrounded);
         visualAnimator.SetBool("FreeFall", !isGrounded && !isJumping);
@@ -131,7 +141,7 @@ public class PlayerMovement : MonoBehaviour {
             transform.forward * playerInput.move
             + transform.right * playerInput.rotate,
             1f);
-        Vector3 moveDistance = moveDirection * moveSpeed * Time.deltaTime;
+        Vector3 moveDistance = moveDirection * currentMoveSpeed * Time.deltaTime;
         // 리지드바디를 통해 게임 오브젝트 위치 변경
         playerRigidbody.MovePosition(playerRigidbody.position + moveDistance);
     }

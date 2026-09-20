@@ -184,16 +184,16 @@
 
 ### 1단계. 아이템 데이터 + 무게제 인벤토리 코어
 
-- [ ] `ItemData`(base) ScriptableObject를 만든다 (id/이름/아이콘/개당 무게/최대 스택/설명).
-- [ ] `ConsumableItemData` / `WeaponItemData` / `ArmorItemData` 3종 서브클래스를 만든다.
-- [ ] `EquipmentSlot` enum을 만든다 (주무기/보조무기/근접/머리/상체/하체).
-- [ ] 런타임 상태 `ItemStack`(ItemData 참조 + 개수)을 만든다.
-- [ ] `Inventory`를 만든다 (무게 합산, 스택 병합, 추가/제거/사용, `OnChanged` 이벤트, UI 무지).
-- [ ] `PlayerMovement`에 무게 초과 시 이동속도 배율을 연결한다.
-- [ ] `Player Character.prefab`에 `Inventory`를 붙인다.
-- [ ] Play Mode `eval`로 추가/스택/제거/무게 합산/초과 배율을 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] `ItemData`(base) ScriptableObject를 만든다 (id/이름/아이콘/개당 무게/최대 스택/설명).
+- [x] `ConsumableItemData` / `WeaponItemData` / `ArmorItemData` 3종 서브클래스를 만든다.
+- [x] `EquipmentSlot` enum을 만든다 (주무기/보조무기/근접/머리/상체/하체).
+- [x] 런타임 상태 `ItemStack`(ItemData 참조 + 개수)을 만든다.
+- [x] `Inventory`를 만든다 (무게 합산, 스택 병합, 추가/제거/사용, `OnChanged` 이벤트, UI 무지).
+- [x] `PlayerMovement`에 무게 초과 시 이동속도 배율을 연결한다.
+- [x] `Player Character.prefab`에 `Inventory`를 붙인다.
+- [x] Play Mode `eval`로 추가/스택/제거/무게 합산/초과 배율을 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
 
 ### 2단계. 기존 아이템 3종 전환 + 인벤토리 UI
 

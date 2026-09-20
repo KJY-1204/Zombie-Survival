@@ -279,3 +279,26 @@
 - **`ItemStack`은 ScriptableObject가 아니라 순수 데이터 클래스다.** 정적 정의(`ItemData`)와 런타임 상태 분리는 §11.6 요구이고, M7 저장 DTO로 옮기기도 이 형태가 쉽다.
 - **무게 초과는 획득을 막지 않고 이동속도만 깎는다.** 사용자가 고른 안의 설명이 그랬다. 획득 차단형으로 바꾸려면 `Inventory.Add`의 반환값 처리만 고치면 된다.
 - 상자 에셋은 `Assets/Ditag Design/Mesh Pack/Chest 01/Model/SM_Chest01~16.fbx`다. 기획서 §15의 `Realistic Crate & Chest Bundle`이 이 폴더명으로 들어와 있어서 이름으로는 못 찾는다.
+
+### M3 1단계 구현 결과 (2026-09-20)
+
+- 신규 파일은 전부 `Assets/Scripts/Items/` 아래에 모았다. 기존 스크립트가 `Assets/Scripts` 평면 구조라 파일이 7개나 늘면 섞여서 찾기 어려워진다.
+- `ItemData`를 **abstract로 만들었다.** M3에서 필요한 아이템이 소비/무기/방어구 3종뿐이라 "아무 효과 없는 일반 소지품"을 미리 만들 이유가 없다. M4 파밍에서 재료 아이템이 필요해지면 abstract만 떼면 된다.
+- 소비 아이템 효과는 `ConsumableEffect` enum + 수치 하나로 처리했다. 효과마다 클래스를 파는 대신 `ConsumableItemData.Apply(GameObject)` 안의 switch 하나로 끝냈다. 지금 효과가 3종뿐이고, 기존 `IItem` 구현체들도 이미 `PlayerShooter`/`LivingEntity`/`GameManager`를 직접 알고 있었으므로 결합도가 늘어난 것도 아니다.
+- `Inventory.Add`는 **반환값이 없다(void).** 칸 제한이 없고 무게 초과도 막지 않기로 했으므로 항상 전량 들어간다. 부분 획득이 없는데 `int`를 반환하면 호출부에서 쓸데없는 분기를 유도한다. 획득 차단형으로 바꾸려면 이 시그니처부터 고치게 된다.
+- `overweightSpeedMultiplier`는 `Inventory`가 아니라 `PlayerMovement`에 뒀다. 인벤토리는 "과적인가"(`isOverweight`)까지만 알고, 그게 이동에 어떤 영향을 주는지는 이동 담당이 정하는 게 경계상 맞다.
+- `PlayerMovement.currentMoveSpeed`를 `Move()`뿐 아니라 `UpdateVisualAnimator`의 `Speed` 파라미터에도 넣었다. 그래야 과적 상태에서 달리기가 아니라 걷기 블렌드로 재생된다.
+
+#### 검증 중에 걸린 함정 두 가지 (둘 다 내 코드 버그가 아니었다)
+
+- 첫 검증에서 `hp=-60`, 붕대 사용 실패, 점수 0이 나왔다. 원인은 **플레이 모드를 켜둔 채로 여러 번 eval을 돌리는 사이 좀비가 플레이어를 죽인 것**이었다. `GameManager.AddScore`는 `isGameover`면 조용히 무시한다(`GameManager.cs:45`). 에러 키워드로 짐작하지 않고 실제 상태(`hp.dead`, `isGameover`)와 `AddScore` 본문을 읽어서 특정했다.
+  - **교훈**: 인벤토리처럼 전투와 무관한 시스템을 Play Mode에서 검증할 때는 `ZombieSpawner`를 끄고 기존 좀비를 제거한 뒤에 측정해야 한다. 안 그러면 측정값이 전투 상태에 오염된다.
+- 다만 그 과정에서 **진짜 결함이 하나 드러났다.** 게임오버라 점수가 오르지 않았는데도 `Apply`가 `true`를 반환해 동전이 소모됐다. `Score` 분기에 `!GameManager.instance.isGameover` 조건을 추가해 고쳤다. 상태 오염이 없었으면 못 봤을 버그다.
+
+#### 검증 결과
+
+- 스택 분할(maxStack 5에 12개 -> 5/5/2 세 묶음), 기존 묶음 우선 채우기, 수량 부족 시 제거 거부, 무게 합산 정상.
+- 무게 30.8kg(과적 아님) 실제속도 5.00 -> 45.8kg(과적) 실제속도 2.50 -> 30.8kg 복귀 시 5.00.
+- 붕대 사용 hp 60->90, 탄약 사용 ammoRemain 80->110, 동전 사용 score 0->200, 무기(비소비) 사용 거부, 범위 밖 인덱스 거부.
+- 사망/게임오버 상태에서 붕대·동전 사용이 거부되고 **아이템이 소모되지 않는 것**까지 확인.
+- `compilationFailed: false`, `consoleErrors: 0`. 남은 경고 1건은 기존의 루트 더미 Animator 건이다.
