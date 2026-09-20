@@ -13,6 +13,16 @@ public class ConsumableItemData : ItemData {
     public ConsumableEffect effect = ConsumableEffect.Heal; // 발동할 효과
     public float amount = 50f; // 효과의 크기(회복량, 탄약 수, 점수)
 
+    // 상세 화면에 보여줄 한 줄 효과 설명
+    public string DescribeEffect() {
+        switch (effect)
+        {
+            case ConsumableEffect.Heal: return $"체력 +{amount:F0}";
+            case ConsumableEffect.Ammo: return $"탄약 +{amount:F0}";
+            default: return $"점수 +{amount:F0}";
+        }
+    }
+
     // target에게 효과를 적용한다. 효과가 실제로 적용됐을 때만 true를 반환해
     // 아무 일도 일어나지 않은 경우에는 아이템이 소모되지 않게 한다
     public bool Apply(GameObject target) {
