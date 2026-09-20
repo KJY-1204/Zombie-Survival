@@ -460,14 +460,16 @@
 - [x] Play Mode에서 청크를 내렸다 올려도 채집/루팅 상태가 유지되는지 검증한다 (복원 직후 dead=True/잔여 재생성 10.1초, 시간이 지나자 부활).
 - [x] 청크 생성 비용을 측정한다 (25칸 33.9ms, 칸당 1.36ms).
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 커밋하고 원격 `main`에 push한다. (b2ae181)
 
 ### 2단계. 오토바이와 스포너 배치
 
-- [ ] `World.unity` 시작 지점 근처에 오토바이를 배치한다.
-- [ ] 좀비 스포너와 아이템 스포너를 배치하고 스폰 지점을 연결한다.
-- [ ] Play Mode에서 시드 월드에서의 탑승/주행과 좀비 스폰을 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] `World.unity` 시작 지점 근처에 오토바이를 배치한다 (스폰에서 8m).
+- [x] 좀비 스폰을 붙인다. 고정 스폰 지점 대신 `WorldZombieSpawner`로 플레이어 주변 유지 방식을 쓴다 (사용자 결정).
+- [x] `ItemSpawner`는 World 씬에 넣지 않는다. 상자 루팅과 자원 채집이 공급원이다 (사용자 결정).
+- [x] Play Mode에서 시드 월드 탑승과 좀비 스폰을 검증한다 (탑승/하차 성공, 좀비 8/8 유지, 모두 NavMesh 위 25.7~43.6m).
+- [x] 플레이어가 멀리 이동하면 멀어진 좀비가 정리되는지 검증한다 (275m 이동 후 기존 8마리 제거, 새 고리에 재생성).
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
 - [ ] 커밋하고 원격 `main`에 push한다.
 
 ### 3단계. 저장 데이터 모델과 파일 입출력
