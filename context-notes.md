@@ -601,3 +601,27 @@
 - 철거: 안내 `[X] 벽 철거` 표시 -> 철거 성공 -> 기록 4->3, **목재 +10 / 돌 +5 전액 환급**, 씬 오브젝트 수와 기록 수가 3으로 일치, 철거 후 대상이 즉시 `없음`으로 초기화.
 - 검증 중 만든 건설물이 에디트 모드 씬에 남지 않았음을 확인(0개).
 - `compilationFailed: false`, `groundTruth.consoleErrors: 0`.
+
+## 2026-09-20 - M5 오토바이 착수
+
+### 에셋이 두 개였고 성격이 정반대였다
+
+- 이름만 보고 골랐으면 틀렸을 상황이다(`CLAUDE.md` §11.3).
+  - `RetroStyleGames/.../P_RSG_Bike_B_Dirty_URP.prefab` - **이미 완성된 주행 리그.** Rigidbody + `Gadd420.BicycleVehicle`(모터/브레이크/조향/기울기/서스펜션) + WheelCollider 2개 + 콜라이더 17개 + CenterOfMass. URP 머티리얼 연결됨. 기획서 §15의 `Post Apocalyptic Motorcycle`이 이것이다.
+  - `MotoInteractionAnimsFREE/Prefabs/SKM_Bike.prefab` - **Transform만 있는 껍데기.** 콜라이더/Rigidbody/WheelCollider 0개. 이 에셋의 값어치는 바이크가 아니라 탑승/주행 애니메이션 세트다.
+- 사용자가 RSG 바이크를 택했다. 대신 `MotoInteractionAnimsFREE`의 애니메이션은 SKM_Bike 비율 기준이라 손/발이 정확히 맞지 않는다. 그래서 "앉은 포즈 하나만" 쓰기로 한 것이다.
+
+### 서드파티를 수정하지 않고 주행을 제어할 수 있다
+
+- `BikeController.cs:112~126`을 읽어보니 `Input_Manager`가 있으면 거기서, **없거나 비활성이면 `Input_Compat`으로 폴백**한다. 그리고 `Input_Compat.GetHorizontal/GetVertical`은 레거시 `Input.GetAxisRaw("Horizontal"/"Vertical")`을 그대로 읽는다(우리 `PlayerInput`과 같은 축).
+- 따라서 **`BicycleVehicle` 컴포넌트의 `enabled`만 토글하면 된다.** 탑승 중에는 `PlayerMovement`가 게이팅되므로 같은 축을 공유해도 충돌하지 않는다. 에셋 코드를 한 줄도 건드리지 않는다(`Z_Attack`, `IKHelperTool` 때와 같은 방침).
+
+### 라이더 포즈
+
+- `AS_Idle_Riding.fbx`가 `animationType=Human`, 1.33초 **루프** 클립이다. Survivalist도 Humanoid라 리타게팅된다.
+- **`Weapon Hold Arms` 레이어(weight 1, Human Arms Mask, Override)를 반드시 0으로 내려야 한다.** 안 그러면 라이더가 핸들이 아니라 소총을 쥔 팔 포즈로 앉아 있게 된다. M3에서 맨손 상태를 만들 때 겪은 것과 같은 계열의 문제다.
+
+### 연료·내구도는 사용자가 범위 확대를 알고 선택했다
+
+- 선택지 설명에 **"M5 완료 조건을 크게 넘어서고 수리 재료·UI까지 필요하다"**고 적어 보냈고 그대로 택했다. M5 완료 조건(`GAME_DESIGN.md` §20)에는 탑승/하차/주행, 카메라 전환, 저장 복원만 있다.
+- 기획서 §21의 "오토바이 연료/내구도 도입 여부" 미정 항목이 이것으로 닫혔다.

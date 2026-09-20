@@ -300,3 +300,54 @@
       MCP 파이프라인은 키보드·마우스 입력을 합성할 수 없다. 코드 경로(`Select`/`TryPlace`/`Demolish`/`Interact`)와 UI 버튼은 전부 검증했고 남은 것은 입력 바인딩 자체뿐이다.
 - [ ] 자원을 실제로 쏴서 부수는 조작감 확인 (총으로 벌목하는 방식이 어색하지 않은지).
 - [ ] 건설 프리뷰가 조준을 따라 자연스럽게 움직이는지 육안 확인.
+
+## 2026-09-20 - M5 오토바이
+
+### 착수 준비
+
+- [x] 오토바이 에셋(RSG 바이크), 라이더 표현(앉은 포즈만), 연료·내구도(둘 다)를 사용자에게 확인한다.
+- [x] 두 오토바이 에셋의 실제 구조(물리 리그 유무, 동봉 스크립트)를 확인한다.
+- [x] `BicycleVehicle`의 입력 폴백 경로를 확인한다 (서드파티 수정 없이 제어 가능한지).
+- [x] 라이더 포즈 클립과 `SurvivalistTPS.controller` 레이어 구조를 확인한다.
+- [x] `plan.md`에 목표/결정/완료 조건/구현 순서/제외 범위를 기록한다.
+
+### 1단계. 탑승과 하차
+
+- [ ] `Motorcycle`을 만든다 (`IInteractable`, 탑승 상태, 좌석/하차 지점).
+- [ ] 오토바이 프리팹을 만든다 (RSG URP 프리팹 + 좌석/하차 지점 + 로직).
+- [ ] `SurvivalistTPS.controller`에 `Mounted` 파라미터와 앉은 포즈 상태를 추가한다.
+- [ ] 탑승 중 `Weapon Hold Arms` 레이어 가중치를 0으로 내린다.
+- [ ] 탑승 중 `PlayerInput`/`PlayerMovement`/`PlayerShooter`/`BuildPlacer` 입력을 막는다.
+- [ ] 카메라 타깃을 오토바이로 전환하고 하차 시 되돌린다.
+- [ ] `Prototype` 씬에 오토바이를 배치한다.
+- [ ] Play Mode에서 탑승/하차, 입력 차단·복구, 카메라 전환, 라이더 포즈를 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 2단계. 주행
+
+- [ ] 탑승 중에만 `BicycleVehicle`이 동작하도록 활성/비활성을 연동한다.
+- [ ] 오토바이가 NavMesh 장애물로 잡히지 않는지 확인하고 필요하면 재베이크한다.
+- [ ] Play Mode에서 전진/후진/조향/제동으로 위치와 속도가 변하는지 검증한다.
+- [ ] 미탑승 상태에서 입력이 오토바이를 움직이지 않는지 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 3단계. 연료와 내구도
+
+- [ ] `Motorcycle`에 연료/내구도와 소모 규칙을 넣는다.
+- [ ] 연료 0 또는 내구 0이면 주행이 막히도록 한다.
+- [ ] 충돌 시 내구도가 감소하도록 한다.
+- [ ] 연료통 `ItemData`와 픽업을 만들고 보충 경로를 붙인다.
+- [ ] 고철로 수리하는 경로를 붙인다.
+- [ ] Play Mode에서 소모/고갈/보충/수리를 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 4단계. 저장 데이터 표현과 HUD
+
+- [ ] `MotorcycleSaveData`와 JSON 덤프를 만든다.
+- [ ] 탑승 중 연료/내구도를 HUD에 표시한다.
+- [ ] Play Mode에서 상태 변경이 덤프와 HUD에 반영되는지 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.

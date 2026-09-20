@@ -248,3 +248,76 @@
 - **자원 노드의 저장.** 채집 상태 복원은 M7이다. M4에서는 일정 시간 뒤 재생성으로 둔다.
 - **건설물 내구도/파괴.** M4 완료 조건에 없다.
 - **저장/불러오기 실제 구현.** M7이다. M4는 "저장 대상 데이터로 표현"까지만 한다.
+
+## M5 오토바이 (2026-09-20)
+
+### 목표
+
+`Prototype` 씬에서 플레이어가 오토바이에 타고 내리고 주행할 수 있게 한다. 탑승 중 카메라가 안정적으로 전환되고, 연료와 내구도를 소모하며, 오토바이 상태 전체가 저장 가능한 순수 데이터로 표현된다.
+
+### 사용자가 확정한 설계 결정 (2026-09-20)
+
+- **오토바이는 RSG 바이크**(`P_RSG_Bike_B_Dirty_URP`)를 쓴다. 기획서 §15의 `Post Apocalyptic Motorcycle`이고 주행 물리가 이미 완성돼 있다.
+- **라이더는 시트에 앉힌 포즈 하나만** 쓴다. 탑승/하차/주행 전환 애니메이션은 쓰지 않는다.
+- **연료와 내구도를 둘 다 넣는다.** 기획서 §21의 미정 항목이 이것으로 닫혔다.
+  - 내가 단점으로 적어 보낸 내용을 그대로 옮겨둔다 - **M5 완료 조건(탑승/하차/주행, 카메라 전환, 저장 복원)을 넘어서고 수리 재료와 수리 경로가 따라붙는다.** 사용자가 이를 보고 선택했다.
+
+### 사전에 확인한 사실
+
+- `P_RSG_Bike_B_Dirty_URP.prefab`은 **이미 완성된 주행 리그**다. 루트에 `Rigidbody` + `Gadd420.BicycleVehicle` + `VehiclePipeline` + `Input_Manager`, 자식에 `Wheel_Colliders`(WheelCollider 2개) / `Colliders`(17개) / `CenterOfMass`. URP 머티리얼도 연결돼 있다. 크기 1.24 x 1.83 x 2.70.
+- `BicycleVehicle`은 모터토크/브레이크/조향각/기울기(lean)/서스펜션을 다룬다. 입력은 `Input_Manager`가 있으면 거기서, **없거나 비활성이면 `Input_Compat`으로 폴백**한다(`BikeController.cs:112~126`).
+- `Input_Compat.GetHorizontal/GetVertical`은 레거시 `Input.GetAxisRaw("Horizontal"/"Vertical")`을 그대로 읽는다. 우리 `PlayerInput`과 같은 축이다.
+  - 따라서 **서드파티 스크립트를 전혀 수정하지 않고** `BicycleVehicle` 컴포넌트의 활성/비활성만으로 주행을 제어할 수 있다. 탑승 중에는 `PlayerMovement`가 게이팅되므로 같은 축을 써도 충돌하지 않는다.
+- `SKM_Bike`(애니메이션 세트 동봉)는 `Transform`뿐이고 콜라이더/Rigidbody/WheelCollider가 0개다. 물리를 처음부터 만들어야 해서 선택하지 않았다.
+- 라이더 포즈용 `AS_Idle_Riding.fbx`는 `animationType=Human`, 길이 1.33초, **루프 클립**이다. Survivalist도 Humanoid라 리타게팅이 된다.
+- `SurvivalistTPS.controller` 구조.
+  - `Base Layer`(weight 1, 상태 4개: Idle Walk Run Blend / InAir / JumpLand / JumpStart)
+  - `Weapon Hold Arms`(weight 1, Human Arms Mask, Override, 상태 1개) - **항상 총 쥔 팔 포즈를 덮어쓴다.** 탑승 중에는 이 레이어 가중치를 0으로 내려야 라이더가 핸들을 잡은 포즈로 보인다.
+  - 파라미터: `Speed`, `Jump`, `Grounded`, `FreeFall`, `MotionSpeed`.
+
+### 데이터 소유권과 경계 (`CLAUDE.md` §11.6)
+
+- `Motorcycle`(MonoBehaviour) - 탑승 상태, 연료, 내구도의 단일 소유자. `IInteractable`을 구현해 `E`로 타고 내린다.
+- `MotorcycleSaveData`(순수 데이터) - 위치, 회전, 연료, 내구도, 탑승 여부. M7 저장 DTO로 그대로 옮길 수 있는 형태로 만든다.
+- 오토바이는 UI를 모른다. 상태와 이벤트만 공개하고 HUD가 그것만 읽는다.
+- **카메라 코어는 건드리지 않는다.** `ThirdPersonCameraController`의 `target`만 바꿔서 오토바이를 따라가게 한다(`CLAUDE.md` §11.6 "카메라 모드가 바뀌어도 인벤토리/데미지/AI/저장 로직은 바뀌지 않는다").
+- 서드파티 `BicycleVehicle`/`Input_Manager`/`Input_Compat`은 **수정하지 않는다.** 활성/비활성으로만 다룬다.
+
+### 완료 조건 (`GAME_DESIGN.md` §20 M5 + 사용자 추가분)
+
+- 오토바이에 다가가 `E`로 탑승하고 다시 `E`로 하차할 수 있다.
+- 탑승 중 플레이어 이동/사격/건설/상호작용 입력이 전부 막히고, 하차하면 복구된다.
+- 탑승 중 카메라가 오토바이를 따라가고, 하차하면 플레이어로 되돌아온다.
+- 라이더가 시트에 앉은 포즈로 보이고, 총 쥔 팔 오버라이드가 꺼진다.
+- 전진/후진/조향/제동이 동작한다.
+- 주행하면 연료가 줄고, 0이 되면 주행할 수 없다.
+- 충돌하면 내구도가 줄고, 0이 되면 주행할 수 없다.
+- 연료통 아이템으로 연료를 보충하고, 고철로 수리할 수 있다.
+- 오토바이 상태 전체가 순수 데이터(`MotorcycleSaveData`)로 표현된다.
+- `compilationFailed: false`, `consoleErrors: 0`.
+
+### 구현 순서 (수직 슬라이스 4단계, 각 단계마다 커밋)
+
+1. **탑승과 하차**
+   `Motorcycle`(IInteractable), 좌석 부착, `Mounted` 애니메이터 상태와 `Weapon Hold Arms` 가중치 0, 입력 게이팅, 카메라 타깃 전환, 하차 위치 계산.
+   검증: 탑승/하차 시 입력 차단·복구, 카메라 타깃, 라이더 포즈, 하차 지점이 지면 위인지.
+
+2. **주행**
+   `BicycleVehicle` 활성/비활성 연동, 오토바이 프리팹 구성과 씬 배치, NavMesh 재베이크.
+   검증: 전진/후진/조향/제동으로 실제 위치·속도가 변하는지, 미탑승 시 움직이지 않는지.
+
+3. **연료와 내구도**
+   `Motorcycle`에 연료/내구도와 소모 규칙, 0일 때 주행 차단, 연료통 아이템과 보충, 고철 수리.
+   검증: 주행 시 연료 감소, 고갈 시 정지, 충돌 시 내구 감소, 보충·수리로 회복.
+
+4. **저장 데이터 표현과 HUD**
+   `MotorcycleSaveData`와 JSON 덤프, 탑승 중 연료/내구 표시.
+   검증: 상태를 바꾼 뒤 덤프가 그대로 반영되는지.
+
+### 의도적으로 범위에서 제외
+
+- **탑승/하차/주행 전환 애니메이션.** 사용자가 "앉은 포즈 하나"를 택했다. `MotoInteractionAnimsFREE`의 Mount/Dismount/Turn 클립은 쓰지 않는다.
+- **핸들바 손 IK.** 앉은 포즈만 쓰므로 손 위치가 약간 어긋난다. 폴리싱 단계 사안이다.
+- **오토바이 저장/불러오기 실제 구현.** M7이다. M5는 "저장 가능한 데이터로 표현"까지만 한다.
+- **오토바이가 좀비를 치는 판정, 주행 중 사격.** M5 완료 조건에 없다.
+- **`BicycleVehicle` 물리 튜닝.** 에셋 기본값으로 시작하고, 주행감이 문제되면 사용자 확인 후 조정한다.
