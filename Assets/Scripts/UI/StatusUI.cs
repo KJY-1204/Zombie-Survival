@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class StatusUI : ScreenPanel {
+public class StatusUI : TabView {
     public Text statusText; // 수치를 모아서 표시할 텍스트
 
     private PlayerHealth playerHealth; // 체력을 읽을 대상
@@ -21,18 +21,16 @@ public class StatusUI : ScreenPanel {
         }
     }
 
-    // 체력은 이벤트가 없어서 열려 있는 동안 매 프레임 갱신한다
-    protected override void Update() {
-        base.Update();
-
-        if (panel.activeSelf)
+    // 체력은 이벤트가 없어서 보이는 동안 매 프레임 갱신한다
+    private void Update() {
+        if (isVisible)
         {
             Refresh();
         }
     }
 
-    protected override void Refresh() {
-        if (playerHealth == null || !panel.activeSelf)
+    public override void Refresh() {
+        if (playerHealth == null || !isVisible)
         {
             return;
         }

@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class InventoryUI : ScreenPanel {
+public class InventoryUI : TabView {
     public Text weightText; // 현재 무게 / 최대 무게 표시
     public Transform content; // 아이템 줄이 붙을 부모
     public GameObject rowPrefab; // 아이템 한 줄의 프리팹
@@ -28,9 +28,9 @@ public class InventoryUI : ScreenPanel {
     }
 
     // 보유 목록과 무게 표시를 현재 인벤토리 상태로 다시 그린다
-    protected override void Refresh() {
+    public override void Refresh() {
         // 닫혀 있는 동안에는 다시 그릴 필요가 없다
-        if (inventory == null || !panel.activeSelf)
+        if (inventory == null || !isVisible)
         {
             return;
         }

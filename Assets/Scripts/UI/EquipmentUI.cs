@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class EquipmentUI : ScreenPanel {
+public class EquipmentUI : TabView {
     public Text armorText; // 총 방어력 표시
     public Transform slotContent; // 6개 슬롯 줄이 붙을 부모
     public Transform availableContent; // 장착 가능한 인벤토리 아이템 줄이 붙을 부모
@@ -40,8 +40,8 @@ public class EquipmentUI : ScreenPanel {
     }
 
     // 슬롯 목록과 장착 후보 목록을 현재 상태로 다시 그린다
-    protected override void Refresh() {
-        if (equipment == null || !panel.activeSelf)
+    public override void Refresh() {
+        if (equipment == null || !isVisible)
         {
             return;
         }
