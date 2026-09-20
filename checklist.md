@@ -440,3 +440,60 @@
 - [x] Play Mode에서 좀비가 학교 안까지 쫓아오는지 검증한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
 - [x] 커밋하고 원격 `main`에 push한다.
+
+## 2026-09-20 - M7 저장 시스템
+
+### 착수 준비
+
+- [x] `World.unity`에 저장 대상 콘텐츠가 있는지 확인한다 (오토바이/상자/자원/스포너 전부 0개).
+- [x] 기준 씬(World + 콘텐츠 먼저), 슬롯 UI(게임 내 ScreenPanel), 자동저장(시간 간격)을 사용자에게 확인한다.
+- [x] `plan.md`에 목표/결정/완료 조건/구현 순서/제외 범위를 기록한다.
+
+### 1단계. 청크 콘텐츠 배치
+
+- [ ] `ChunkLibrary`에 자원 노드/루팅 상자 프리팹과 청크 타입별 개수를 넣는다.
+- [ ] `WorldChunkBuilder`가 칸 시드로 자원/상자를 결정론적으로 배치한다.
+- [ ] `WorldRuntimeState`를 만들어 채집/루팅 상태를 청크 밖에 보관한다.
+- [ ] 청크가 다시 올라올 때 저장된 상태를 반영한다.
+- [ ] Play Mode에서 같은 칸의 배치가 항상 같은지 검증한다.
+- [ ] Play Mode에서 청크를 내렸다 올려도 채집/루팅 상태가 유지되는지 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 2단계. 오토바이와 스포너 배치
+
+- [ ] `World.unity` 시작 지점 근처에 오토바이를 배치한다.
+- [ ] 좀비 스포너와 아이템 스포너를 배치하고 스폰 지점을 연결한다.
+- [ ] Play Mode에서 시드 월드에서의 탑승/주행과 좀비 스폰을 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 3단계. 저장 데이터 모델과 파일 입출력
+
+- [ ] `SaveRegistry`(id -> ItemData/BuildableData)를 만든다.
+- [ ] `SaveData` 계열 순수 데이터와 `SaveVersion`을 만든다.
+- [ ] `SaveSystem`을 만든다 (슬롯 파일 경로, 원자적 저장, 목록 조회, 삭제).
+- [ ] Play Mode에서 쓰기/읽기 왕복과 원자적 저장을 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 4단계. 수집과 복원
+
+- [ ] 플레이어 위치/체력을 저장/복원한다.
+- [ ] 인벤토리와 장비를 저장/복원한다.
+- [ ] 건설물을 저장/복원한다 (보관 상자 내용물 포함).
+- [ ] 오토바이를 저장/복원한다.
+- [ ] 루팅/채집 상태와 월드 시드를 저장/복원한다.
+- [ ] Play Mode에서 상태 변경 -> 저장 -> 훼손 -> 불러오기 왕복을 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 5단계. 슬롯 UI와 자동저장
+
+- [ ] 10개 슬롯 화면(`ScreenPanel`)을 만들고 `ESC`로 연다.
+- [ ] 각 슬롯의 수동/자동저장 칸을 구분해 표시한다.
+- [ ] 저장/불러오기/삭제 버튼을 연결한다.
+- [ ] 일정 시간마다 자동저장한다 (수동을 덮지 않는다).
+- [ ] Play Mode에서 슬롯 목록, 저장/불러오기/삭제, 자동저장을 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
