@@ -229,10 +229,17 @@
 
 ### 5단계. 상자 루팅
 
-- [ ] `LootContainer`를 만든다 (내용물 목록, 열림 상태, 인벤토리로 옮기기).
-- [ ] 상호작용 입력(`E`)과 대상 감지를 `PlayerInput`/상호작용 컴포넌트에 추가한다.
-- [ ] `Ditag Design/Mesh Pack/Chest 01`의 모델로 상자 프리팹을 만든다.
-- [ ] `Prototype` 씬에 상자를 배치한다.
-- [ ] Play Mode에서 열기 -> 인벤토리 적재 -> 빈 상자 재개봉 불가를 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] `LootContainer`를 만든다 (내용물 목록, 열림 상태, 인벤토리로 옮기기).
+- [x] 상호작용 입력(`E`)과 대상 감지를 `PlayerInput`/상호작용 컴포넌트에 추가한다.
+- [x] `Ditag Design/Mesh Pack/Chest 01`의 모델로 상자 프리팹을 만든다.
+- [x] `Prototype` 씬에 상자를 배치한다.
+- [x] Play Mode에서 열기 -> 인벤토리 적재 -> 빈 상자 재개봉 불가를 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
+
+### M3 마무리 - 사용자 수동 확인이 필요한 항목
+
+- [ ] 키 입력 확인: `I`(인벤토리) / `O`(장비) / `K`(상태) / `E`(상자 열기) / `1`,`2`(주무기·보조무기 전환).
+      MCP 파이프라인은 키보드 입력을 합성할 수 없어 자동 검증이 불가능하다.
+      코드 경로(`SetOpen`, `SelectSlot`, `LootContainer.Loot`)와 버튼 클릭은 전부 검증했고, 남은 것은 키 바인딩 그 자체뿐이다.
+- [ ] 화면이 열린 동안 마우스로 시점/캐릭터가 돌지 않는지 육안 확인.

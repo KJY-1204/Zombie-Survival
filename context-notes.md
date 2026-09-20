@@ -395,3 +395,39 @@
 - 검증 결과: 피해 30 + 방탄조끼 장착 + 탄약 45개(40.5kg) 추가 후 화면이 `체력 70/100`, `총 방어력 12`, `무게 52.00 / 40.0 kg (과적 - 이동속도 감소)`, `상체 방탄조끼 방어 +12`로 갱신됐다. 스크린샷으로 한글 표시도 확인했다.
 - 화면 배타도 3개 사이에서 동작한다(상태가 열린 상태에서 인벤토리를 열면 상태가 닫힘).
 - `compilationFailed: false`, `consoleErrors: 0`.
+
+### M3 5단계 구현 결과 (2026-09-20)
+
+#### 상자 에셋에서 걸린 두 가지
+
+- 기획서 §15의 `Realistic Crate & Chest Bundle`은 `Assets/Ditag Design/Mesh Pack/Chest 01/`에 들어와 있다. **폴더 이름으로는 절대 못 찾는다.** URP/Built-in/HDRP 프리팹이 따로 있고 프로젝트가 URP이므로 `Prefab/URP/SM_Chest01.prefab`을 썼다.
+- **에셋의 URP 프리팹이 FBX 내장 머티리얼(`Chest01`, 텍스처 없음)을 참조하고 있어서 상자가 새하얗게 나왔다.** 실제 머티리얼은 `Material/URP/M_Chest 01.mat`(`_BaseMap=T_Chest01_D`)인데 **이름에 공백이 있어서**(`M_Chest 01`) `FindAssets("Chest01")` 검색에 걸리지 않았다. 프리팹의 `MeshRenderer.sharedMaterial`을 이 머티리얼로 교체해 해결했다. 다른 상자(02~18)를 추가할 때도 같은 교체가 필요하다.
+- 상자 메시는 뚜껑이 분리돼 있지 않은 단일 메시다. **여는 애니메이션은 불가능**하므로, 열림 피드백은 안내 문구가 "[E] 보급 상자 A 열기" -> "보급 상자 A (비어 있음)"로 바뀌는 것으로 대신했다.
+
+#### 구조
+
+- `LootContainer`(내용물 + `isEmpty` + `Loot(Inventory)`), `PlayerInteractor`(주변 탐색 + `E` 입력), `InteractionPromptUI`(안내 표시)로 나눴다. `PlayerInteractor`는 `currentTarget`만 공개하고 UI는 그것만 읽는다. 상호작용 컴포넌트가 직접 `Text`를 들고 있으면 §11.6의 "시스템은 UI를 모른다"가 깨진다.
+- 탐색은 `Physics.OverlapSphere(transform.position, 2.5f)` + `GetComponentInParent<LootContainer>()`다. 레이어 마스크를 새로 만들지 않았다. 상자 수가 적고 레이어를 늘리면 기존 `whatIsTarget`(레이어 9) 설정과 얽힌다.
+- 빈 상자도 `currentTarget`에 포함시킨다. 그래야 "비어 있음"을 안내할 수 있다. `Loot()`가 `isEmpty`로 막는다.
+- 상자 프리팹은 **에셋 프리팹을 자식으로 둔 중첩 구조**다(`Loot Chest` 루트에 BoxCollider + LootContainer, 자식에 `SM_Chest01`). 좀비 때와 달리 언팩하지 않은 이유는 Animator/아바타 경로 문제가 없고 에셋 원본을 건드리지 않는 쪽이 낫기 때문이다.
+- `BoxCollider`는 메시의 로컬 bounds(center 0,0.51,0.02 / size 1.27,1.02,0.58)를 그대로 썼다. 트리거가 아니라 솔리드라 플레이어가 통과하지 못한다.
+
+#### NavMesh를 다시 베이크했다
+
+- 상자는 솔리드 장애물이므로 NavMesh에서 파여야 한다. 안 그러면 좀비가 상자를 통과하거나 끼인다.
+- 상자 3개(자식 포함)에 `NavigationStatic`을 주고 재베이크했다. **정점 16 -> 108, 삼각형 44**로 늘었고, 세 상자 위치 모두 `NavMesh.SamplePosition`이 실패(= 파였음)하는 것을 확인했다.
+- `CLAUDE_HANDOFF.md`에 적어둔 "지형을 바꾸면 다시 베이크해야 한다"가 실제로 적용된 첫 사례다. 앞으로 씬에 정적 장애물을 놓을 때마다 이 절차를 반복할 것.
+
+#### 검증 결과
+
+- 배치: `보급 상자 A`(붕대3, 탄약 상자2), `무기 상자`(저격총1, 탄약 상자4), `보호구 상자`(군모1, 방탄조끼1, 전투바지1)를 `Loot Chests` 아래에 배치.
+- 감지: 멀리 있을 때 `currentTarget=없음`, 1.40m 거리에서 `보급 상자 A`가 잡히고 안내가 `[E] 보급 상자 A 열기`로 뜬다.
+- 열기: `Loot()` -> 묶음 2->4, 무게 5.00 -> 7.40(붕대 0.6 + 탄약 상자 1.8). 다시 열면 `False`, 내용 변화 없음. 안내가 `보급 상자 A (비어 있음)`으로 바뀐다.
+- 상자 -> 장비 연결: 무기 상자에서 얻은 저격총을 장착하니 주무기가 저격총이 되고 **실제로 손에 `Sniper Gun(Clone)`이 들렸으며 오른손-그립 거리 0.00000**. 보호구 상자 3종 장착 시 총 방어력 20.
+- 텍스처 교체 후 스크린샷으로 나무 상자 3개와 안내 문구가 정상 렌더링되는 것을 확인했다.
+- `groundTruth.consoleErrors: 0`. 콘솔 버퍼에 잡힌 에러 1건은 게임 코드가 아니라 내가 머티리얼을 조회할 때 난 MCP 도구 타임아웃(`Failed to handle /api/exec request`)이다.
+
+#### 남은 것
+
+- **키 입력 자체는 자동 검증이 불가능하다.** MCP 파이프라인이 키보드 입력을 합성하지 못한다. `SetOpen`/`SelectSlot`/`Loot` 같은 코드 경로와 UI 버튼 클릭은 전부 직접 호출해 검증했지만, `I`/`O`/`K`/`E`/`1`/`2` 키 바인딩이 실제로 먹는지는 사용자가 플레이해서 확인해야 한다. `checklist.md`에 남겨뒀다.
+- 새로 만든 UI 스크립트들이 기존 스타일을 따라 `FindObjectOfType`을 써서 CS0618 폐기 경고가 몇 건 늘었다. 기능 영향은 없고, 기존에 미뤄둔 `FindObjectOfType` 일괄 정리 작업에 같이 묶으면 된다.
