@@ -16,6 +16,7 @@ public class BuildableData : ScriptableObject {
     [TextArea] public string description; // 건설 메뉴에 표시할 설명
 
     public GameObject prefab; // 실제로 설치할 프리팹
+    public Sprite icon; // 건설 메뉴에 표시할 아이콘
     public BuildCost[] costs; // 설치에 필요한 재료
 
     public Vector3 checkCenter = new Vector3(0f, 1f, 0f); // 겹침 판정 상자의 중심(로컬)

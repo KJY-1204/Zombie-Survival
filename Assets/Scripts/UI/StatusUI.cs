@@ -1,9 +1,15 @@
-// 체력/방어력/무게/장착 무기의 핵심 수치를 읽기 전용으로 보여주는 화면
+// 체력/방어력/무게/장착 무기의 핵심 수치를 읽기 전용으로 보여주는 탭
 using UnityEngine;
 using UnityEngine.UI;
 
 public class StatusUI : TabView {
-    public Text statusText; // 수치를 모아서 표시할 텍스트
+    [Header("체력")]
+    public RectTransform healthFill; // 체력 막대의 채움 부분
+    public Text healthText; // 현재 체력 / 최대 체력
+
+    [Header("수치")]
+    public Text statsText; // 방어력, 무게, 손에 든 무기
+    public Text equipText; // 슬롯별 장착 상태
 
     private PlayerHealth playerHealth; // 체력을 읽을 대상
     private Inventory inventory; // 무게를 읽을 대상
@@ -11,7 +17,7 @@ public class StatusUI : TabView {
     private PlayerShooter playerShooter; // 지금 손에 든 총을 읽을 대상
 
     private void Start() {
-        playerHealth = FindObjectOfType<PlayerHealth>();
+        playerHealth = FindFirstObjectByType<PlayerHealth>();
 
         if (playerHealth != null)
         {
@@ -35,13 +41,22 @@ public class StatusUI : TabView {
             return;
         }
 
-        statusText.text = string.Join("\n", new[] {
-            $"체력          {playerHealth.health:F0} / {playerHealth.startingHealth:F0}",
+        float ratio = playerHealth.startingHealth > 0f
+            ? Mathf.Clamp01(playerHealth.health / playerHealth.startingHealth)
+            : 0f;
+
+        healthFill.anchorMax = new Vector2(ratio, 1f);
+        healthFill.GetComponent<Image>().color = UiTheme.BarColorForRemaining(ratio);
+        healthText.text = $"{playerHealth.health:F0} / {playerHealth.startingHealth:F0}";
+
+        statsText.text = string.Join("\n", new[] {
             $"총 방어력      {equipment.totalArmor}",
             $"무게          {inventory.totalWeight:F2} / {inventory.maxWeight:F1} kg"
                 + (inventory.isOverweight ? "   (과적 - 이동속도 감소)" : ""),
-            "",
             $"손에 든 무기   {DescribeHeldWeapon()}",
+        });
+
+        equipText.text = string.Join("\n", new[] {
             $"주무기        {DescribeSlot(EquipmentSlot.PrimaryWeapon)}",
             $"보조무기      {DescribeSlot(EquipmentSlot.SecondaryWeapon)}",
             $"근접          {DescribeSlot(EquipmentSlot.Melee)}",

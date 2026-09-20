@@ -1,12 +1,13 @@
-// 장비의 공개 상태와 onChanged 이벤트만 읽어서 6개 슬롯과 장착 가능한 아이템을 보여주는 화면
+// 장비의 공개 상태와 onChanged 이벤트만 읽어서 6개 슬롯과 장착 후보를 보여주는 탭
 using UnityEngine;
 using UnityEngine.UI;
 
 public class EquipmentUI : TabView {
-    public Text armorText; // 총 방어력 표시
-    public Transform slotContent; // 6개 슬롯 줄이 붙을 부모
-    public Transform availableContent; // 장착 가능한 인벤토리 아이템 줄이 붙을 부모
-    public GameObject rowPrefab; // 줄 하나의 프리팹 (Label + Action Button)
+    public Transform slotContent; // 장착 중인 슬롯 줄이 붙을 부모
+    public Transform availableContent; // 장착 가능한 아이템 줄이 붙을 부모
+    public GameObject rowPrefab; // 아이템 줄 프리팹 (인벤토리와 같은 것을 쓴다)
+    public Text armorText; // 총 방어력
+    public Text availableEmptyText; // 장착할 것이 없을 때의 안내
 
     private Equipment equipment; // 표시 대상 장비
     private Inventory inventory; // 장착 후보를 가져올 인벤토리
@@ -17,7 +18,7 @@ public class EquipmentUI : TabView {
     };
 
     private void Start() {
-        equipment = FindObjectOfType<Equipment>();
+        equipment = FindFirstObjectByType<Equipment>();
 
         if (equipment != null)
         {
@@ -39,7 +40,6 @@ public class EquipmentUI : TabView {
         }
     }
 
-    // 슬롯 목록과 장착 후보 목록을 현재 상태로 다시 그린다
     public override void Refresh() {
         if (equipment == null || !isVisible)
         {
@@ -56,25 +56,37 @@ public class EquipmentUI : TabView {
             CreateSlotRow((EquipmentSlot)i);
         }
 
-        CreateAvailableRows();
+        availableEmptyText.gameObject.SetActive(CreateAvailableRows() == 0);
     }
 
-    // 슬롯 한 줄: 무엇을 장착 중인지와 해제 버튼
+    // 슬롯 한 줄: 무엇을 장착 중인지. 누르면 해제된다
     private void CreateSlotRow(EquipmentSlot slot) {
-        GameObject row = Instantiate(rowPrefab, slotContent);
         ItemData equipped = equipment.Get(slot);
+        GameObject row = Instantiate(rowPrefab, slotContent);
 
-        Text label = row.transform.Find("Label").GetComponent<Text>();
-        label.text = $"[{slotNames[(int)slot]}]  " + (equipped != null ? equipped.displayName : "-");
+        row.GetComponent<Image>().color = equipped != null
+            ? UiTheme.RowSelected
+            : UiTheme.RowBackground;
 
-        Button action = row.transform.Find("Action Button").GetComponent<Button>();
-        action.transform.Find("Text").GetComponent<Text>().text = "해제";
-        action.interactable = equipped != null;
-        action.onClick.AddListener(() => equipment.Unequip(slot));
+        Image icon = row.transform.Find("Icon Slot/Icon").GetComponent<Image>();
+        icon.sprite = equipped != null ? equipped.icon : null;
+        icon.enabled = equipped != null;
+
+        row.transform.Find("Name").GetComponent<Text>().text =
+            equipped != null ? equipped.displayName : "비어 있음";
+        row.transform.Find("Detail").GetComponent<Text>().text = slotNames[(int)slot];
+
+        Text action = row.transform.Find("Count").GetComponent<Text>();
+        action.text = equipped != null ? "해제" : "";
+
+        row.GetComponent<Button>().interactable = equipped != null;
+        row.GetComponent<Button>().onClick.AddListener(() => equipment.Unequip(slot));
     }
 
     // 인벤토리에 있는 아이템 중 장착 가능하고 아직 장착하지 않은 것만 후보로 보여준다
-    private void CreateAvailableRows() {
+    private int CreateAvailableRows() {
+        int count = 0;
+
         foreach (ItemStack stack in inventory.items)
         {
             if (!Equipment.TryGetSlot(stack.data, out EquipmentSlot slot)
@@ -84,25 +96,27 @@ public class EquipmentUI : TabView {
             }
 
             GameObject row = Instantiate(rowPrefab, availableContent);
-
-            Text label = row.transform.Find("Label").GetComponent<Text>();
-            label.text = $"{stack.data.displayName}    {DescribeItem(stack.data)}";
-
-            Button action = row.transform.Find("Action Button").GetComponent<Button>();
-            action.transform.Find("Text").GetComponent<Text>().text = "장착";
+            row.GetComponent<Image>().color = UiTheme.RowBackground;
+            row.transform.Find("Icon Slot/Icon").GetComponent<Image>().sprite = stack.data.icon;
+            row.transform.Find("Name").GetComponent<Text>().text = stack.data.displayName;
+            row.transform.Find("Detail").GetComponent<Text>().text = DescribeItem(stack.data, slot);
+            row.transform.Find("Count").GetComponent<Text>().text = "장착";
 
             ItemData item = stack.data;
-            action.onClick.AddListener(() => equipment.Equip(item));
+            row.GetComponent<Button>().onClick.AddListener(() => equipment.Equip(item));
+            count++;
         }
+
+        return count;
     }
 
     // 후보 목록에 함께 보여줄 한 줄 설명
-    private static string DescribeItem(ItemData item) {
+    private static string DescribeItem(ItemData item, EquipmentSlot slot) {
         if (item is ArmorItemData armor)
         {
-            return $"방어 +{armor.armor}   {armor.weight:F2} kg";
+            return $"{slotNames[(int)slot]}   방어 +{armor.armor}   {armor.weight:F2} kg";
         }
 
-        return $"{item.weight:F2} kg";
+        return $"{slotNames[(int)slot]}   {item.weight:F2} kg";
     }
 }

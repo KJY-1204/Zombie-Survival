@@ -67,6 +67,41 @@ public static class ItemIconGenerator {
             EditorUtility.SetDirty(item);
         }
 
+        // 건설물도 같은 방식으로 프리팹을 찍어 아이콘을 만든다
+        foreach (string guid in AssetDatabase.FindAssets("t:BuildableData"))
+        {
+            var buildable = AssetDatabase.LoadAssetAtPath<BuildableData>(
+                AssetDatabase.GUIDToAssetPath(guid));
+
+            if (buildable == null || buildable.prefab == null
+                || (!force && buildable.icon != null))
+            {
+                continue;
+            }
+
+            if (done.Count + placeholder.Count >= maxCount)
+            {
+                pending.Add(buildable.buildableId);
+                continue;
+            }
+
+            Texture2D preview = AssetPreview.GetAssetPreview(buildable.prefab);
+
+            if (preview == null)
+            {
+                pending.Add(buildable.buildableId);
+                continue;
+            }
+
+            string buildPath = $"{IconFolder}/build_{buildable.buildableId}.png";
+            File.WriteAllBytes(buildPath, Readable(preview).EncodeToPNG());
+            AssetDatabase.ImportAsset(buildPath, ImportAssetOptions.ForceUpdate);
+            ApplySpriteSettings(buildPath);
+            buildable.icon = AssetDatabase.LoadAssetAtPath<Sprite>(buildPath);
+            EditorUtility.SetDirty(buildable);
+            done.Add(buildable.buildableId);
+        }
+
         AssetDatabase.SaveAssets();
 
         return $"미리보기 {done.Count}개 | 대체 타일 {placeholder.Count}개 | 대기 {pending.Count}개"

@@ -52,10 +52,18 @@ public class SaveData {
     public MotorcycleSaveData motorcycle = new MotorcycleSaveData();
     public WorldRuntimeSaveData worldRuntime = new WorldRuntimeSaveData();
 
-    // 슬롯 목록에 보여줄 한 줄 요약
+    // 슬롯 목록에 보여줄 한 줄 요약 (줄 폭이 좋은 줄 모르므로 짧게 유지한다)
     public string Summarize() {
         var time = TimeSpan.FromSeconds(playTime);
-        return $"시드 {worldSeed} | {time.Hours}시간 {time.Minutes}분"
-            + $" | 아이템 {inventory.Count}종 | 건설물 {buildings.Count}개";
+        return $"{SavedAtLocal()}  ·  {time.Hours}시간 {time.Minutes}분"
+            + $"  ·  아이템 {inventory.Count}종  ·  건설 {buildings.Count}";
+    }
+
+    // 저장 시각을 현지 시간 짧은 형태로
+    private string SavedAtLocal() {
+        return DateTime.TryParse(savedAtUtc, null,
+            System.Globalization.DateTimeStyles.RoundtripKind, out DateTime parsed)
+            ? parsed.ToLocalTime().ToString("MM-dd HH:mm")
+            : "-";
     }
 }

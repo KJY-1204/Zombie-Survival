@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: "\uBC14\uB9AC\uCF00\uC774\uB4DC"
   description: "\uC880\uBE44\uC758 \uC811\uADFC\uC744 \uB2A6\uCD98\uB2E4."
   prefab: {fileID: 4668674985401916907, guid: dd3557fab94f2e84a96e1bdc53d91a1c, type: 3}
+  icon: {fileID: 21300000, guid: 1e420fff568f9c14eb09669808bc4dfe, type: 3}
   costs:
   - data: {fileID: 11400000, guid: eb6efa28caf752643b13830fd570afd8, type: 2}
     count: 6
