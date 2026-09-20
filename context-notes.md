@@ -662,3 +662,28 @@
 - 미탑승 상태에서 `BicycleVehicle.enabled=False`라 입력이 와도 오토바이가 움직이지 않는다.
 - 오토바이가 물리로 자리를 잡은 뒤에도 기울기 0.1도로 넘어지지 않는다.
 - `compilationFailed: false`, `groundTruth.consoleErrors: 0`.
+
+### M5 2단계 구현 결과 (2026-09-20)
+
+#### 코드 변경이 없는 단계였다
+
+- 주행은 1단계에서 이미 연결됐다. `Motorcycle`이 탑승/하차에 맞춰 `BicycleVehicle.enabled`만 토글하고, 에셋 컨트롤러가 `Input_Compat`(레거시 `Horizontal`/`Vertical` 축)으로 알아서 굴러간다. 2단계는 **그게 실제로 도는지 확인하는 단계**였고 새 코드가 필요 없었다.
+- 오토바이는 런타임에 움직이는 물체라 `NavigationStatic`을 주지 않았다(`staticFlags=0` 확인). NavMesh를 다시 구울 필요도 없다. 건설물과 같은 이유로 좀비는 물리 콜라이더로만 막힌다.
+
+#### 키 입력을 합성할 수 없어 검증 방식을 바꿔야 했다
+
+- 처음엔 에셋의 `Input_Manager`에 값을 주입하려 했는데 **불가능했다.** `hzInput`/`vInput`이 `protected` 필드인데다 `Input_Manager.Update()`가 매 프레임 실제 입력으로 덮어쓴다. `BicycleVehicle`이 매니저를 쓰려면 `enabled`여야 하고, `enabled`면 `Update`가 돈다.
+- 그래서 세 갈래로 나눠 검증했다.
+  1. **게이팅** - 미탑승 `enabled=False`, 탑승 `True`, 하차 `False`. 입력이 와도 미탑승이면 움직이지 않는다.
+  2. **주행 리그** - 컨트롤러를 잠시 끄고 뒷바퀴에 `motorTorque = 500`(컨트롤러의 `motorForce`와 같은 값)을 직접 걸었더니 오토바이가 `(4.04, 0, -4.00)`에서 `(-11.12, 0.16, -4.00)`까지 **15m를 주행**했고 라이더도 `Seat`에 붙은 채 함께 이동했다.
+  3. **컨트롤러가 실제로 제어 중인지** - 컨트롤러를 켜고 입력이 없을 때 `rear.motorTorque`가 `0`으로 유지된다. 즉 컨트롤러가 매 프레임 값을 쓰고 있다.
+- 남은 고리는 "실제 키 -> `Input_Compat` -> 토크"뿐이고 이건 에셋 자체 코드다. 다른 키 바인딩과 같은 성격이라 `checklist.md`에 수동 확인으로 남겼다.
+- **주의**: 2번 테스트에서 생토크를 제한 없이 걸어서 뒷바퀴 rpm이 10339까지 치솟고 바퀴가 헛돌았다. 실제 컨트롤러는 브레이크/조향/기울기로 이걸 제어하므로 이 수치는 주행감의 지표가 아니다.
+
+#### 검증 결과
+
+- WheelCollider 2개 모두 `isGrounded=True`, radius 0.44.
+- 컨트롤러 기본값: `motorForce=500`, `brakeForce=2000`, `maxSteeringAngle=45`, `maxLeanAngle=35`. 에셋 기본값을 그대로 쓴다(주행감 튜닝은 사용자 확인 후로 미룸).
+- 정지 상태에서 기울기 0.1도로 넘어지지 않는다.
+- 플레이 모드에서 오토바이가 움직여도 에디트 모드 씬 위치 `(4, 0.5, -4)`는 그대로다.
+- `compilationFailed: false`, `groundTruth.consoleErrors: 0`.
