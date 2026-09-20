@@ -255,16 +255,16 @@
 
 ### 1단계. 재료 아이템과 자원 채집
 
-- [ ] `ItemData`의 abstract를 해제해 순수 재료 아이템을 만들 수 있게 한다.
-- [ ] 재료 `ItemData` 에셋 3종(목재/돌/고철)을 만든다.
-- [ ] 재료 픽업 프리팹 3종을 만들고 `ItemData.worldPrefab`에 연결한다.
-- [ ] `ResourceNode : LivingEntity`를 만든다 (내구도, 파괴 시 드랍, 재생성).
-- [ ] 자원 노드 프리팹 3종(나무/바위/고철)을 만든다 (콜라이더와 로직을 같은 오브젝트에).
-- [ ] 자원 노드 머티리얼이 텍스처를 제대로 물고 있는지 확인한다.
-- [ ] `Prototype` 씬에 자원 노드를 배치하고 NavMesh를 다시 베이크한다.
-- [ ] Play Mode에서 사격 -> 내구도 감소 -> 파괴 -> 드랍 -> 줍기 -> 인벤토리 적재를 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] `ItemData`의 abstract를 해제해 순수 재료 아이템을 만들 수 있게 한다.
+- [x] 재료 `ItemData` 에셋 3종(목재/돌/고철)을 만든다.
+- [x] 재료 픽업 프리팹 3종을 만들고 `ItemData.worldPrefab`에 연결한다.
+- [x] `ResourceNode : LivingEntity`를 만든다 (내구도, 파괴 시 드랍, 재생성).
+- [x] 자원 노드 프리팹 3종(나무/바위/고철)을 만든다 (콜라이더와 로직을 같은 오브젝트에).
+- [x] 자원 노드 머티리얼이 텍스처를 제대로 물고 있는지 확인한다.
+- [x] `Prototype` 씬에 자원 노드를 배치하고 NavMesh를 다시 베이크한다.
+- [x] Play Mode에서 사격 -> 내구도 감소 -> 파괴 -> 드랍 -> 줍기 -> 인벤토리 적재를 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
 
 ### 2단계. 건설 배치 시스템 + 벽 1종
 

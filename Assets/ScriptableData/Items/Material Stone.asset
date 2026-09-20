@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f206546cc6c9f154eb707a0d9f69bb4f, type: 3}
+  m_Name: Material Stone
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemId: mat_stone
+  displayName: "\uB3CC"
+  description: "\uBCBD\uC744 \uC138\uC6B0\uB294 \uB370 \uC4F4\uB2E4."
+  icon: {fileID: 0}
+  weight: 2.5
+  maxStack: 50
+  worldPrefab: {fileID: 3196309760075019145, guid: e867f5adc7c7059488327c9982a8d9af,
+    type: 3}
