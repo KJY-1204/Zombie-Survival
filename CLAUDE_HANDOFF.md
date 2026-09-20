@@ -4,7 +4,7 @@
 
 ## 시작 상태
 
-- 기준 커밋은 `85587e9 캐릭터 파묻힘 회귀 복구와 시체 공격 버그 수정`이며 `main`과 `origin/main`은 동기화되어 있다. 원격은 `https://github.com/KJY-1204/Zombie-Survival.git`이다.
+- 기준 커밋은 `2b5c446 상자 루팅과 상호작용 구현`이며 `main`과 `origin/main`은 동기화되어 있다. 원격은 `https://github.com/KJY-1204/Zombie-Survival.git`이다.
 - 사용자 소유의 미커밋 변경(있다면 되돌리거나 커밋하지 않는다): `ProjectSettings/ProjectSettings.asset`, `ProjectSettings/ShaderGraphSettings.asset`, `.vsconfig`.
 - 작업 씬은 `Assets/Scenes/Prototype.unity`(Build Settings 인덱스 2), 플레이어 프리팹은 `Assets/Prefabs/Player Character.prefab`, 좀비 프리팹은 `Assets/Prefabs/Zombie Character.prefab`이다.
 - 교재 씬 `Assets/Scenes/Main.unity`와 교재 `Assets/Prefabs/Zombie.prefab`은 참조 관계가 남아 있어 그대로 두었다. 건드리지 말 것.
@@ -14,7 +14,23 @@
 - M0 프로젝트 진단/에셋 검증 - 완료.
 - M1 플레이어와 카메라 프로토타입 - 완료.
 - M2 전투 수직 슬라이스 - 완료(2026-09-20).
-- M3 루팅과 캐릭터 관리 - 미착수. `Assets/Scripts`에 인벤토리/장비/상자 계열 스크립트가 아직 하나도 없다.
+- M3 루팅과 캐릭터 관리 - 완료(2026-09-20). 무게제 인벤토리, 6슬롯 장비, 방어 계산, 인벤토리/장비/상태 화면, 상자 루팅까지 구현했다.
+- M4 파밍과 거점 MVP - 미착수.
+
+## M3에서 만든 것 (2026-09-20)
+
+- **아이템 데이터** `Assets/Scripts/Items/`. `ItemData`(abstract) 아래 `ConsumableItemData`(Heal/Ammo/Score enum + 수치), `WeaponItemData`(슬롯 + 무기 프리팹), `ArmorItemData`(슬롯 + 방어력) 3종. 런타임 상태는 `ItemStack`(ScriptableObject 아님). 에셋은 `Assets/ScriptableData/Items/`에 9개.
+- **`Inventory`** - 칸 제한 없이 총 무게(`maxWeight` 기본 40kg)로만 제한한다. **무게를 넘어도 획득은 막지 않고 이동속도만 깎는다**(`PlayerMovement.overweightSpeedMultiplier` 기본 0.5). `Add`/`Remove`/`Use`/`DropAt`/`CountOf`와 `onChanged` 이벤트를 공개하고 UI를 모른다.
+- **`Equipment`** - 6슬롯(주무기/보조무기/근접/머리/상체/하체). **아이템을 인벤토리에서 빼가지 않고 "무엇을 장착 중인지"만 가리킨다.** 그래야 무게가 두 번 세어지지 않는다. `inventory.onChanged`를 구독해 버리거나 소진된 장착품을 자동 해제한다.
+- **방어 계산** - `PlayerHealth.OnDamage`에서 `Mathf.Max(1f, damage - equipment.totalArmor)`. 사용자가 고른 고정 수치 차감 방식이다.
+- **`PlayerShooter`의 `weaponPrefabs` 하드코딩 배열은 제거됐다.** 이제 `equipment.Get(activeSlot)`의 `WeaponItemData.weaponPrefab`을 쓴다. 숫자키 1/2가 주무기/보조무기다(`PlayerInput`은 그대로 두고 `PlayerShooter`가 해석). 시작 장비는 `Equipment.startingItems`(돌격소총 + 권총).
+- **UI** - `ScreenPanel`(abstract) 아래 `InventoryUI`(`I`), `EquipmentUI`(`O`), `StatusUI`(`K`). **한 번에 하나만 열린다.** 열려 있는 동안 `UIManager.isScreenOpen`이 참이 되어 `PlayerInput`/`PlayerMovement.Rotate`/`ThirdPersonCameraController.LateUpdate`가 입력을 무시하고 커서가 풀린다. 별도로 `InteractionPromptUI`가 상자 안내를 띄운다.
+- **상자** - `LootContainer` + `PlayerInteractor`(`E`, 반경 2.5m) + `Loot Chest.prefab`. `Prototype` 씬에 `Loot Chests` 아래 3개 배치.
+- **주의할 함정 몇 가지**
+  - 맨손 상태(무기 미장착)에서 서드파티 `IKHelperTool`이 파괴된 이펙터를 참조해 매 프레임 예외를 던진다. `PlayerShooter`가 맨손일 때 `ikHelperTool.enabled = false`로 꺼서 막는다. **이 컴포넌트를 마음대로 켜면 안 된다.**
+  - UI 목록을 다시 그릴 때는 `ScreenPanel.ClearRows`를 쓴다. `Destroy`만 하면 같은 프레임에 두 번 그릴 때 줄이 중복된다.
+  - 상자 에셋의 URP 프리팹은 텍스처 없는 FBX 내장 머티리얼을 참조한다. 새 상자를 쓸 때는 `Material/URP/M_Chest NN.mat`으로 직접 교체해야 한다.
+  - **씬에 정적 장애물을 놓으면 `NavigationStatic`을 주고 NavMesh를 다시 베이크할 것.** 상자 3개를 놓고 재베이크해서 정점이 16 -> 108이 됐다.
 
 ## 현재 구현
 
@@ -76,25 +92,25 @@
 ## 남은 미검증/미해결 항목
 
 - **사용자 수동 확인 필요**: 마우스 우클릭 ADS 전환과 이동·사격의 육안 확인. MCP 파이프라인은 마우스 입력을 합성할 수 없어 자동 검증이 불가능하다. `checklist.md`에 미완료로 남아 있다.
+- **사용자 수동 확인 필요**: M3의 키 바인딩 `I`/`O`/`K`/`E`/`1`/`2`. 같은 이유로 키 입력을 합성할 수 없다. 코드 경로와 UI 버튼 클릭은 전부 검증했고 남은 것은 키 바인딩 자체뿐이다.
 - `FindObjectOfType` 폐지 경고 정리. 기능 영향 없음, 폴리싱 단계로 미뤘다.
 - 왼손 IK의 무기별 2~3cm 오차. 조준에 영향 없음, 폴리싱 단계로 미뤘다.
 - 근접무기(멜리) 전투. `Crusader Weapon`/`Free medieval weapons` 에셋이 있으나 스윙/히트박스 기반의 다른 전투 방식이 필요해 M8 콘텐츠 사안으로 미뤘다. `IDamageable`은 재사용 가능하지만 애니메이션/입력/판정은 새로 설계해야 한다.
 
 ## 권장 다음 작업
 
-**M3 루팅과 캐릭터 관리.** 완료 조건은 상자 열기/아이템 획득, 인벤토리 화면, 장비 화면에서 무기 장착/해제, 상태 화면이다.
+**M4 파밍과 거점 MVP.** 완료 조건은 필드 자원 획득, 재료를 소비한 최소 건설물 2~4종 설치, 건설물이 저장 대상 데이터로 표현되는 것이다.
 
-착수 전에 정해야 할 것이 있다. `GAME_DESIGN.md` §21에 **인벤토리가 무게제인지 슬롯/그리드제인지가 미정으로 남아 있다.** 데이터 구조 자체가 갈리므로 코드를 쓰기 전에 사용자에게 확인할 것.
-
-설계 시 지킬 경계(`CLAUDE.md` §11.6).
-- 아이템은 정적 데이터(`ItemData` 같은 ScriptableObject)와 런타임 인스턴스 상태를 분리한다.
-- 인벤토리/장비 시스템은 UI를 몰라야 하고, UI는 공개된 상태/이벤트만 사용한다.
-- 인벤토리, 장비, 상태 화면은 서로 분리한다.
+착수 전에 정할 것.
+- 재료 아이템이 필요하다. 지금 `ItemData`는 **abstract**라 "효과 없는 순수 재료"를 만들 수 없다. abstract만 떼거나 `MaterialItemData`를 추가하면 된다(`ItemData.cs` 한 줄).
+- 채집 대상(나무/돌/고철 등)과 건설물 종류를 사용자에게 확인할 것. `GAME_DESIGN.md` §21에 거점 건설 자유도가 미정으로 남아 있다.
+- 건설물은 M7 저장 대상이므로 처음부터 "위치 + 종류 + 상태"를 순수 데이터로 표현할 것(`CLAUDE.md` §11.6).
 
 ## 최근 커밋
 
-- `85587e9 캐릭터 파묻힘 회귀 복구와 시체 공격 버그 수정`
-- `1760112 M2 커밋/push 체크리스트 항목 완료 처리`
-- `8999645 M2 전투 수직 슬라이스 구현 (Zombie 에셋 기반 좀비 전투 루프)`
-- `52c831d M2 전투 수직 슬라이스 계획과 체크리스트 작성`
-- `6a9af1e 카메라 시점을 3인칭 확정으로 문서 갱신`
+- `2b5c446 상자 루팅과 상호작용 구현`
+- `ba641d3 상태 화면 구현`
+- `bf3e6e9 6슬롯 장비 시스템과 고정 수치 방어 계산 구현`
+- `7a736b1 필드 아이템을 인벤토리 경유로 전환하고 인벤토리 화면 구현`
+- `52058d5 무게제 인벤토리 코어와 아이템 데이터 정의 구현`
+- `d49ef93 M3 루팅/인벤토리 계획과 체크리스트 작성`
