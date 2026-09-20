@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: fuel_can
   displayName: "\uD718\uBC1C\uC720\uD1B5"
   description: "\uC624\uD1A0\uBC14\uC774\uC5D0 \uC8FC\uC720\uD560 \uC218 \uC788\uB2E4."
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: f86b9c8f3dd9ad4489d7fde4346becd9, type: 3}
   weight: 8
   maxStack: 5
   worldPrefab: {fileID: 7982308812267581016, guid: f2ae62c3ecfc80c4c92ffa04b5e544c8,

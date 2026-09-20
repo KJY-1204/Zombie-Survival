@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: mat_stone
   displayName: "\uB3CC"
   description: "\uBCBD\uC744 \uC138\uC6B0\uB294 \uB370 \uC4F4\uB2E4."
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4511f654bee47fb45b70a6ea60bc0237, type: 3}
   weight: 2.5
   maxStack: 50
   worldPrefab: {fileID: 3196309760075019145, guid: e867f5adc7c7059488327c9982a8d9af,

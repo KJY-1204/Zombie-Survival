@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: coin
   displayName: "\uB3D9\uC804"
   description: "\uC0AC\uC6A9\uD558\uBA74 \uC810\uC218\uAC00 \uC624\uB978\uB2E4."
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: b7561998a870d2d43978abeaa8faf32e, type: 3}
   weight: 0.01
   maxStack: 99
   worldPrefab: {fileID: 1676094191218838, guid: 4229c84aca58549a586e9bb7aaae97c4,

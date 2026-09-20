@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: bandage
   displayName: "\uBD95\uB300"
   description: "\uC0AC\uC6A9\uD558\uBA74 \uCCB4\uB825\uC744 \uD68C\uBCF5\uD55C\uB2E4."
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: e6b0f6d481f9a2a4bad6a77372a9a32d, type: 3}
   weight: 0.2
   maxStack: 5
   worldPrefab: {fileID: 1838412652947266, guid: b4e7df10a580e4a1a88a79995b741816,

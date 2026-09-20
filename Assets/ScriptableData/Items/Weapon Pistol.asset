@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\uAD8C\uCD1D"
   description: "\uC7A5\uBE44 \uD654\uBA74\uC5D0\uC11C \uBCF4\uC870\uBB34\uAE30 \uC2AC\uB86F\uC5D0
     \uC7A5\uCC29\uD55C\uB2E4."
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 67135ea26ca22d34bba1849c2c3344b6, type: 3}
   weight: 1.2
   maxStack: 1
   worldPrefab: {fileID: 0}
