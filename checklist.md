@@ -346,8 +346,15 @@
 
 ### 4단계. 저장 데이터 표현과 HUD
 
-- [ ] `MotorcycleSaveData`와 JSON 덤프를 만든다.
-- [ ] 탑승 중 연료/내구도를 HUD에 표시한다.
-- [ ] Play Mode에서 상태 변경이 덤프와 HUD에 반영되는지 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] `MotorcycleSaveData`와 JSON 덤프를 만든다.
+- [x] 탑승 중 연료/내구도를 HUD에 표시한다.
+- [x] Play Mode에서 상태 변경이 덤프와 HUD에 반영되는지 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
+
+### M5 마무리 - 사용자 수동 확인이 필요한 항목
+
+- [ ] 키 입력 확인: `E`(타기/내리기) / `R`(주유) / `F`(수리) / `WASD`(주행).
+      MCP 파이프라인은 키 입력을 합성할 수 없다. 코드 경로(`Mount`/`Dismount`/`Refuel`/`Repair`)와 주행 리그는 전부 검증했고 남은 것은 입력 바인딩 자체뿐이다.
+- [ ] 실제 주행감 확인 (에셋 기본값 `motorForce=500`, `brakeForce=2000`, `maxSteeringAngle=45`, `maxLeanAngle=35`). 너무 빠르거나 느리면 알려주면 조정한다.
+- [ ] 라이더 자세 육안 확인 (다리가 약간 길게 내려오는 리타게팅 아티팩트가 거슬리는지).

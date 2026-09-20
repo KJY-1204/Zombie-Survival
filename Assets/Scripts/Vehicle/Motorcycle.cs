@@ -254,6 +254,45 @@ public class Motorcycle : MonoBehaviour, IInteractable {
         return found ? ground.point : target;
     }
 
+    // 현재 상태를 저장용 순수 데이터로 뽑아낸다
+    public MotorcycleSaveData ToSaveData() {
+        return new MotorcycleSaveData {
+            position = transform.position,
+            rotationY = transform.eulerAngles.y,
+            fuel = fuel,
+            durability = durability,
+            isRidden = isRidden,
+        };
+    }
+
+    // 저장된 상태를 되돌린다 (탑승 상태는 플레이어 복원 쪽에서 따로 처리한다)
+    public void LoadFromSaveData(MotorcycleSaveData data) {
+        if (data == null)
+        {
+            return;
+        }
+
+        transform.position = data.position;
+        transform.rotation = Quaternion.Euler(0f, data.rotationY, 0f);
+        fuel = Mathf.Clamp(data.fuel, 0f, maxFuel);
+        durability = Mathf.Clamp(data.durability, 0f, maxDurability);
+        lastPosition = transform.position;
+
+        if (body != null)
+        {
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
+        }
+
+        SetDriveEnabled(isRidden && canDrive);
+        NotifyStateChanged();
+    }
+
+    // 저장 DTO 형태 확인용 JSON 덤프
+    public string ToJson() {
+        return JsonUtility.ToJson(ToSaveData(), true);
+    }
+
     // 주행 컴포넌트를 켜고 끈다 (에셋 스크립트는 수정하지 않고 활성만 다룬다)
     private void SetDriveEnabled(bool enabled) {
         if (driveController != null)
