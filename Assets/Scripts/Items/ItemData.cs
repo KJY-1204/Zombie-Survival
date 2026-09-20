@@ -8,4 +8,5 @@ public abstract class ItemData : ScriptableObject {
     public Sprite icon; // 목록에 표시할 아이콘
     public float weight = 0.1f; // 개당 무게(kg)
     public int maxStack = 1; // 한 묶음에 쌓을 수 있는 최대 개수
+    public GameObject worldPrefab; // 인벤토리에서 버렸을 때 필드에 다시 떨어뜨릴 프리팹
 }

@@ -148,6 +148,12 @@ public class PlayerMovement : MonoBehaviour {
 
     // 입력값에 따라 캐릭터를 좌우로 회전
     private void Rotate() {
+        // 전체 화면이 열려 있는 동안에는 마우스로 캐릭터가 돌아가지 않게 한다
+        if (UIManager.isScreenOpen)
+        {
+            return;
+        }
+
         // 1인칭 모드에서는 마우스 X 입력으로, 그 외에는 키보드 입력으로 회전량을 계산
         float turn = useMouseLook
             ? Input.GetAxis("Mouse X") * mouseYawSpeed

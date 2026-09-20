@@ -302,3 +302,46 @@
 - 붕대 사용 hp 60->90, 탄약 사용 ammoRemain 80->110, 동전 사용 score 0->200, 무기(비소비) 사용 거부, 범위 밖 인덱스 거부.
 - 사망/게임오버 상태에서 붕대·동전 사용이 거부되고 **아이템이 소모되지 않는 것**까지 확인.
 - `compilationFailed: false`, `consoleErrors: 0`. 남은 경고 1건은 기존의 루트 더미 Animator 건이다.
+
+### M3 2단계 구현 결과 (2026-09-20)
+
+#### 기존 아이템 3종을 새 프리팹이 아니라 "그 자리에서" 전환했다
+
+- `AmmoPack.prefab`/`HealthPack.prefab`/`Coin.prefab`을 그대로 두고 컴포넌트만 `AmmoPack`/`HealthPack`/`Coin` -> `WorldItem`으로 교체했다. 새 프리팹을 따로 만들면 `ItemSpawner.items`와 교재 `Main.unity`에 옛 프리팹이 남아 아이템 개념이 이원화된다.
+- **`Main.unity`도 `Player Character.prefab`을 인스턴스로 갖고 있다는 걸 GUID로 확인했다**(41줄이 이 프리팹을 참조). 그래서 `PlayerHealth`를 고치면 교재 씬도 같이 영향을 받는다. 다만 `Inventory`를 프리팹 자체에 붙였으므로 교재 씬에서도 줍기가 그대로 동작한다. 깨지는 곳은 없다.
+- 그 결과 `IItem.cs`/`AmmoPack.cs`/`HealthPack.cs`/`Coin.cs` 4개가 내 변경 때문에 고아가 됐다. **삭제 전에 파묻힘 회귀 때 배운 대로 GUID 역참조를 검사했다** - `.prefab`/`.unity`/`.asset`/`.controller` 전부에서 참조 0건, 코드 참조 0건을 확인하고 지웠다.
+- `ItemData`에 `worldPrefab` 필드를 하나 넣어 "버리기"가 아이템을 필드에 다시 떨어뜨릴 수 있게 했다. 버리기가 그냥 증발이면 무게제에서 납득이 안 된다. 떨어뜨리는 로직은 `Inventory.DropAt`에 뒀다 - UI가 월드 오브젝트를 생성하면 경계가 무너진다. `dropDistance=1.5`는 버리자마자 다시 주워지지 않을 만큼 떨어뜨리기 위한 값이다.
+
+#### 전체 화면 열림 게이트를 UIManager에 뒀다
+
+- 인벤토리를 열면 커서가 나와야 하고 마우스로 시점/캐릭터가 돌면 안 된다. `UIManager.isScreenOpen` static과 `SetScreenOpen(bool)`을 만들어 `PlayerInput`(입력 차단), `PlayerMovement.Rotate`(캐릭터 회전 차단), `ThirdPersonCameraController.LateUpdate`(시점 회전 차단) 세 곳에서 읽게 했다.
+- static으로 둔 이유는 세 컴포넌트가 UIManager 인스턴스를 참조하도록 배선하지 않기 위해서다. UIManager는 이미 static 싱글톤 패턴을 쓰고 있어 스타일도 맞는다.
+- 3단계/4단계에서 장비·상태 화면이 생기면 동시에 하나만 열리는 전제로 이 bool을 공유한다. 여러 개가 동시에 열려야 하면 카운터로 바꿔야 한다.
+- 씬에 `EventSystem`이 없어서 UI 버튼 클릭이 불가능했다. `Prototype.unity`에 추가했다(씬 diff는 이것 하나뿐).
+
+#### 찾아낸 실제 버그: 같은 프레임에 Refresh가 두 번 돌면 목록이 중복된다
+
+- 증상: 묶음이 3개인데 화면에는 5줄이 나왔다.
+- 원인: `Destroy`는 프레임 끝에야 처리된다. `SetOpen(true)`가 Refresh를 부르고 같은 프레임에 `Add`가 `onChanged` -> Refresh를 다시 부르면, 파괴 예정인 옛 줄이 아직 `content`의 자식으로 남아 있는 상태에서 새 줄이 추가된다.
+- 해결: 지우기 전에 `row.SetParent(null)`로 부모에서 먼저 떼어낸다. 런타임에 `DestroyImmediate`를 쓰지 않는 쪽을 택했다.
+- 실제 플레이에서는 프레임이 갈리는 경우가 많아 잘 안 드러나지만, 화면이 열린 채로 아이템을 줍는 상황에서는 바로 재현된다.
+
+#### 검증 도구 관련으로 알아둘 것 (다음 세션이 같은 데서 헤매지 않도록)
+
+- **`capture_game_view`와 `screenshot` 둘 다 ScreenSpaceOverlay 캔버스를 담지 못한다.** 카메라 오프스크린 렌더 기반이라 오버레이 UI가 빠진다. UI를 눈으로 확인하려면 플레이 중에만 `Canvas.renderMode`를 `ScreenSpaceCamera` + `worldCamera=Camera.main`으로 바꿔서 찍고 플레이를 끝내면 된다(플레이 모드 변경이라 자동으로 되돌아간다).
+- **좀비 스포너는 Play Mode 안에서 끄면 늦다.** 툴 호출 왕복 사이에 실제로 수 초가 흐르기 때문에, 플레이를 시작하고 첫 eval이 도달하기 전에 이미 좀비가 가만히 서 있는 플레이어를 죽여놓는다(hp가 0이나 음수로 시작한다). 전투와 무관한 시스템을 검증할 때는 **에디트 모드에서 `Zombie Spawner`/`Item Spawner` 오브젝트를 `SetActive(false)`로 끄고, 씬을 저장하지 않은 채 플레이해서 검증한 뒤 다시 켜고 저장한다.** 이번에 이걸 모르고 세 번 헛돌았다.
+
+#### 검증 결과
+
+- 줍기: 필드 아이템을 밟으면 인벤토리에 들어가고(붕대 0.20kg, 탄약 상자 0.90kg), **체력/탄약이 즉시 변하지 않는다**(hp 100 유지, ammoRemain 80 유지). 즉시효과 -> 인벤토리 전환이 의도대로 됐다.
+- 화면: `I` 토글, 커서 노출(`lockState=None`), 플레이어 입력 전면 차단(move/rotate/fire=0, selectWeapon=-1) 확인.
+- 사용 버튼: 붕대 클릭 -> hp 55->105, 탄약 클릭 -> ammoRemain 80->110. 비소비 아이템(무기)은 사용 버튼이 `interactable=false`.
+  - 점수 효과는 같은 `Inventory.Use` 경로를 1단계에서 직접 검증했다(score 0->200). 이번 라운드에서는 동전을 버리기 테스트에 썼다.
+- 버리기 버튼: 동전 5->4, 필드에 `Coin(Clone)`이 플레이어로부터 1.58m 거리에 생성됨(바로 다시 주워지지 않는 거리).
+- 과적: 탄약 50개(45kg) 추가 시 표시가 `무게 46.34 / 40.0 kg (과적)`으로 바뀌고 실제 이동속도 5.00 -> 2.50.
+- 한글 렌더링: 내장 `LegacyRuntime.ttf`(레거시 `Text`)로 "인벤토리 / 붕대 / 탄약 상자 / 동전 / 사용 / 버리기"가 정상 표시되는 것을 스크린샷으로 확인했다. 프로젝트의 `Kenney Future Narrow.ttf`는 한글 글리프가 없어 쓸 수 없다. TMP를 쓰려면 한글 폰트 에셋을 따로 만들어야 한다.
+- `compilationFailed: false`, `consoleErrors: 0`, `consoleWarnings: 0`.
+
+#### 고치지 않고 기록만 (기존 동작)
+
+- `LivingEntity.RestoreHealth`에 상한이 없어서 붕대를 쓰면 체력이 `startingHealth`(100)를 넘는다(검증에서 105까지 올라감). 교재 시절부터 있던 동작이고 이번 요청 범위 밖이라 그대로 뒀다. 상한을 걸려면 `RestoreHealth`에 `Mathf.Min(health + newHealth, startingHealth)` 한 줄이면 된다.

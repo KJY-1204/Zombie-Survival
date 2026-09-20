@@ -6,6 +6,9 @@ using UnityEngine;
 public class Inventory : MonoBehaviour {
     public float maxWeight = 40f; // 이 무게를 넘으면 과적 상태가 된다
 
+    public float dropDistance = 1.5f; // 버린 아이템을 떨어뜨릴 앞쪽 거리(바로 다시 줍지 않을 만큼 떨어뜨린다)
+    public float dropHeight = 0.5f; // 버린 아이템을 떨어뜨릴 높이
+
     private readonly List<ItemStack> stacks = new List<ItemStack>(); // 실제 보유 묶음들
 
     public IReadOnlyList<ItemStack> items => stacks; // 외부에서는 읽기만 가능
@@ -120,6 +123,45 @@ public class Inventory : MonoBehaviour {
         stacks[index].count--;
 
         if (stacks[index].count <= 0)
+        {
+            stacks.RemoveAt(index);
+        }
+
+        NotifyChanged();
+        return true;
+    }
+
+    // index번째 묶음에서 count개를 인벤토리 밖으로 버린다
+    // 아이템에 월드 프리팹이 있으면 플레이어 앞쪽에 다시 떨어뜨린다
+    public bool DropAt(int index, int count) {
+        if (index < 0 || index >= stacks.Count || count <= 0)
+        {
+            return false;
+        }
+
+        ItemStack stack = stacks[index];
+        int dropped = Mathf.Min(stack.count, count);
+
+        if (stack.data.worldPrefab != null)
+        {
+            Vector3 position = transform.position
+                + transform.forward * dropDistance
+                + Vector3.up * dropHeight;
+
+            GameObject spawned = Instantiate(
+                stack.data.worldPrefab, position, Quaternion.identity);
+
+            // 버린 개수가 그대로 다시 주워지도록 픽업 개수를 맞춰준다
+            WorldItem worldItem = spawned.GetComponent<WorldItem>();
+            if (worldItem != null)
+            {
+                worldItem.count = dropped;
+            }
+        }
+
+        stack.count -= dropped;
+
+        if (stack.count <= 0)
         {
             stacks.RemoveAt(index);
         }

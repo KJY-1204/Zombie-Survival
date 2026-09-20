@@ -197,14 +197,14 @@
 
 ### 2단계. 기존 아이템 3종 전환 + 인벤토리 UI
 
-- [ ] 실제 `ItemData` 에셋을 만든다 (붕대, 탄약, 동전 최소 3종).
-- [ ] `AmmoPack`/`HealthPack`/`Coin`을 `WorldItem` 하나로 통합한다.
-- [ ] `PlayerHealth.OnTriggerEnter`를 즉시 사용에서 인벤토리 추가로 바꾼다.
-- [ ] `ItemSpawner.items`와 기존 픽업 프리팹 3종을 새 `WorldItem` 방식으로 갱신한다.
-- [ ] 인벤토리 화면(목록, 무게 표시, 사용, 버리기)을 만들고 `I` 키로 연다.
-- [ ] Play Mode에서 줍기 -> 인벤토리 적재 -> 사용 -> 체력/탄약/점수 변화를 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 실제 `ItemData` 에셋을 만든다 (붕대, 탄약, 동전 최소 3종).
+- [x] `AmmoPack`/`HealthPack`/`Coin`을 `WorldItem` 하나로 통합한다.
+- [x] `PlayerHealth.OnTriggerEnter`를 즉시 사용에서 인벤토리 추가로 바꾼다.
+- [x] `ItemSpawner.items`와 기존 픽업 프리팹 3종을 새 `WorldItem` 방식으로 갱신한다.
+- [x] 인벤토리 화면(목록, 무게 표시, 사용, 버리기)을 만들고 `I` 키로 연다.
+- [x] Play Mode에서 줍기 -> 인벤토리 적재 -> 사용 -> 체력/탄약/점수 변화를 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
 
 ### 3단계. 장비 시스템 6슬롯 + 장비 UI + 방어 계산
 

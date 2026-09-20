@@ -42,7 +42,8 @@ public class ThirdPersonCameraController : MonoBehaviour {
     }
 
     private void LateUpdate() {
-        if (target == null)
+        // 전체 화면이 열려 있는 동안에는 마우스로 시점이 돌아가지 않게 한다
+        if (target == null || UIManager.isScreenOpen)
         {
             return;
         }

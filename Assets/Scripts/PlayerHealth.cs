@@ -14,6 +14,7 @@ public class PlayerHealth : LivingEntity {
 
     private PlayerMovement playerMovement; // 플레이어 움직임 컴포넌트
     private PlayerShooter playerShooter; // 플레이어 슈터 컴포넌트
+    private Inventory inventory; // 주운 아이템을 담을 인벤토리
 
     private void Awake() {
         // 사용할 컴포넌트를 가져오기
@@ -22,6 +23,7 @@ public class PlayerHealth : LivingEntity {
 
         playerMovement = GetComponent<PlayerMovement>();
         playerShooter = GetComponent<PlayerShooter>();
+        inventory = GetComponent<Inventory>();
     }
 
     protected override void OnEnable() {
@@ -83,19 +85,17 @@ public class PlayerHealth : LivingEntity {
     }
 
     private void OnTriggerEnter(Collider other) {
-        // 아이템과 충돌한 경우 해당 아이템을 사용하는 처리
-        // 사망하지 않은 경우에만 아이템 사용가능
+        // 아이템과 충돌한 경우 인벤토리에 담는 처리
+        // 사망하지 않은 경우에만 아이템을 주울 수 있다
         if (!dead)
         {
-            // 충돌한 상대방으로 부터 Item 컴포넌트를 가져오기 시도
-            IItem item = other.GetComponent<IItem>();
+            // 충돌한 상대방으로부터 WorldItem 컴포넌트를 가져오기 시도
+            WorldItem worldItem = other.GetComponent<WorldItem>();
 
-            // 충돌한 상대방으로부터 Item 컴포넌트가 가져오는데 성공했다면
-            if (item != null)
+            // 아이템을 실제로 주웠다면 습득 소리 재생
+            // 효과는 즉시 발동하지 않고 인벤토리에서 사용할 때 발동한다
+            if (worldItem != null && worldItem.PickUp(inventory))
             {
-                // Use 메서드를 실행하여 아이템 사용
-                item.Use(gameObject);
-                // 아이템 습득 소리 재생
                 playerAudioPlayer.PlayOneShot(itemPickupClip);
             }
         }
