@@ -22,7 +22,7 @@ public class GameManager : MonoBehaviour {
 
     private static GameManager m_instance; // 싱글톤이 할당될 static 변수
 
-    private int score = 0; // 현재 게임 점수
+    public int score { get; private set; } // 현재 게임 점수
     public bool isGameover { get; private set; } // 게임 오버 상태
 
     private void Awake() {
@@ -47,6 +47,11 @@ public class GameManager : MonoBehaviour {
             // 점수 추가
             score += newScore;
         }
+    }
+
+    // 저장된 점수를 그대로 되돌린다 (불러오기 전용)
+    public void SetScore(int newScore) {
+        score = newScore;
     }
 
     private void Update() {

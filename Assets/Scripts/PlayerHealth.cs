@@ -53,6 +53,12 @@ public class PlayerHealth : LivingEntity {
     }
 
 
+    // 불러온 체력을 슬라이더에도 반영한다
+    public override void SetHealth(float newHealth) {
+        base.SetHealth(newHealth);
+        healthSlider.value = health;
+    }
+
     // 데미지 처리
     public override void OnDamage(float damage, Vector3 hitPoint,
         Vector3 hitDirection) {

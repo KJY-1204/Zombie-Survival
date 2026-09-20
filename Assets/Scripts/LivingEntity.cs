@@ -42,6 +42,12 @@ public class LivingEntity : MonoBehaviour, IDamageable {
         health += newHealth;
     }
 
+    // 저장된 체력을 그대로 되돌린다 (불러오기 전용)
+    public virtual void SetHealth(float newHealth) {
+        health = Mathf.Clamp(newHealth, 0f, startingHealth);
+        dead = health <= 0f;
+    }
+
     // 사망 처리
     public virtual void Die() {
         // onDeath 이벤트에 등록된 메서드가 있다면 실행

@@ -75,6 +75,22 @@ public class WorldStreamer : MonoBehaviour {
         }
     }
 
+    // 다른 시드의 저장을 불러왔을 때 월드를 다시 만든다
+    public void Regenerate(int worldSeed, int generatorVersion) {
+        settings.worldSeed = worldSeed;
+        settings.generatorVersion = generatorVersion;
+        map = WorldGenerator.Generate(settings);
+
+        foreach (KeyValuePair<Vector2Int, GameObject> pair in loaded)
+        {
+            Destroy(pair.Value);
+        }
+
+        loaded.Clear();
+        lastCenter = new Vector2Int(int.MinValue, int.MinValue);
+        UpdateChunks(force: true);
+    }
+
     // 주변 청크를 올리고 멀어진 청크를 내린다
     private void UpdateChunks(bool force) {
         Vector2Int center = map.WorldToChunk(viewer.position);
