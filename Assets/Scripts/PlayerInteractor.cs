@@ -7,8 +7,17 @@ public class PlayerInteractor : MonoBehaviour {
 
     public IInteractable currentTarget { get; private set; } // 지금 상호작용할 수 있는 대상
 
+    private RiderControl rider; // 차량에 타고 있는지 알려주는 컴포넌트
+
+    private void Start() {
+        rider = GetComponent<RiderControl>();
+    }
+
     private void Update() {
-        currentTarget = FindNearestInteractable();
+        // 차량에 타고 있는 동안에는 내리는 것만 할 수 있다
+        currentTarget = rider != null && rider.isRiding
+            ? rider.vehicle
+            : FindNearestInteractable();
 
         // 전체 화면이 열려 있거나 게임오버면 상호작용하지 않는다
         if (currentTarget == null

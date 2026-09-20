@@ -625,3 +625,40 @@
 
 - 선택지 설명에 **"M5 완료 조건을 크게 넘어서고 수리 재료·UI까지 필요하다"**고 적어 보냈고 그대로 택했다. M5 완료 조건(`GAME_DESIGN.md` §20)에는 탑승/하차/주행, 카메라 전환, 저장 복원만 있다.
 - 기획서 §21의 "오토바이 연료/내구도 도입 여부" 미정 항목이 이것으로 닫혔다.
+
+### M5 1단계 구현 결과 (2026-09-20)
+
+#### 구조
+
+- `Motorcycle`(차량, `IInteractable`)과 `RiderControl`(플레이어)로 나눴다. 차량은 "누가 타고 있는가"만 알고, 플레이어의 조작·물리·애니메이션·카메라를 실제로 전환하는 책임은 `RiderControl`에 있다. 차량이 플레이어 내부 컴포넌트를 직접 켜고 끄면 경계가 무너진다.
+- **서드파티 `BicycleVehicle`은 한 줄도 수정하지 않았다.** `Motorcycle.Awake`가 타입 이름으로 찾아서 `enabled`만 토글한다. 프리팹의 `Input_Manager`는 꺼두고 `Input_Compat` 폴백(레거시 `Horizontal`/`Vertical` 축)을 쓰게 했다.
+- 탑승 중 게이팅은 컴포넌트 비활성으로 했다(`PlayerMovement`/`PlayerShooter`/`BuildPlacer`). `PlayerInput`에 조건을 더 넣지 않은 이유는 하차 후 원상복구가 단순하기 때문이다. `PlayerShooter`는 `OnDisable`에서 총을 숨기므로 라이더가 총을 든 채 타는 것도 자동으로 막힌다.
+- `PlayerInteractor`는 끄지 않는다. 끄면 `E`로 내릴 수 없다. 대신 **타고 있는 동안에는 `currentTarget`을 차량으로 고정**해 주변 다른 상호작용이 끼어들지 않게 했다.
+- 물리: 탑승 시 `Rigidbody.isKinematic = true` + 콜라이더 비활성. 안 그러면 플레이어 캡슐과 오토바이가 서로 밀어낸다.
+- 카메라: `ThirdPersonCameraController.target`만 오토바이로 바꾼다. 카메라 코어는 손대지 않았다(`CLAUDE.md` §11.6).
+- 애니메이터: `SurvivalistTPS.controller`에 `Mounted`(Bool) 파라미터와 `AS_Idle_Riding` 상태를 추가하고 `AnyState -> Mounted` / `Mounted -> Idle Walk Run Blend` 전환을 걸었다. **탑승 중 `Weapon Hold Arms` 레이어 가중치를 0으로 내린다** - 안 내리면 라이더가 소총 쥔 팔 포즈로 앉는다.
+
+#### 측정 지표를 잘못 골라 한참 헤맸다 (기록용)
+
+- 탑승 직후 "머리-엉덩이 1.58m, 렌더러 높이 2.80m"가 나와서 캐릭터가 늘어난 줄 알고 스케일·물리·클립을 차례로 의심했다. **전부 헛다리였다.**
+  - 렌더러 높이 2.80m는 **총기와 총구 이펙트 렌더러**가 bounds에 섞여 나온 값이다. 실제 캐릭터는 부츠 `-0.06` ~ 모자 `1.88`로 1.89m, M3에서 검증한 값 그대로였다.
+  - "머리-엉덩이"가 1.65m로 나온 건 **이 아바타가 `Hips`를 루트 근처(y≈0)에 매핑**하고 있어서다. 서 있을 때도 같은 값이 나온다. 애초에 의미 없는 지표였다.
+  - 결정적 단서는 `Mounted=false`로 되돌려도 같은 값이 나온 것이었다. 탑승과 무관하다는 뜻이므로 그 시점에 지표를 의심했어야 했다.
+- **교훈**: 캐릭터 치수는 `GetBoneTransform`이 아니라 **특정 메시 렌더러의 bounds**(부츠/모자)로 재야 한다. 이 프로젝트에는 Survivalist 본(`Hips`/`Left_Foot`)과 마네킹 본(`pelvis`/`foot_l`) 두 벌이 한 프리팹에 섞여 있어서 이름으로 찾는 것도 위험하다.
+- 그리고 **숫자로 애매하면 그냥 측면에서 스크린샷을 찍는 게 빠르다.** 실제로 그렇게 해서 한 번에 원인을 봤다.
+
+#### 좌석 위치는 측면 뷰로 맞췄다
+
+- 처음 `Seat`를 렌더러 bounds 비율로 `(0, 0.77, -0.10)`에 뒀더니 라이더가 시트보다 높고 뒤에 떠 있었다.
+- 오토바이 콜라이더에 `Seat` / `Fuel_Tank` / `Handlebar_Main`이라는 이름이 있어서 위에서 아래로 레이캐스트해 **실제 시트면이 월드 y≈1.28, 로컬 z -0.45~-0.15** 구간임을 찾았다.
+- 최종값 `Seat local = (0, 0.45, -0.30)`, `Exit Point local = (-1.10, 0, -0.30)`. 이 값에서 엉덩이가 시트에 닿고 손이 핸들바에 온다.
+- **다리가 약간 길게 내려온다.** Survivalist와 원본 마네킹의 다리 비율 차이에서 오는 리타게팅 아티팩트다. 사용자가 "앉은 포즈 하나만"을 택하면서 손/발 어긋남을 감수한 부분이고, 손·발 IK는 폴리싱 단계로 미뤄뒀다.
+
+#### 검증 결과
+
+- 탑승: 부모가 `Seat`, 로컬 위치 (0,0,0), 카메라 타깃 `Motorcycle`, `PlayerMovement`/`PlayerShooter`/`BuildPlacer` 전부 `False`, `isKinematic=True`, 콜라이더 `False`, `Mounted=True`, 팔 레이어 가중치 `0`, `BicycleVehicle.enabled=True`.
+- 재생 클립이 `AS_Idle_Riding`인 것과 안내가 `[E] 오토바이에서 내리기`로 바뀌는 것 확인.
+- 하차: 부모 해제, 위치 `(2.45, 0.00, -5.46)`으로 지면 위, 콜라이더·물리·조작 컴포넌트 전부 복구, 카메라 타깃 `Player Character`.
+- 미탑승 상태에서 `BicycleVehicle.enabled=False`라 입력이 와도 오토바이가 움직이지 않는다.
+- 오토바이가 물리로 자리를 잡은 뒤에도 기울기 0.1도로 넘어지지 않는다.
+- `compilationFailed: false`, `groundTruth.consoleErrors: 0`.

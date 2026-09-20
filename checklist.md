@@ -313,16 +313,16 @@
 
 ### 1단계. 탑승과 하차
 
-- [ ] `Motorcycle`을 만든다 (`IInteractable`, 탑승 상태, 좌석/하차 지점).
-- [ ] 오토바이 프리팹을 만든다 (RSG URP 프리팹 + 좌석/하차 지점 + 로직).
-- [ ] `SurvivalistTPS.controller`에 `Mounted` 파라미터와 앉은 포즈 상태를 추가한다.
-- [ ] 탑승 중 `Weapon Hold Arms` 레이어 가중치를 0으로 내린다.
-- [ ] 탑승 중 `PlayerInput`/`PlayerMovement`/`PlayerShooter`/`BuildPlacer` 입력을 막는다.
-- [ ] 카메라 타깃을 오토바이로 전환하고 하차 시 되돌린다.
-- [ ] `Prototype` 씬에 오토바이를 배치한다.
-- [ ] Play Mode에서 탑승/하차, 입력 차단·복구, 카메라 전환, 라이더 포즈를 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] `Motorcycle`을 만든다 (`IInteractable`, 탑승 상태, 좌석/하차 지점).
+- [x] 오토바이 프리팹을 만든다 (RSG URP 프리팹 + 좌석/하차 지점 + 로직).
+- [x] `SurvivalistTPS.controller`에 `Mounted` 파라미터와 앉은 포즈 상태를 추가한다.
+- [x] 탑승 중 `Weapon Hold Arms` 레이어 가중치를 0으로 내린다.
+- [x] 탑승 중 `PlayerInput`/`PlayerMovement`/`PlayerShooter`/`BuildPlacer` 입력을 막는다.
+- [x] 카메라 타깃을 오토바이로 전환하고 하차 시 되돌린다.
+- [x] `Prototype` 씬에 오토바이를 배치한다.
+- [x] Play Mode에서 탑승/하차, 입력 차단·복구, 카메라 전환, 라이더 포즈를 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
 
 ### 2단계. 주행
 
