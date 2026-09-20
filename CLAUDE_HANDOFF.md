@@ -4,7 +4,7 @@
 
 ## 시작 상태
 
-- 기준 커밋은 `2b5c446 상자 루팅과 상호작용 구현`이며 `main`과 `origin/main`은 동기화되어 있다. 원격은 `https://github.com/KJY-1204/Zombie-Survival.git`이다.
+- 기준 커밋은 `e8cd084 건설물 철거와 저장 DTO 형태 확인`이며 `main`과 `origin/main`은 동기화되어 있다. 원격은 `https://github.com/KJY-1204/Zombie-Survival.git`이다.
 - 사용자 소유의 미커밋 변경(있다면 되돌리거나 커밋하지 않는다): `ProjectSettings/ProjectSettings.asset`, `ProjectSettings/ShaderGraphSettings.asset`, `.vsconfig`.
 - 작업 씬은 `Assets/Scenes/Prototype.unity`(Build Settings 인덱스 2), 플레이어 프리팹은 `Assets/Prefabs/Player Character.prefab`, 좀비 프리팹은 `Assets/Prefabs/Zombie Character.prefab`이다.
 - 교재 씬 `Assets/Scenes/Main.unity`와 교재 `Assets/Prefabs/Zombie.prefab`은 참조 관계가 남아 있어 그대로 두었다. 건드리지 말 것.
@@ -15,7 +15,29 @@
 - M1 플레이어와 카메라 프로토타입 - 완료.
 - M2 전투 수직 슬라이스 - 완료(2026-09-20).
 - M3 루팅과 캐릭터 관리 - 완료(2026-09-20). 무게제 인벤토리, 6슬롯 장비, 방어 계산, 인벤토리/장비/상태 화면, 상자 루팅까지 구현했다.
-- M4 파밍과 거점 MVP - 미착수.
+- M4 파밍과 거점 MVP - 완료(2026-09-20). 자원 채집, 자유 배치 건설, 건설물 4종, 철거, 저장 DTO 표현까지 구현했다.
+- M5 오토바이 - 미착수.
+
+## M4에서 만든 것 (2026-09-20)
+
+- **자원 채집** `ResourceNode : LivingEntity`. 나무/바위/고철을 **총으로 쏴서** 내구도를 깎고 부수면 재료 픽업이 드랍된다. 부서지면 오브젝트를 파괴하지 않고 콜라이더·렌더러만 꺼두었다가 `respawnTime`(기본 60초) 뒤 되살린다. 씬의 `Resource Nodes` 아래 7개 배치.
+  - **`Gun.cs:114`가 `hit.collider.GetComponent<IDamageable>()`를 쓴다(`GetComponentInParent`가 아니다).** 총에 맞아야 하는 오브젝트는 **로직과 콜라이더가 같은 GameObject에** 있어야 한다. 에셋 프리팹의 자식 콜라이더는 전부 제거하고 루트에만 콜라이더를 뒀다.
+  - 반대로 **상호작용(`IInteractable`)은 `GetComponentInParent`로 찾으므로 자식 콜라이더여도 된다.** 두 규칙이 반대라는 걸 헷갈리지 말 것.
+- **재료 아이템** 목재/돌/고철. 이를 위해 `ItemData`의 abstract를 해제했다(그대로 쓰면 효과 없는 재료, 상속하면 소비/무기/방어구).
+- **건설 시스템** `Assets/Scripts/Building/`.
+  - `BuildableData`(정적 정의: 프리팹, 재료, 겹침 판정 상자) / `PlacedBuilding`(순수 데이터: id, 위치, 회전, 열림) / `BaseBuildState`(설치 목록 소유자) / `PlacedBuildingLink`(씬 오브젝트 <-> 기록 연결).
+  - `BuildPlacer`가 반투명 프리뷰, 휠 회전(15도), 겹침 판정, 재료 차감, `X` 철거(재료 전액 환급)를 담당한다. `BuildMenuUI`(`B` 키)가 목록을 보여준다.
+  - 건설물 4종: 벽(목재10+돌5) / 바리케이드(목재6+고철4) / 문(목재8+고철6) / 보관 상자(목재15).
+  - **보관 상자는 자기 `Inventory` 컴포넌트를 내용물로 쓴다**(`[RequireComponent]`). `StorageUI`가 `StorageContainer.onOpenRequested` static 이벤트를 구독해 열린다(상자는 UI를 모른다).
+  - **문은 `Hinge` 자식에 콜라이더를 붙여** 열리면 콜라이더가 함께 비켜난다. 열림 상태는 `PlacedBuildingLink.record.isOpen`에 기록되고 `Start`에서 복원한다.
+  - `BaseBuildState.ToJson()`이 설치 상태를 씬 참조 없이 직렬화한다. **이 출력이 곧 M7 저장 DTO의 형태다.**
+- **주의할 함정**
+  - **3인칭에서 사정거리를 카메라 기준으로 재면 안 된다.** 카메라가 플레이어 뒤 3.4m에 있어서 `demolishDistance=4`가 실제로는 앞 0.6m밖에 안 됐다. 레이 길이는 `카메라-플레이어 거리 + 사정거리`로 잡고 판정은 플레이어 기준으로 한다. 건설 프리뷰도 같은 이유로 "사정거리 끝에서 아래로 재투영"하는 보정이 들어가 있다.
+  - **`Destroy`는 프레임 끝에야 처리된다.** 이 세션에서만 세 번 물렸다(UI 줄 중복, 프리뷰 자기 콜라이더, 목록 재생성). 런타임에 즉시 없애야 하면 `enabled = false`를 쓴다.
+  - 프리뷰는 컴포넌트를 **지우지 않고 끈다.** `RequireComponent`로 묶인 컴포넌트는 제거가 거부되고 콘솔 에러만 남는다(`StorageContainer -> Inventory`).
+  - **씬에 정적 장애물을 놓으면 NavMesh 재베이크 후 스폰 지점과 필수 경로를 샘플링해 확인할 것.** 나무를 `(-14,0,2)`에 놓았다가 `Spawn Point 1`이 NavMesh에서 파여나간 적이 있다. 정점 수만 보면 놓친다.
+  - **건설물은 NavMesh에 반영되지 않는다.** 런타임 생성물이라 베이크로 못 막는다. 물리 콜라이더로만 막으므로 좀비는 경로를 벽 너머로 계산하고 실제로는 밀린다. 정식 처리(`NavMeshObstacle` carving)는 M6 사안이다.
+  - **문틀이 없다.** 문짝만 있어서 옆으로 돌아갈 수 있다. 벽과 조합해 쓰는 전제다.
 
 ## M3에서 만든 것 (2026-09-20)
 
@@ -92,25 +114,33 @@
 ## 남은 미검증/미해결 항목
 
 - **사용자 수동 확인 필요**: 마우스 우클릭 ADS 전환과 이동·사격의 육안 확인. MCP 파이프라인은 마우스 입력을 합성할 수 없어 자동 검증이 불가능하다. `checklist.md`에 미완료로 남아 있다.
-- **사용자 수동 확인 필요**: M3의 키 바인딩 `I`/`O`/`K`/`E`/`1`/`2`. 같은 이유로 키 입력을 합성할 수 없다. 코드 경로와 UI 버튼 클릭은 전부 검증했고 남은 것은 키 바인딩 자체뿐이다.
+- **사용자 수동 확인 필요**: 키 바인딩 전체. 같은 이유로 키/마우스 입력을 합성할 수 없다. 코드 경로와 UI 버튼 클릭은 전부 검증했고 남은 것은 바인딩 자체뿐이다.
+  - `I` 인벤토리 / `O` 장비 / `K` 상태 / `B` 건설 메뉴 / `T` 보관 상자 닫기
+  - `E` 상호작용(루팅 상자·보관 상자·문) / `X` 철거 / `1`·`2` 주무기·보조무기
+  - 건설 모드: 휠 회전 / 좌클릭 설치 / 우클릭·ESC 취소
+- **사용자 판단 필요**: 총으로 자원을 부수는 채집 방식의 조작감. 사용자가 이 방식을 택했지만 실제로 해보고 어색하면 `E` 즉시 채집으로 바꾸는 비용은 작다(`ResourceNode`의 진입점만 교체).
 - `FindObjectOfType` 폐지 경고 정리. 기능 영향 없음, 폴리싱 단계로 미뤘다.
 - 왼손 IK의 무기별 2~3cm 오차. 조준에 영향 없음, 폴리싱 단계로 미뤘다.
 - 근접무기(멜리) 전투. `Crusader Weapon`/`Free medieval weapons` 에셋이 있으나 스윙/히트박스 기반의 다른 전투 방식이 필요해 M8 콘텐츠 사안으로 미뤘다. `IDamageable`은 재사용 가능하지만 애니메이션/입력/판정은 새로 설계해야 한다.
 
 ## 권장 다음 작업
 
-**M4 파밍과 거점 MVP.** 완료 조건은 필드 자원 획득, 재료를 소비한 최소 건설물 2~4종 설치, 건설물이 저장 대상 데이터로 표현되는 것이다.
+**M5 오토바이.** 완료 조건은 탑승/하차/주행, 안정적인 카메라 전환, 저장 후 위치/상태 복원이다.
 
 착수 전에 정할 것.
-- 재료 아이템이 필요하다. 지금 `ItemData`는 **abstract**라 "효과 없는 순수 재료"를 만들 수 없다. abstract만 떼거나 `MaterialItemData`를 추가하면 된다(`ItemData.cs` 한 줄).
-- 채집 대상(나무/돌/고철 등)과 건설물 종류를 사용자에게 확인할 것. `GAME_DESIGN.md` §21에 거점 건설 자유도가 미정으로 남아 있다.
-- 건설물은 M7 저장 대상이므로 처음부터 "위치 + 종류 + 상태"를 순수 데이터로 표현할 것(`CLAUDE.md` §11.6).
+- 에셋은 `Post Apocalyptic Motorcycle 3D Model Rigged Off Road`(모델)와 `MotoInteractionAnimsFREE`(탑승/주행 애니메이션)다. 실제 폴더와 리그 구조를 먼저 확인할 것 - 이름만 보고 API를 추정하지 말 것(`CLAUDE.md` §11.3).
+- 주행 물리 방식(`WheelCollider` vs 단순 Rigidbody 조작)을 사용자에게 확인할 것. 작업량과 조작감이 크게 갈린다.
+- `GAME_DESIGN.md` §21에 오토바이 연료/내구도 도입 여부가 미정으로 남아 있다.
+- 탑승 중에는 `PlayerInput`/`PlayerMovement`/`BuildPlacer`/`PlayerInteractor`를 모두 게이팅해야 한다. `UIManager.isScreenOpen`과 같은 방식을 쓸지, 별도 상태를 둘지 정할 것.
+- 카메라는 `ThirdPersonCameraController`가 플레이어를 따라가게 되어 있다. 오토바이를 타면 타깃을 바꾸는 방식이 가장 작은 수정이다(`CLAUDE.md` §11.6 "카메라 모드가 바뀌어도 코어는 바뀌지 않는다").
+
+**M4에서 남겨둔 것 중 M7에 필요한 것**: 보관 상자의 내용물이 아직 `BaseBuildState.ToJson()`에 포함되지 않는다. `StorageContainer`의 `Inventory`를 `PlacedBuilding`에 붙이거나 별도 목록으로 저장해야 한다.
 
 ## 최근 커밋
 
-- `2b5c446 상자 루팅과 상호작용 구현`
-- `ba641d3 상태 화면 구현`
-- `bf3e6e9 6슬롯 장비 시스템과 고정 수치 방어 계산 구현`
-- `7a736b1 필드 아이템을 인벤토리 경유로 전환하고 인벤토리 화면 구현`
-- `52058d5 무게제 인벤토리 코어와 아이템 데이터 정의 구현`
-- `d49ef93 M3 루팅/인벤토리 계획과 체크리스트 작성`
+- `e8cd084 건설물 철거와 저장 DTO 형태 확인`
+- `f458c40 바리케이드/보관 상자/문 건설물과 상호작용 일반화`
+- `d1102cc 자유 배치 건설 시스템과 벽 건설물 구현`
+- `1165f2b 재료 아이템과 자원 채집 구현`
+- `8025311 M4 파밍/거점 계획과 체크리스트 작성`
+- `1668b58 인수인계 메모를 M3 완료 시점 기준으로 갱신`
