@@ -171,3 +171,68 @@
 - [x] Play Mode에서 사망 시 체력이 정확히 0에서 멈추고 좀비가 Idle로 돌아가는지 검증한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
 - [x] 검증된 변경을 로컬 커밋하고 원격 `main`에 push한다.
+
+## 2026-09-20 - M3 루팅과 캐릭터 관리
+
+### 착수 준비
+
+- [x] 인벤토리 방식(무게제), 기존 아이템 처리(인벤토리 전환), 장비 슬롯 구성(무기 3 + 방어구 3)을 사용자에게 확인한다.
+- [x] 방어구 비주얼 가능 여부를 실제 메시 파츠로 검증한다 (하체 맨다리 메시 없음 -> 전부 수치만으로 확정).
+- [x] 방어 계산 규칙을 확정한다 (`Max(1, damage - armor)`).
+- [x] `plan.md`에 목표/결정/완료 조건/구현 순서/제외 범위를 기록한다.
+- [x] `CLAUDE_HANDOFF.md`를 M2 완료 시점 기준으로 갱신한다.
+
+### 1단계. 아이템 데이터 + 무게제 인벤토리 코어
+
+- [ ] `ItemData`(base) ScriptableObject를 만든다 (id/이름/아이콘/개당 무게/최대 스택/설명).
+- [ ] `ConsumableItemData` / `WeaponItemData` / `ArmorItemData` 3종 서브클래스를 만든다.
+- [ ] `EquipmentSlot` enum을 만든다 (주무기/보조무기/근접/머리/상체/하체).
+- [ ] 런타임 상태 `ItemStack`(ItemData 참조 + 개수)을 만든다.
+- [ ] `Inventory`를 만든다 (무게 합산, 스택 병합, 추가/제거/사용, `OnChanged` 이벤트, UI 무지).
+- [ ] `PlayerMovement`에 무게 초과 시 이동속도 배율을 연결한다.
+- [ ] `Player Character.prefab`에 `Inventory`를 붙인다.
+- [ ] Play Mode `eval`로 추가/스택/제거/무게 합산/초과 배율을 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 2단계. 기존 아이템 3종 전환 + 인벤토리 UI
+
+- [ ] 실제 `ItemData` 에셋을 만든다 (붕대, 탄약, 동전 최소 3종).
+- [ ] `AmmoPack`/`HealthPack`/`Coin`을 `WorldItem` 하나로 통합한다.
+- [ ] `PlayerHealth.OnTriggerEnter`를 즉시 사용에서 인벤토리 추가로 바꾼다.
+- [ ] `ItemSpawner.items`와 기존 픽업 프리팹 3종을 새 `WorldItem` 방식으로 갱신한다.
+- [ ] 인벤토리 화면(목록, 무게 표시, 사용, 버리기)을 만들고 `I` 키로 연다.
+- [ ] Play Mode에서 줍기 -> 인벤토리 적재 -> 사용 -> 체력/탄약/점수 변화를 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 3단계. 장비 시스템 6슬롯 + 장비 UI + 방어 계산
+
+- [ ] `Equipment`를 만든다 (6슬롯, 장착/해제, 총 방어력, `OnChanged` 이벤트, UI 무지).
+- [ ] 무기 3종(권총/저격총/돌격소총)의 `WeaponItemData` 에셋을 만든다.
+- [ ] 방어구 `ArmorItemData` 에셋을 머리/상체/하체 각 1종 이상 만든다.
+- [ ] `PlayerShooter.weaponPrefabs` 하드코딩을 장비 슬롯 참조로 대체한다.
+- [ ] `PlayerInput`의 숫자키 무기 선택을 주무기/보조무기 전환으로 바꾼다.
+- [ ] `PlayerHealth.OnDamage`에 `Max(1, damage - armor)`를 적용한다.
+- [ ] 장비 화면을 만들고 `O` 키로 연다.
+- [ ] Play Mode에서 무기 교체 시 오른손 그립 거리 0.00000 유지를 검증한다.
+- [ ] Play Mode에서 방어구 장착 전후 좀비 피해량 차이를 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 4단계. 상태 화면
+
+- [ ] 상태 화면(체력, 총 방어력, 총 무게/최대 무게, 장착 무기 공격력)을 만들고 `K` 키로 연다.
+- [ ] 인벤토리/장비 변경 시 수치가 따라 갱신되는지 Play Mode에서 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 5단계. 상자 루팅
+
+- [ ] `LootContainer`를 만든다 (내용물 목록, 열림 상태, 인벤토리로 옮기기).
+- [ ] 상호작용 입력(`E`)과 대상 감지를 `PlayerInput`/상호작용 컴포넌트에 추가한다.
+- [ ] `Ditag Design/Mesh Pack/Chest 01`의 모델로 상자 프리팹을 만든다.
+- [ ] `Prototype` 씬에 상자를 배치한다.
+- [ ] Play Mode에서 열기 -> 인벤토리 적재 -> 빈 상자 재개봉 불가를 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
