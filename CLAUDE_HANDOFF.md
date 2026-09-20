@@ -4,9 +4,12 @@
 
 ## 시작 상태
 
-- 기준 커밋은 `693a879 오토바이 저장 데이터 표현과 주행 HUD 구현`이며 `main`과 `origin/main`은 동기화되어 있다. 원격은 `https://github.com/KJY-1204/Zombie-Survival.git`이다.
+- 기준 커밋은 `fd1be38 School 건물을 대형 POI로 추출해 시드 월드에 편입`이며 `main`과 `origin/main`은 동기화되어 있다. 원격은 `https://github.com/KJY-1204/Zombie-Survival.git`이다.
 - 사용자 소유의 미커밋 변경(있다면 되돌리거나 커밋하지 않는다): `ProjectSettings/ProjectSettings.asset`, `ProjectSettings/ShaderGraphSettings.asset`, `.vsconfig`.
-- 작업 씬은 `Assets/Scenes/Prototype.unity`(Build Settings 인덱스 2), 플레이어 프리팹은 `Assets/Prefabs/Player Character.prefab`, 좀비 프리팹은 `Assets/Prefabs/Zombie Character.prefab`이다.
+- **씬이 두 개다.**
+  - `Assets/Scenes/Prototype.unity`(인덱스 2) - M2~M5를 검증한 씬. `Test Ground` 50x50에 레거시 `NavMeshBuilder` 베이크를 쓴다. **건드리지 않는다.**
+  - `Assets/Scenes/World.unity`(인덱스 3) - M6의 시드 청크 월드. 런타임 NavMesh를 쓴다.
+- 플레이어 프리팹은 `Assets/Prefabs/Player Character.prefab`, 좀비 프리팹은 `Assets/Prefabs/Zombie Character.prefab`이다.
 - 교재 씬 `Assets/Scenes/Main.unity`와 교재 `Assets/Prefabs/Zombie.prefab`은 참조 관계가 남아 있어 그대로 두었다. 건드리지 말 것.
 
 ## 마일스톤 진행도
@@ -17,7 +20,26 @@
 - M3 루팅과 캐릭터 관리 - 완료(2026-09-20). 무게제 인벤토리, 6슬롯 장비, 방어 계산, 인벤토리/장비/상태 화면, 상자 루팅까지 구현했다.
 - M4 파밍과 거점 MVP - 완료(2026-09-20). 자원 채집, 자유 배치 건설, 건설물 4종, 철거, 저장 DTO 표현까지 구현했다.
 - M5 오토바이 - 완료(2026-09-20). 탑승/하차, 주행, 연료·내구도, 저장 DTO 표현, 주행 HUD까지 구현했다.
-- M6 시드 월드와 스트리밍 - 미착수.
+- M6 시드 월드와 스트리밍 - 완료(2026-09-20). 결정론적 생성, 연결성 검증, 청크 스트리밍, 런타임 NavMesh, School POI까지 구현했다.
+- M7 저장 시스템 - 미착수.
+
+## M6에서 만든 것 (2026-09-20)
+
+- **`Assets/Scripts/World/`**. `WorldGenerator`(static, 순수 계산) / `WorldChunkData` / `WorldMap` / `WorldGenerationSettings` / `WorldConnectivityReport` / `ChunkLibrary`(프리팹 모음) / `WorldChunkBuilder` / `WorldStreamer` / `WorldNavMeshBaker`.
+- **생성**: 시드 + `generatorVersion`으로 결정론적. 50m 청크 20x20 = 1km. 도로를 격자로 깔아 연결성을 구조적으로 보장하고 BFS로 따로 검사한다. **400청크 생성은 0.0ms** - 비용은 인스턴스화에 있다.
+  - **`UnityEngine.Random`을 쓰지 않는다**(전역 상태라 결정론이 깨진다). 칸 시드는 좌표 해시로 뽑아 생성 순서와 무관하다.
+  - `generatorVersion`은 현재 **2**(POI 주변 칸 비우기 규칙 추가). 규칙을 바꾸면 반드시 올릴 것.
+- **스트리밍**: `loadRadius`(기본 2) 안의 청크만 올린다. 월드 경계에서는 자동으로 줄어든다.
+- **배치**: 에셋 피벗이 모서리 기준이고 축마다 달라서 **좌표를 하드코딩하지 않고 인스턴스화 후 bounds에서 계산**한다. 스케일도 `FitScale`로 긴 축을 맞춘다(균등 스케일만).
+- **NavMesh**: `WorldNavMeshBaker`가 저수준 `NavMeshBuilder`로 플레이어를 따라다니며 비동기 갱신한다. 건설물에는 `NavMeshObstacle`(carve)이 붙어 있다.
+- **POI**: `Assets/Prefabs/World/School POI.prefab`(School 씬에서 건물 본체만 추출, 렌더러 58 / 콜라이더 21 / 85x10x62m).
+- **주의할 함정**
+  - **`NavMeshSurface`를 청크마다 두면 안 된다.** 분리된 `NavMeshData`끼리는 이어지지 않아 좀비가 청크 경계를 못 넘는다. 그리고 `UpdateNavMesh`는 볼륨이 움직여도 재수집하지 않는다(정점 1160 -> 122를 확인했다). 그래서 `NavMeshBuilder`를 직접 쓴다.
+  - **런타임 NavMesh 베이크는 메시 Read/Write가 필요하다.** 없으면 **에디터에서만 동작하고 빌드하면 실패**한다. `Assets/Apocalyptic_World`의 모델 132개에 켜뒀다. 새 에셋을 월드에 쓰면 똑같이 켤 것. 메모리 비용은 M8 사안이다.
+  - **NavMesh는 청크가 다 올라온 뒤에 구워야 한다.** `Start()`에서 구우면 `WorldStreamer.Start`와 순서가 안 정해져 빈 NavMesh가 나온다. `WorldStreamer.onChunksChanged`를 구독할 것.
+  - **`World.unity`는 원점에서 수백 m 떨어진 곳에서 시작한다.** `ThirdPersonCameraController`에 첫 프레임 스냅이 들어 있으니 지우지 말 것.
+  - 지면 위에 무언가를 놓을 때는 **자기 콜라이더를 제외하고** 레이캐스트할 것. 안 그러면 자기 키만큼 공중에 뜬다.
+  - **에디터가 포커스를 잃으면 Play가 멈춘다**(`Application.runInBackground=False`). 검증 중 시간이 안 흐르면 `Time.frameCount`를 먼저 의심할 것.
 
 ## M5에서 만든 것 (2026-09-20)
 
@@ -138,6 +160,8 @@
   - `E` 상호작용(루팅 상자·보관 상자·문·오토바이 타기/내리기) / `X` 철거 / `1`·`2` 주무기·보조무기
   - `R` 오토바이 주유 / `F` 오토바이 수리 / `WASD` 주행
   - 건설 모드: 휠 회전 / 좌클릭 설치 / 우클릭·ESC 취소
+- **사용자 수동 확인 필요**: `World.unity` 플레이. **에디터가 포커스를 잃으면 게임이 멈춘다**(Run In Background 꺼짐). 사용자 소유 설정이라 켜지 않았다.
+- **사용자 판단 필요**: 도로 폭이 21m라 50m 칸의 나머지가 풀밭이다. 도로 칸에 서 있어도 풀 위일 수 있다.
 - **사용자 판단 필요**: 총으로 자원을 부수는 채집 방식의 조작감. 사용자가 이 방식을 택했지만 실제로 해보고 어색하면 `E` 즉시 채집으로 바꾸는 비용은 작다(`ResourceNode`의 진입점만 교체).
 - `FindObjectOfType` 폐지 경고 정리. 기능 영향 없음, 폴리싱 단계로 미뤘다.
 - 왼손 IK의 무기별 2~3cm 오차. 조준에 영향 없음, 폴리싱 단계로 미뤘다.
@@ -145,24 +169,30 @@
 
 ## 권장 다음 작업
 
-**M6 시드 월드와 스트리밍.** 완료 조건은 같은 시드에서 같은 초기 맵, 여러 환경 청크와 대형 POI 1개 이상, 도로 연결성 검증, 플레이어 이동에 따른 청크 활성/비활성이다(`GAME_DESIGN.md` §20, 설계 기준은 §6과 `CLAUDE.md` §11.7).
+**M7 저장 시스템.** 완료 조건은 10개 저장 슬롯 표시, 수동 저장/불러오기, 자동저장, 인벤토리·장비·위치·월드 변경·건설·오토바이 복원, `SaveVersion` 기록이다(`GAME_DESIGN.md` §20, 기준은 §11.8).
+
+**이미 준비된 것** (전부 씬 참조 없는 순수 데이터)
+- `BaseBuildState.ToJson()` - 건설물 목록(`PlacedBuilding`: id/위치/회전Y/열림).
+- `Motorcycle.ToJson()` - 오토바이(`MotorcycleSaveData`: 위치/회전Y/연료/내구/탑승 여부). 범위 클램프가 있는 `LoadFromSaveData`도 있다.
+- 월드는 `WorldSeed` + `GeneratorVersion` 두 값만 저장하면 초기 상태가 재현된다(결정론 검증 완료).
+- `ItemStack`은 `ItemData` 참조 + 개수인 순수 데이터다. 저장할 때는 참조 대신 `ItemData.itemId`로 바꿔야 한다.
+
+**남은 것**
+- **보관 상자 내용물**이 `BaseBuildState.ToJson()`에 없다. `StorageContainer`의 `Inventory`를 `PlacedBuilding`에 붙이거나 별도 목록으로 저장해야 한다.
+- 플레이어 인벤토리/장비/체력/위치.
+- 자원 노드(`ResourceNode`)의 채집 상태와 재생성 타이머.
+- 오토바이 탑승 상태 복원 순서(플레이어를 먼저 복원할지 차량을 먼저 복원할지).
+- `SaveVersion`과 원자적 저장(임시 파일 작성 후 교체) - `CLAUDE.md` §11.8.
 
 착수 전에 정할 것.
-- **지금 월드는 `Test Ground` 하나(50x50)뿐이다.** 청크 시스템을 넣으면 기존 씬 배치(자원 노드, 상자, 건설물, 오토바이)를 어떻게 다룰지 정해야 한다.
-- 청크 크기와 월드 크기가 `GAME_DESIGN.md` §21에 미정으로 남아 있다.
-- 쓸 수 있는 에셋은 `Apocalyptic_World`(건물/도로/지형/프롭)와 `School Scene`(대형 POI 후보)이다. 실제 폴더 구조를 먼저 확인할 것.
-- **NavMesh 처리를 반드시 같이 정해야 한다.** 지금은 레거시 `NavMeshBuilder`로 씬 전체를 한 번 굽는 방식이라 청크 스트리밍과 맞지 않는다. `NavMeshSurface`(AI Navigation 패키지) 기반 청크별 베이크로 갈지 결정할 것. 이 결정이 M4의 "건설물이 NavMesh에 반영되지 않는다" 제약도 같이 푼다.
-
-**M7 저장을 위해 이미 준비된 것과 남은 것**
-- 준비됨: `BaseBuildState.ToJson()`(건설물), `Motorcycle.ToJson()`(오토바이). 둘 다 씬 참조 없는 순수 데이터다.
-- 남음: **보관 상자의 내용물**이 `BaseBuildState.ToJson()`에 없다. `StorageContainer`의 `Inventory`를 `PlacedBuilding`에 붙이거나 별도 목록으로 저장해야 한다.
-- 남음: 플레이어 인벤토리/장비, 자원 노드의 채집 상태, 오토바이 탑승 상태 복원 순서.
+- 저장 슬롯 UI를 `ScreenPanel`로 만들지, 별도 타이틀/메뉴 씬을 만들지.
+- 자동저장 시점(일정 시간마다 / 거점 근처 / 특정 이벤트).
 
 ## 최근 커밋
 
-- `693a879 오토바이 저장 데이터 표현과 주행 HUD 구현`
-- `a828c1f 오토바이 연료와 내구도 구현`
-- `5811c90 오토바이 주행 검증과 체크리스트 반영`
-- `d9dbda8 오토바이 탑승과 하차 구현`
-- `4bbe2ad M5 오토바이 계획과 체크리스트 작성`
-- `7123749 인수인계 메모를 M4 완료 시점 기준으로 갱신`
+- `fd1be38 School 건물을 대형 POI로 추출해 시드 월드에 편입`
+- `117b82e 스트리밍 월드의 런타임 NavMesh와 건설물 장애물 구현`
+- `470f4d1 좀비를 시야와 청각 기반으로 바꿈`
+- `5481502 청크 스트리밍과 World.unity 구성`
+- `5ab9fd7 결정론적 시드 월드 생성기와 연결성 검증 구현`
+- `265d1e8 M6 시드 월드 계획과 체크리스트 작성`
