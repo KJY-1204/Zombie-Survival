@@ -138,7 +138,7 @@ public static class WorldChunkBuilder {
         }
 
         Place(library.poiPrefab, parent, Vector3.zero, 0f,
-            FitScale(library.poiPrefab, chunkSize * 0.9f), VerticalAlign.BottomOnGround);
+            FitScale(library.poiPrefab, library.poiFootprint), VerticalAlign.BottomOnGround);
     }
 
     // 칸 안에 여러 개를 흩뿌린다

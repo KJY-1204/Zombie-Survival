@@ -562,7 +562,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WorldStreamer
   settings:
     worldSeed: 12345
-    generatorVersion: 1
+    generatorVersion: 2
     chunksX: 20
     chunksZ: 20
     chunkSize: 50

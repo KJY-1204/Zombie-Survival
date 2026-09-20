@@ -403,12 +403,12 @@
 
 ### 4단계. 대형 POI (School)
 
-- [ ] `SchoolSceneAbandoned.unity`에서 학교 건물 계층을 확인한다.
-- [ ] 라이트맵/머티리얼 의존성을 확인하고 프리팹으로 추출한다.
-- [ ] POI 청크로 편입하고 시드에 따라 배치되게 한다.
-- [ ] Play Mode에서 POI 배치와 도로 연결을 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] `SchoolSceneAbandoned.unity`에서 학교 건물 계층을 확인한다.
+- [x] 라이트맵/머티리얼 의존성을 확인하고 프리팹으로 추출한다.
+- [x] POI 청크로 편입하고 시드에 따라 배치되게 한다.
+- [x] Play Mode에서 POI 배치와 도로 연결을 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
 
 ## 2026-09-20 - 좀비 탐지 방식 변경 (시야 + 청각)
 
@@ -422,3 +422,10 @@
 - [x] Play Mode에서 사거리 밖/등 뒤/정면/총소리/추적 포기/공격을 검증한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
 - [x] 커밋하고 원격 `main`에 push한다.
+
+### M6 마무리 - 사용자 수동 확인이 필요한 항목
+
+- [ ] `World.unity`를 직접 플레이해 이동/스트리밍/주행 체감을 확인한다.
+      **에디터 창이 포커스를 잃으면 게임이 멈춘다**(Run In Background 꺼짐). 필요하면 Player Settings에서 켤 것 - 사용자 소유 설정이라 건드리지 않았다.
+- [ ] 시드를 바꿔가며(`World Streamer > settings > worldSeed`) 월드가 달라지는지 확인한다.
+- [ ] 도로 폭(21m)과 50m 칸의 빈 풀밭 비율이 괜찮은지 판단한다.

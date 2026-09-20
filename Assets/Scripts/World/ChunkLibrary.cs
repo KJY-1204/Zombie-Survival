@@ -27,5 +27,8 @@ public class ChunkLibrary : ScriptableObject {
     public int plainPropMax = 3;
 
     [Header("POI")]
-    public GameObject poiPrefab; // 대형 거점 (4단계에서 School로 교체)
+    public GameObject poiPrefab; // 대형 거점
+    // 한 칸(50m)보다 크게 둔다. 칸에 맞춰 줄이면 도시 건물보다 작아져 "대형"이 아니게 된다
+    // 생성기가 POI 주변 칸을 비우므로 넘쳐도 겹치지 않는다
+    public float poiFootprint = 85f;
 }

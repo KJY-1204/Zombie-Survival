@@ -6,7 +6,9 @@ using UnityEngine;
 public class WorldGenerationSettings {
     [Header("시드")]
     public int worldSeed = 12345; // 월드를 결정하는 시드
-    public int generatorVersion = 1; // 생성 규칙이 바뀌면 올린다. 시드가 같아도 결과가 달라진다
+    // 생성 규칙이 바뀌면 올린다. 시드가 같아도 결과가 달라진다
+    // v2: POI 주변 칸을 비우는 규칙 추가
+    public int generatorVersion = 2;
 
     [Header("크기")]
     public int chunksX = 20; // 가로 청크 수

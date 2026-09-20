@@ -139,6 +139,28 @@ public static class WorldGenerator {
             {
                 candidate.type = ChunkType.POI;
                 placed.Add(candidate);
+                ClearAroundPoi(map, candidate);
+            }
+        }
+    }
+
+    // 대형 POI는 한 칸보다 크다. 주변 칸을 비워 건물이나 바위와 겹치지 않게 한다
+    // 도로는 비우지 않는다. 비우면 길이 끊겨 연결성 검사가 깨진다
+    private static void ClearAroundPoi(WorldMap map, WorldChunkData poi) {
+        for (int dz = -1; dz <= 1; dz++)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                WorldChunkData neighbor = map.Get(poi.x + dx, poi.z + dz);
+
+                if (neighbor == null || neighbor == poi
+                    || neighbor.type == ChunkType.Road
+                    || neighbor.type == ChunkType.POI)
+                {
+                    continue;
+                }
+
+                neighbor.type = ChunkType.Plain;
             }
         }
     }
