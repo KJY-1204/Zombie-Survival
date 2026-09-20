@@ -32,12 +32,26 @@ public class BuildMenuUI : ScreenPanel {
     protected override void Update() {
         base.Update();
 
-        // 건설 모드일 때만 조작 안내를 띄운다
-        if (hintText != null)
+        // 건설 모드이거나 철거할 수 있는 건설물을 보고 있을 때만 안내를 띄운다
+        if (hintText == null || placer == null)
         {
-            hintText.text = placer != null && placer.isBuilding
-                ? $"건설 모드 - {placer.selected.displayName}  |  휠 회전 · 좌클릭 설치 · 우클릭/ESC 취소"
-                : string.Empty;
+            return;
+        }
+
+        if (placer.isBuilding)
+        {
+            hintText.text =
+                $"건설 모드 - {placer.selected.displayName}  |  휠 회전 · 좌클릭 설치 · 우클릭/ESC 취소";
+        }
+        else if (placer.demolishTarget != null)
+        {
+            BuildableData target = buildState.Find(placer.demolishTarget.buildableId);
+            string name = target != null ? target.displayName : placer.demolishTarget.buildableId;
+            hintText.text = $"[{placer.demolishKey}] {name} 철거";
+        }
+        else
+        {
+            hintText.text = string.Empty;
         }
     }
 

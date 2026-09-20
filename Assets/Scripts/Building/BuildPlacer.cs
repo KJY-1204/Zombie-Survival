@@ -6,6 +6,12 @@ public class BuildPlacer : MonoBehaviour {
     public float maxPlaceDistance = 8f; // 설치할 수 있는 최대 거리
     public float rotationStep = 15f; // 휠 한 칸당 회전 각도
 
+    public KeyCode demolishKey = KeyCode.X; // 바라보는 건설물을 철거하는 키
+    public float demolishDistance = 4f; // 철거할 수 있는 거리
+    public bool refundOnDemolish = true; // 철거할 때 재료를 돌려줄지
+
+    public PlacedBuilding demolishTarget { get; private set; } // 지금 철거할 수 있는 건설물
+
     public BuildableData selected { get; private set; } // 지금 고른 건설물 (없으면 null)
     public bool isBuilding => selected != null; // 건설 모드인지
     public bool canPlaceHere { get; private set; } // 지금 위치에 설치할 수 있는지
@@ -58,16 +64,22 @@ public class BuildPlacer : MonoBehaviour {
     }
 
     private void Update() {
-        if (!isBuilding)
+        // 화면이 열려 있는 동안에는 조작하지 않는다 (프리뷰는 그대로 둔다)
+        if (UIManager.isScreenOpen
+            || (GameManager.instance != null && GameManager.instance.isGameover))
         {
+            demolishTarget = null;
             return;
         }
 
-        // 화면이 열려 있는 동안에는 조작하지 않는다 (프리뷰는 그대로 둔다)
-        if (UIManager.isScreenOpen)
+        // 철거는 건설 모드가 아닐 때만 받는다 (건설 중에는 설치가 우선)
+        if (!isBuilding)
         {
+            UpdateDemolishTarget();
             return;
         }
+
+        demolishTarget = null;
 
         if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Fire2"))
         {
@@ -110,6 +122,69 @@ public class BuildPlacer : MonoBehaviour {
         SetCanPlace(affordable && !blocked);
 
         previewMaterial.SetColor("_BaseColor", canPlaceHere ? allowedColor : blockedColor);
+    }
+
+    // 바라보는 곳에 철거할 수 있는 건설물이 있는지 갱신하고, 입력이 오면 철거한다
+    private void UpdateDemolishTarget() {
+        demolishTarget = FindDemolishTarget();
+
+        if (demolishTarget != null && Input.GetKeyDown(demolishKey))
+        {
+            Demolish(demolishTarget);
+        }
+    }
+
+    // 조준선 끝에 있는 건설물의 기록을 찾는다
+    private PlacedBuilding FindDemolishTarget() {
+        if (BaseBuildState.instance == null)
+        {
+            return null;
+        }
+
+        Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+
+        // 3인칭 카메라는 플레이어 뒤에 있으므로 레이 길이를 카메라-플레이어 거리만큼 늘리고,
+        // 사정거리는 카메라가 아니라 플레이어 기준으로 판정한다
+        float rayLength =
+            Vector3.Distance(aimCamera.transform.position, transform.position)
+            + demolishDistance;
+
+        if (!TryRaycastIgnoringSelf(ray, rayLength, out RaycastHit hit))
+        {
+            return null;
+        }
+
+        if (Vector3.Distance(transform.position, hit.point) > demolishDistance)
+        {
+            return null;
+        }
+
+        // 콜라이더가 자식(문의 경첩 등)에 있을 수 있으므로 부모까지 올라가 찾는다
+        var link = hit.collider.GetComponentInParent<PlacedBuildingLink>();
+        return link != null ? link.record : null;
+    }
+
+    // 건설물을 철거하고 재료를 돌려준다
+    public bool Demolish(PlacedBuilding record) {
+        if (record == null || BaseBuildState.instance == null)
+        {
+            return false;
+        }
+
+        BuildableData data = BaseBuildState.instance.Find(record.buildableId);
+
+        if (!BaseBuildState.instance.Remove(record))
+        {
+            return false;
+        }
+
+        if (refundOnDemolish && data != null)
+        {
+            data.Refund(inventory);
+        }
+
+        demolishTarget = null;
+        return true;
     }
 
     // 설치할 바닥 지점을 찾는다

@@ -87,6 +87,17 @@ public class BaseBuildState : MonoBehaviour {
         return null;
     }
 
+    // 설치 상태 전체를 JSON으로 덤프한다
+    // PlacedBuilding의 instance는 [NonSerialized]라 빠지므로, 나온 결과가 곧 M7 저장 DTO의 형태다
+    public string ToJson() {
+        return JsonUtility.ToJson(new SaveSnapshot { buildings = placed }, true);
+    }
+
+    [Serializable]
+    private class SaveSnapshot {
+        public List<PlacedBuilding> buildings;
+    }
+
     private void NotifyChanged() {
         if (onChanged != null)
         {

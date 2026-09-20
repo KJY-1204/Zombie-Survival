@@ -288,8 +288,15 @@
 
 ### 4단계. 철거와 저장 데이터 표현
 
-- [ ] 철거 입력을 만들고 `BaseBuildState`에서 제거한다.
-- [ ] 설치된 건설물 전체를 `PlacedBuilding` 목록으로 덤프해 M7 저장 DTO로 옮길 수 있는 형태임을 보인다.
-- [ ] Play Mode에서 설치 -> 철거 -> 목록 반영을 검증한다.
-- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 `main`에 push한다.
+- [x] 철거 입력을 만들고 `BaseBuildState`에서 제거한다.
+- [x] 설치된 건설물 전체를 `PlacedBuilding` 목록으로 덤프해 M7 저장 DTO로 옮길 수 있는 형태임을 보인다.
+- [x] Play Mode에서 설치 -> 철거 -> 목록 반영을 검증한다.
+- [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [x] 커밋하고 원격 `main`에 push한다.
+
+### M4 마무리 - 사용자 수동 확인이 필요한 항목
+
+- [ ] 키 입력 확인: `B`(건설 메뉴) / `X`(철거) / `E`(문·보관 상자) / 휠(프리뷰 회전) / 좌클릭(설치) / 우클릭·ESC(취소).
+      MCP 파이프라인은 키보드·마우스 입력을 합성할 수 없다. 코드 경로(`Select`/`TryPlace`/`Demolish`/`Interact`)와 UI 버튼은 전부 검증했고 남은 것은 입력 바인딩 자체뿐이다.
+- [ ] 자원을 실제로 쏴서 부수는 조작감 확인 (총으로 벌목하는 방식이 어색하지 않은지).
+- [ ] 건설 프리뷰가 조준을 따라 자연스럽게 움직이는지 육안 확인.
