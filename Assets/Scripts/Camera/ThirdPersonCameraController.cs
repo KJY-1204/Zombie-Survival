@@ -19,6 +19,10 @@ public class ThirdPersonCameraController : MonoBehaviour {
     public float maxPitch = 55f;
     public float transitionSpeed = 14f;
 
+    [Header("벽 회피")]
+    public float collisionRadius = 0.25f; // 카메라가 벽을 감지할 반경
+    public float minCollisionDistance = 0.4f; // 벽에 막혔을 때 피벗에서 최소한 떨어질 거리
+
     public bool isAiming { get; private set; }
 
     private Camera targetCamera;
@@ -65,6 +69,10 @@ public class ThirdPersonCameraController : MonoBehaviour {
         Vector3 pivot = target.position + Vector3.up * height;
         Vector3 desiredPosition = pivot + viewRotation * new Vector3(shoulderOffset, 0f, -distance);
 
+        // 실내처럼 좁은 곳에서는 카메라가 벽을 뚫고 나간다.
+        // 피벗에서 목표 지점까지 구를 굴려 막히면 그 앞까지만 물러난다
+        desiredPosition = PullOutOfWalls(pivot, desiredPosition);
+
         // 시작 지점이 원점에서 멀면(시드 월드는 수백 m 떨어져 있다)
         // 보간으로 따라가는 동안 몇 초간 엉뚱한 곳을 비춘다. 처음 한 번은 바로 붙인다
         transform.position = hasSnapped
@@ -76,5 +84,41 @@ public class ThirdPersonCameraController : MonoBehaviour {
             targetCamera.fieldOfView,
             fov,
             transitionSpeed * Time.deltaTime);
+    }
+
+    // 피벗에서 목표 지점 사이에 막히는 것이 있으면 그 앞까지만 물러난다
+    private Vector3 PullOutOfWalls(Vector3 pivot, Vector3 desiredPosition) {
+        Vector3 offset = desiredPosition - pivot;
+        float distance = offset.magnitude;
+
+        if (distance < 0.01f)
+        {
+            return desiredPosition;
+        }
+
+        Vector3 direction = offset / distance;
+
+        RaycastHit[] hits = Physics.SphereCastAll(
+            pivot, collisionRadius, direction, distance,
+            ~0, QueryTriggerInteraction.Ignore);
+
+        float nearest = distance;
+
+        foreach (RaycastHit hit in hits)
+        {
+            // 플레이어 자신과 그가 든 물건은 무시한다
+            if (target != null && hit.transform.IsChildOf(target))
+            {
+                continue;
+            }
+
+            if (hit.distance < nearest)
+            {
+                nearest = hit.distance;
+            }
+        }
+
+        // 벽에 딱 붙으면 면이 보이므로 약간 띄운다
+        return pivot + direction * Mathf.Max(minCollisionDistance, nearest - 0.1f);
     }
 }

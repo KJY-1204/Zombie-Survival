@@ -12,6 +12,10 @@ public class WorldNavMeshBaker : MonoBehaviour {
     public int chunkMargin = 1; // 로드 반경보다 이만큼 좁게 굽는다(청크 단위)
     public LayerMask includeLayers = ~0; // 수집할 레이어
 
+    // 기본 0.4로는 학교 출입구 문턱을 못 넘어 실내외 NavMesh가 끊긴다
+    // (PathPartial -> 0.75로 올리면 PathComplete가 되는 것을 확인했다)
+    public float agentClimb = 0.75f;
+
     private NavMeshData navMeshData;
     private NavMeshDataInstance dataInstance;
     private readonly List<NavMeshBuildSource> sources = new List<NavMeshBuildSource>();
@@ -93,6 +97,7 @@ public class WorldNavMeshBaker : MonoBehaviour {
             0, new List<NavMeshBuildMarkup>(), sources);
 
         NavMeshBuildSettings settings = NavMesh.GetSettingsByID(0);
+        settings.agentClimb = agentClimb;
 
         // 첫 번째는 동기로 굽는다. 시작하자마자 좀비가 설 바닥이 있어야 한다
         if (!hasBakedOnce)
