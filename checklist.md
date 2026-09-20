@@ -243,3 +243,53 @@
       MCP 파이프라인은 키보드 입력을 합성할 수 없어 자동 검증이 불가능하다.
       코드 경로(`SetOpen`, `SelectSlot`, `LootContainer.Loot`)와 버튼 클릭은 전부 검증했고, 남은 것은 키 바인딩 그 자체뿐이다.
 - [ ] 화면이 열린 동안 마우스로 시점/캐릭터가 돌지 않는지 육안 확인.
+
+## 2026-09-20 - M4 파밍과 거점 MVP
+
+### 착수 준비
+
+- [x] 채집 방식(무기 타격), 배치 방식(자유 배치), 건설물 4종(벽/바리케이드/보관 상자/문)을 사용자에게 확인한다.
+- [x] 사격 데미지 전달 경로(`hit.collider.GetComponent<IDamageable>()`)를 확인한다.
+- [x] 자원/건설물로 쓸 에셋이 실제로 있는지 확인한다.
+- [x] `plan.md`에 목표/결정/완료 조건/구현 순서/제외 범위를 기록한다.
+
+### 1단계. 재료 아이템과 자원 채집
+
+- [ ] `ItemData`의 abstract를 해제해 순수 재료 아이템을 만들 수 있게 한다.
+- [ ] 재료 `ItemData` 에셋 3종(목재/돌/고철)을 만든다.
+- [ ] 재료 픽업 프리팹 3종을 만들고 `ItemData.worldPrefab`에 연결한다.
+- [ ] `ResourceNode : LivingEntity`를 만든다 (내구도, 파괴 시 드랍, 재생성).
+- [ ] 자원 노드 프리팹 3종(나무/바위/고철)을 만든다 (콜라이더와 로직을 같은 오브젝트에).
+- [ ] 자원 노드 머티리얼이 텍스처를 제대로 물고 있는지 확인한다.
+- [ ] `Prototype` 씬에 자원 노드를 배치하고 NavMesh를 다시 베이크한다.
+- [ ] Play Mode에서 사격 -> 내구도 감소 -> 파괴 -> 드랍 -> 줍기 -> 인벤토리 적재를 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 2단계. 건설 배치 시스템 + 벽 1종
+
+- [ ] `BuildableData`(id/이름/프리팹/필요 재료/판정 크기)를 만든다.
+- [ ] `PlacedBuilding`(순수 데이터)과 `BaseBuildState`(설치 목록 소유자)를 만든다.
+- [ ] `BuildPlacer`를 만든다 (프리뷰 생성, 바닥 레이캐스트, 휠 회전, 겹침 판정, 재료 소모, 설치).
+- [ ] `BuildMenuUI`를 만들고 `B` 키로 연다 (건설물 목록과 필요 재료 표시).
+- [ ] 벽 `BuildableData`와 건설물 프리팹을 만든다.
+- [ ] Play Mode에서 재료 부족 거부 / 충분 시 설치 / 재료 정확히 차감 / 겹침 거부를 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 3단계. 나머지 건설물 3종
+
+- [ ] 바리케이드 `BuildableData`와 프리팹을 만든다.
+- [ ] 보관 상자를 만든다 (`StorageContainer` + 넣기/꺼내기 화면).
+- [ ] 문을 만든다 (`BuildableDoor` 열림/닫힘, `E` 상호작용, 닫힘 시 물리 차단).
+- [ ] Play Mode에서 각 건설물의 고유 동작을 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
+
+### 4단계. 철거와 저장 데이터 표현
+
+- [ ] 철거 입력을 만들고 `BaseBuildState`에서 제거한다.
+- [ ] 설치된 건설물 전체를 `PlacedBuilding` 목록으로 덤프해 M7 저장 DTO로 옮길 수 있는 형태임을 보인다.
+- [ ] Play Mode에서 설치 -> 철거 -> 목록 반영을 검증한다.
+- [ ] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
+- [ ] 커밋하고 원격 `main`에 push한다.
