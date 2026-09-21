@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e4762b65ce9a1c48839c13e1a456661, type: 3}
+  m_Name: Crossbow Data
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectileWeaponData
+  ammoItem: {fileID: 11400000, guid: 37c6776ec73d9d747820866bc84a099c, type: 2}
+  projectilePrefab: {fileID: 4793242349375608175, guid: 8d9df3c8f75ca8046a1dc024ddb6e762,
+    type: 3}
+  damage: 65
+  projectileSpeed: 62
+  fireInterval: 1.1
+  reloadTime: 0.85
+  magazineCapacity: 1
+  noiseRadius: 14

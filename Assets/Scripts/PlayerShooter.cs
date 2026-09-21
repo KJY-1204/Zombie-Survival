@@ -5,6 +5,7 @@ using KevinIglesias;
 // 알맞은 애니메이션을 재생하고 IK를 사용해 캐릭터 양손이 총에 위치하도록 조정
 public class PlayerShooter : MonoBehaviour {
     public Gun gun; // 현재 장착한 총
+    public EquippedWeapon equippedWeapon { get; private set; } // 현재 장착한 모든 종류의 무기
     public Transform gunPivot; // 총 배치의 기준점
     public Transform leftHandMount; // 총의 왼쪽 손잡이, 왼손이 위치할 지점
     public Transform rightHandMount; // 총의 오른쪽 손잡이, 오른손이 위치할 지점
@@ -15,19 +16,20 @@ public class PlayerShooter : MonoBehaviour {
     // 숫자키로 고를 수 있는 손에 드는 무기 슬롯 (1번=주무기, 2번=보조무기)
     private static readonly EquipmentSlot[] selectableSlots = {
         EquipmentSlot.PrimaryWeapon,
-        EquipmentSlot.SecondaryWeapon
+        EquipmentSlot.SecondaryWeapon,
+        EquipmentSlot.Melee
     };
 
     public EquipmentSlot activeSlot { get; private set; } = EquipmentSlot.PrimaryWeapon; // 현재 손에 든 슬롯
 
     private GameObject currentWeaponInstance; // 현재 gunPivot 아래 생성되어 있는 총 인스턴스
-    private ItemData currentWeaponItem; // 현재 생성되어 있는 총의 아이템 정의
+    public ItemData currentWeaponItem { get; private set; } // 현재 생성되어 있는 무기의 아이템 정의
     private SurvivalistWeaponIK weaponIK; // 무기 교체 시 그립 보정을 다시 계산시킬 IK 컴포넌트
     private IKHelperTool ikHelperTool; // 왼손 IK 이펙터를 갱신할 IK Helper Tool 컴포넌트
 
     private Equipment equipment; // 어떤 무기를 장착 중인지 알려주는 장비 컴포넌트
     private BuildPlacer buildPlacer; // 건설 모드인지 알려주는 컴포넌트
-    private PlayerInput playerInput; // 플레이어의 입력
+    private ZombiePlayerInput playerInput; // 플레이어의 입력
     private Animator playerAnimator; // 애니메이터 컴포넌트
 
     private void Awake() {
@@ -42,7 +44,7 @@ public class PlayerShooter : MonoBehaviour {
 
     private void Start() {
         // 사용할 컴포넌트들을 가져오기
-        playerInput = GetComponent<PlayerInput>();
+        playerInput = GetComponent<ZombiePlayerInput>();
         playerAnimator = GetComponent<Animator>();
         equipment = GetComponent<Equipment>();
         buildPlacer = GetComponent<BuildPlacer>();
@@ -62,17 +64,17 @@ public class PlayerShooter : MonoBehaviour {
 
     private void OnEnable() {
         // 슈터가 활성화될 때 총도 함께 활성화
-        if (gun != null)
+        if (equippedWeapon != null)
         {
-            gun.gameObject.SetActive(true);
+            equippedWeapon.gameObject.SetActive(true);
         }
     }
 
     private void OnDisable() {
         // 슈터가 비활성화될 때 총도 함께 비활성화
-        if (gun != null)
+        if (equippedWeapon != null)
         {
-            gun.gameObject.SetActive(false);
+            equippedWeapon.gameObject.SetActive(false);
         }
     }
 
@@ -86,7 +88,7 @@ public class PlayerShooter : MonoBehaviour {
 
         // 아무 무기도 장착하지 않았거나 건설 모드면 발사·재장전하지 않는다
         // (건설 모드의 좌클릭은 설치 입력이므로 같이 발사되면 안 된다)
-        if (gun == null || (buildPlacer != null && buildPlacer.isBuilding))
+        if (equippedWeapon == null || (buildPlacer != null && buildPlacer.isBuilding))
         {
             UpdateUI();
             return;
@@ -96,12 +98,12 @@ public class PlayerShooter : MonoBehaviour {
         if (playerInput.fire)
         {
             // 발사 입력 감지시 총 발사
-            gun.Fire();
+            equippedWeapon.Fire();
         }
         else if (playerInput.reload)
         {
             // 재장전 입력 감지시 재장전
-            if (gun.Reload())
+            if (equippedWeapon.Reload())
             {
                 // 재장전 성공시에만 재장전 애니메이션 재생
                 playerAnimator.SetTrigger("Reload");
@@ -147,6 +149,7 @@ public class PlayerShooter : MonoBehaviour {
 
         currentWeaponInstance = null;
         gun = null;
+        equippedWeapon = null;
         leftHandMount = null;
         rightHandMount = null;
 
@@ -169,8 +172,17 @@ public class PlayerShooter : MonoBehaviour {
         currentWeaponInstance.transform.localScale = Vector3.one;
 
         gun = currentWeaponInstance.GetComponent<Gun>();
-        // 총이 자기 자신(플레이어)의 콜라이더를 조준 레이에서 제외할 수 있도록 소유자 등록
-        gun.SetOwner(transform);
+        equippedWeapon = currentWeaponInstance.GetComponent<EquippedWeapon>();
+
+        if (equippedWeapon == null)
+        {
+            Destroy(currentWeaponInstance);
+            currentWeaponInstance = null;
+            return;
+        }
+
+        // 무기가 자기 자신(플레이어)의 콜라이더를 조준·충돌 판정에서 제외할 수 있도록 소유자 등록
+        equippedWeapon.SetOwner(transform);
 
         leftHandMount = currentWeaponInstance.transform.Find("Left Handle");
         rightHandMount = currentWeaponInstance.transform.Find("Right Handle");
@@ -193,10 +205,10 @@ public class PlayerShooter : MonoBehaviour {
 
     // 조준점 UI 갱신
     private void UpdateUI() {
-        if (gun != null && UIManager.instance != null)
+        if (equippedWeapon != null && UIManager.instance != null)
         {
             // 조준점 UI에 현재 탄퍼짐 비율을 반영
-            UIManager.instance.UpdateCrosshairSpread(gun.spreadRatio);
+            UIManager.instance.UpdateCrosshairSpread(equippedWeapon.spreadRatio);
         }
     }
 

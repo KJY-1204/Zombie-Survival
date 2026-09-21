@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e4762b65ce9a1c48839c13e1a456661, type: 3}
+  m_Name: Bow Data
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectileWeaponData
+  ammoItem: {fileID: 11400000, guid: 50dd745a29ce5bf46a8ef3379800e6c5, type: 2}
+  projectilePrefab: {fileID: 5957629693362666959, guid: 2edb8ed0750963c448be52d5ce12ed4f,
+    type: 3}
+  damage: 42
+  projectileSpeed: 50
+  fireInterval: 0.75
+  reloadTime: 0.65
+  magazineCapacity: 1
+  noiseRadius: 11

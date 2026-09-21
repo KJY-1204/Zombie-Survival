@@ -2,7 +2,7 @@
 using UnityEngine;
 
 // 총을 구현한다
-public class Gun : MonoBehaviour {
+public class Gun : EquippedWeapon {
     // 총의 상태를 표현하는데 사용할 타입을 선언한다
     public enum State {
         Ready, // 발사 준비됨
@@ -39,7 +39,7 @@ public class Gun : MonoBehaviour {
     private float currentSpread; // 현재 탄퍼짐 각도(도)
 
     // 조준점 UI가 탄퍼짐을 표시할 때 사용할 0~1 정규화 값
-    public float spreadRatio =>
+    public override float spreadRatio =>
         gunData.maxSpread > gunData.minSpread
             ? Mathf.InverseLerp(gunData.minSpread, gunData.maxSpread, currentSpread)
             : 0f;
@@ -50,10 +50,13 @@ public class Gun : MonoBehaviour {
         bulletLineRenderer = GetComponent<LineRenderer>();
         aimCamera = Camera.main;
 
-        // 사용할 점을 두개로 변경
-        bulletLineRenderer.positionCount = 2;
-        // 라인 렌더러를 비활성화
-        bulletLineRenderer.enabled = false;
+        if (bulletLineRenderer != null)
+        {
+            // 사용할 점을 두개로 변경
+            bulletLineRenderer.positionCount = 2;
+            // 라인 렌더러를 비활성화
+            bulletLineRenderer.enabled = false;
+        }
     }
 
     private void OnEnable() {
@@ -78,12 +81,12 @@ public class Gun : MonoBehaviour {
     }
 
     // 조준 레이가 자기 자신의 콜라이더를 맞추지 않도록 소유자(총을 든 사람)의 루트를 등록
-    public void SetOwner(Transform owner) {
+    public override void SetOwner(Transform owner) {
         ownerRoot = owner;
     }
 
     // 발사 시도
-    public void Fire() {
+    public override bool Fire() {
         // 현재 상태가 발사 가능한 상태
         // && 마지막 총 발사 시점에서 timeBetFire 이상의 시간이 지남
         if (state == State.Ready && Time.time >= lastFireTime + gunData.timeBetFire)
@@ -95,7 +98,10 @@ public class Gun : MonoBehaviour {
 
             // 총소리를 월드에 알린다. 근처 좀비가 그 지점으로 몰려온다
             NoiseEvent.Emit(fireTransform.position, noiseRadius);
+            return true;
         }
+
+        return false;
     }
 
     // 실제 발사 처리
@@ -197,7 +203,10 @@ public class Gun : MonoBehaviour {
     // 발사 이펙트와 소리를 재생하고 총알 궤적을 그린다
     private IEnumerator ShotEffect(Vector3 hitPosition) {
         // 총구 화염 효과 재생
-        muzzleFlashEffect.Play();
+        if (muzzleFlashEffect != null)
+        {
+            muzzleFlashEffect.Play();
+        }
         // 탄피 배출 효과 재생 (총에 배출 이펙트가 없으면 생략)
         if (shellEjectEffect != null)
         {
@@ -205,24 +214,33 @@ public class Gun : MonoBehaviour {
         }
 
         // 총격 소리 재생
-        gunAudioPlayer.PlayOneShot(gunData.shotClip);
+        if (gunAudioPlayer != null && gunData.shotClip != null)
+        {
+            gunAudioPlayer.PlayOneShot(gunData.shotClip);
+        }
 
         // 선의 시작점은 총구의 위치
-        bulletLineRenderer.SetPosition(0, fireTransform.position);
-        // 선의 끝점은 입력으로 들어온 충돌 위치
-        bulletLineRenderer.SetPosition(1, hitPosition);
-        // 라인 렌더러를 활성화하여 총알 궤적을 그린다
-        bulletLineRenderer.enabled = true;
+        if (bulletLineRenderer != null)
+        {
+            bulletLineRenderer.SetPosition(0, fireTransform.position);
+            // 선의 끝점은 입력으로 들어온 충돌 위치
+            bulletLineRenderer.SetPosition(1, hitPosition);
+            // 라인 렌더러를 활성화하여 총알 궤적을 그린다
+            bulletLineRenderer.enabled = true;
+        }
 
         // 0.03초 동안 잠시 처리를 대기
         yield return new WaitForSeconds(0.03f);
 
         // 라인 렌더러를 비활성화하여 총알 궤적을 지운다
-        bulletLineRenderer.enabled = false;
+        if (bulletLineRenderer != null)
+        {
+            bulletLineRenderer.enabled = false;
+        }
     }
 
     // 재장전 시도
-    public bool Reload() {
+    public override bool Reload() {
         if (state == State.Reloading ||
             ammoRemain <= 0 || magAmmo >= gunData.magCapacity)
         {
@@ -241,7 +259,10 @@ public class Gun : MonoBehaviour {
         // 현재 상태를 재장전 중 상태로 전환
         state = State.Reloading;
         // 재장전 소리 재생
-        gunAudioPlayer.PlayOneShot(gunData.reloadClip);
+        if (gunAudioPlayer != null && gunData.reloadClip != null)
+        {
+            gunAudioPlayer.PlayOneShot(gunData.reloadClip);
+        }
 
         // 재장전 소요 시간 만큼 처리를 쉬기
         yield return new WaitForSeconds(gunData.reloadTime);
@@ -263,5 +284,9 @@ public class Gun : MonoBehaviour {
 
         // 총의 현재 상태를 발사 준비된 상태로 변경
         state = State.Ready;
+    }
+
+    public override string GetAmmoLabel() {
+        return $"{magAmmo} / {ammoRemain}";
     }
 }

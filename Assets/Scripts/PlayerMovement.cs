@@ -15,7 +15,7 @@ public class PlayerMovement : MonoBehaviour {
 
     private Animator playerAnimator; // 플레이어 캐릭터의 애니메이터
     private Animator visualAnimator; // Survivalist 비주얼의 애니메이터
-    private PlayerInput playerInput; // 플레이어 입력을 알려주는 컴포넌트
+    private ZombiePlayerInput playerInput; // 플레이어 입력을 알려주는 컴포넌트
     private Rigidbody playerRigidbody; // 플레이어 캐릭터의 리지드바디
     private Collider playerCollider; // 바닥 검사에서 자기 자신을 제외하기 위한 콜라이더
     private Inventory inventory; // 과적 여부를 알려주는 인벤토리
@@ -31,7 +31,7 @@ public class PlayerMovement : MonoBehaviour {
 
     private void Start() {
         // 사용할 컴포넌트들의 참조를 가져오기
-        playerInput = GetComponent<PlayerInput>();
+        playerInput = GetComponent<ZombiePlayerInput>();
         playerRigidbody = GetComponent<Rigidbody>();
         playerAnimator = GetComponent<Animator>();
         playerCollider = GetComponent<Collider>();

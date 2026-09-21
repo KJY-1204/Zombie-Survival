@@ -22,33 +22,23 @@ public class WeaponHudUI : MonoBehaviour {
     }
 
     private void Update() {
-        Gun gun = shooter != null ? shooter.gun : null;
+        EquippedWeapon equippedWeapon = shooter != null ? shooter.equippedWeapon : null;
 
         // 전체 화면이 열려 있는 동안에는 숨긴다
-        if (gun == null || UIManager.isScreenOpen)
+        if (equippedWeapon == null || UIManager.isScreenOpen)
         {
             root.SetActive(false);
             return;
         }
 
         root.SetActive(true);
-        ammoText.text = $"{gun.magAmmo} / {gun.ammoRemain}";
-        ammoText.color = gun.magAmmo > 0 ? UiTheme.TextPrimary : UiTheme.TextDanger;
+        ammoText.text = equippedWeapon.GetAmmoLabel();
+        ammoText.color = UiTheme.TextPrimary;
 
-        ItemData weapon = FindEquippedWeapon();
-        weaponName.text = weapon != null ? weapon.displayName : gun.name;
+        ItemData weapon = shooter.currentWeaponItem;
+        weaponName.text = weapon != null ? weapon.displayName : equippedWeapon.name;
         weaponIcon.sprite = weapon != null ? weapon.icon : null;
         weaponIcon.enabled = weaponIcon.sprite != null;
     }
 
-    // 무기 슬롯에 장착된 것 중 먼저 찾은 것을 보여준다
-    private ItemData FindEquippedWeapon() {
-        if (equipment == null)
-        {
-            return null;
-        }
-
-        ItemData primary = equipment.Get(EquipmentSlot.PrimaryWeapon);
-        return primary != null ? primary : equipment.Get(EquipmentSlot.SecondaryWeapon);
-    }
 }

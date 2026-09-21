@@ -42,3 +42,27 @@ MonoBehaviour:
     minCount: 1
     maxCount: 1
     weight: 1
+  - data: {fileID: 11400000, guid: 50dd745a29ce5bf46a8ef3379800e6c5, type: 2}
+    minCount: 3
+    maxCount: 8
+    weight: 3
+  - data: {fileID: 11400000, guid: 37c6776ec73d9d747820866bc84a099c, type: 2}
+    minCount: 2
+    maxCount: 6
+    weight: 2
+  - data: {fileID: 11400000, guid: 459599053b567bd4e85b3270d140391f, type: 2}
+    minCount: 1
+    maxCount: 1
+    weight: 0.7
+  - data: {fileID: 11400000, guid: a5136908e7122de4483a5e2c0004c4d3, type: 2}
+    minCount: 1
+    maxCount: 1
+    weight: 1.5
+  - data: {fileID: 11400000, guid: 747b203d9ed20904db01dbd8592f5706, type: 2}
+    minCount: 1
+    maxCount: 1
+    weight: 1
+  - data: {fileID: 11400000, guid: 739c194b6d69aa24090dfb76e3420d23, type: 2}
+    minCount: 1
+    maxCount: 1
+    weight: 2
