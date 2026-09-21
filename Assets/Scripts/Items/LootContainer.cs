@@ -18,6 +18,11 @@ public class LootContainer : MonoBehaviour, IInteractable {
 
     public bool isEmpty { get; private set; } // 이미 열어서 비었는지
 
+    // 청크 생성기가 유형별 테이블을 굴린 결과를 넣는다
+    public void SetContents(LootEntry[] newContents) {
+        contents = newContents;
+    }
+
     // 이미 열어본 상자라면 빈 상태로 시작한다
     private void Start() {
         if (!string.IsNullOrEmpty(runtimeId) && WorldRuntimeState.instance != null

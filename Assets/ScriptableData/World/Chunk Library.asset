@@ -54,23 +54,28 @@ MonoBehaviour:
     resourceMax: 4
     crateMin: 0
     crateMax: 1
+    lootTable: {fileID: 11400000, guid: 57c25657744849141bde4ae400e3e27a, type: 2}
   - type: 1
     resourceMin: 0
     resourceMax: 1
     crateMin: 0
     crateMax: 1
+    lootTable: {fileID: 11400000, guid: ea14115755f323149b14b064be7099e6, type: 2}
   - type: 2
     resourceMin: 1
     resourceMax: 2
     crateMin: 1
     crateMax: 3
+    lootTable: {fileID: 11400000, guid: b83d69828e4abb94d9df158873576d76, type: 2}
   - type: 3
     resourceMin: 2
     resourceMax: 4
     crateMin: 0
     crateMax: 1
+    lootTable: {fileID: 11400000, guid: 827dc464a9807274d9c36df877e1122e, type: 2}
   - type: 4
     resourceMin: 0
     resourceMax: 0
     crateMin: 1
     crateMax: 3
+    lootTable: {fileID: 11400000, guid: fe3fd9d2aa5922f48b73db5ceb6faf90, type: 2}

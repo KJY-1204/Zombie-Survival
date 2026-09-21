@@ -592,7 +592,17 @@
 - [x] `Title.unity`를 빌드 설정 첫 씬으로 추가한다.
 - [ ] 새 게임과 수동·자동 저장 불러오기를 Play Mode에서 확인한다. (기존 저장이 없어 불러오기는 미검증)
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 main에 push한다.
+- [x] 커밋하고 원격 main에 push한다. (80cbbc1)
+
+## 2026-09-21 - M10 루팅 테이블
+
+- [x] 기존 상자 고정 내용물, 청크 콘텐츠 규칙, 저장되는 루팅 상태를 확인한다.
+- [x] 가중치·수량 범위·롤 횟수를 정의하는 `LootTableData`를 추가한다.
+- [x] `ChunkContentRule`에 청크 유형별 루팅 테이블을 연결한다.
+- [x] 상자 ID 기반 독립 난수로 월드 상자 내용을 채운다.
+- [x] 초원·도로·도시·산·POI 루팅 테이블 에셋을 만들고 Chunk Library에 연결한다.
+- [x] Unity 컴파일과 같은 시드 상자 내용물 재생성 결과를 검증한다. (에디터 롤링 확인. 실제 상자 열기 Play Mode 확인은 보류)
+- [x] 커밋하고 원격 main에 push한다.
 
 
 ## 2026-09-21 - M9 안정화: 월드 런타임 NavMesh 메시 읽기
@@ -601,4 +611,4 @@
 - [x] 필요한 모델 임포터만 Read/Write Enabled로 바꾼다.
 - [x] 새 게임으로 World를 열어 RuntimeNavMeshBuilder 오류가 사라졌는지 확인한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
-- [ ] 커밋하고 원격 main에 push한다.
+- [x] 커밋하고 원격 main에 push한다. (80cbbc1)

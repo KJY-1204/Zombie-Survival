@@ -10,6 +10,7 @@ public class ChunkContentRule {
     public int resourceMax;
     public int crateMin;
     public int crateMax;
+    public LootTableData lootTable;
 }
 
 [CreateAssetMenu(menuName = "Scriptable/World/Chunk Library", fileName = "Chunk Library")]

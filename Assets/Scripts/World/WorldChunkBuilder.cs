@@ -94,8 +94,19 @@ public static class WorldChunkBuilder {
             if (crate != null)
             {
                 crate.runtimeId = WorldRuntimeState.MakeId(chunk.x, chunk.z, "crate", i);
+
+                if (rule.lootTable != null)
+                {
+                    crate.SetContents(rule.lootTable.Roll(CreateLootRandom(chunk.chunkSeed, i)));
+                }
             }
         }
+    }
+
+    // 배치 시도 횟수와 무관하게 같은 청크의 같은 상자는 같은 내용물을 받는다
+    private static System.Random CreateLootRandom(int chunkSeed, int crateIndex) {
+        int seed = unchecked((chunkSeed * 486187739) ^ ((crateIndex + 1) * 16777619));
+        return new System.Random(seed);
     }
 
     // 빈 땅을 찾아 하나 놓는다. 건물 지붕이나 바위 위에 얹히지 않도록
