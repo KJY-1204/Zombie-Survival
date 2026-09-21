@@ -61,6 +61,8 @@ public class PlayerShooter : MonoBehaviour {
             {
                 weaponAnimation = playerAnimator.gameObject.AddComponent<WeaponAnimationDriver>();
             }
+
+            weaponAnimation.onHit += ResolveWeaponAnimationHit;
         }
 
         // 장비 슬롯이 바뀌면 손에 든 총도 따라 바뀐다
@@ -72,6 +74,11 @@ public class PlayerShooter : MonoBehaviour {
         if (equipment != null)
         {
             equipment.onChanged -= RefreshWeapon;
+        }
+
+        if (weaponAnimation != null)
+        {
+            weaponAnimation.onHit -= ResolveWeaponAnimationHit;
         }
     }
 
@@ -124,8 +131,16 @@ public class PlayerShooter : MonoBehaviour {
         // 입력을 감지하고 총 발사하거나 재장전
         if (playerInput.fire)
         {
-            // 발사 입력 감지시 총 발사
-            if (equippedWeapon.Fire() && weaponAnimation != null)
+            if (equippedWeapon.animationProfile != null && weaponAnimation != null
+                && !weaponAnimation.isAttacking)
+            {
+                if (equippedWeapon.BeginAttack())
+                {
+                    weaponAnimation.PlayAttack();
+                }
+            }
+            // 총기처럼 전용 명중 이벤트가 없는 무기는 입력 즉시 발사한다
+            else if (equippedWeapon.Fire() && weaponAnimation != null)
             {
                 weaponAnimation.PlayAttack();
             }
@@ -142,6 +157,13 @@ public class PlayerShooter : MonoBehaviour {
 
         // 조준점 UI를 갱신
         UpdateUI();
+    }
+
+    private void ResolveWeaponAnimationHit() {
+        if (equippedWeapon != null)
+        {
+            equippedWeapon.ResolveAnimationHit();
+        }
     }
 
     // 손에 들 무기 슬롯을 바꾼다

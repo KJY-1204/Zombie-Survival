@@ -1,4 +1,5 @@
 // 총기 컨트롤러와 분리된 상체 무기 애니메이션을 재생하는 플레이어 컴포넌트
+using System;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -13,6 +14,10 @@ public class WeaponAnimationDriver : MonoBehaviour {
     private WeaponAnimationProfile activeProfile;
     private AnimationClip activeClip;
     private float attackEndTime;
+
+    public event Action onHit;
+    public bool isAttacking => activeProfile != null && activeClip == activeProfile.attackClip
+        && Time.time < attackEndTime;
 
     private void Awake() {
         targetAnimator = GetComponent<Animator>();
@@ -77,7 +82,8 @@ public class WeaponAnimationDriver : MonoBehaviour {
     }
 
     public void PlayAttack() {
-        if (activeProfile == null || activeProfile.attackClip == null || !graph.IsValid())
+        if (activeProfile == null || activeProfile.attackClip == null || !graph.IsValid()
+            || isAttacking)
         {
             return;
         }
@@ -86,8 +92,9 @@ public class WeaponAnimationDriver : MonoBehaviour {
         attackEndTime = Time.time + activeProfile.attackClip.length;
     }
 
-    // 외부 전투 클립의 수신자 없는 이벤트를 현재 전투 범위에서 무시한다.
+    // 외부 전투 클립의 명중 이벤트를 현재 장착 무기에 전달한다.
     public void Hit() {
+        onHit?.Invoke();
     }
 
     public void FootL() {

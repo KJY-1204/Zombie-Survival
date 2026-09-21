@@ -3048,12 +3048,12 @@ Assets/Scripts/Building/StorageContainer.cs	1121
 Assets/Scripts/Camera/CameraRigController.cs	3493
 Assets/Scripts/Camera/FirstPersonLook.cs	835
 Assets/Scripts/Camera/ThirdPersonCameraController.cs	4708
-Assets/Scripts/Combat/EquippedWeapon.cs	582
-Assets/Scripts/Combat/MeleeWeapon.cs	2361
+Assets/Scripts/Combat/EquippedWeapon.cs	729
+Assets/Scripts/Combat/MeleeWeapon.cs	2835
 Assets/Scripts/Combat/MeleeWeaponData.cs	446
-Assets/Scripts/Combat/ProjectileWeapon.cs	2981
+Assets/Scripts/Combat/ProjectileWeapon.cs	3449
 Assets/Scripts/Combat/ProjectileWeaponData.cs	556
-Assets/Scripts/Combat/WeaponAnimationDriver.cs	4136
+Assets/Scripts/Combat/WeaponAnimationDriver.cs	4354
 Assets/Scripts/Combat/WeaponAnimationProfile.cs	364
 Assets/Scripts/Combat/WeaponProjectile.cs	1874
 Assets/Scripts/GameManager.cs	2380
@@ -3080,7 +3080,7 @@ Assets/Scripts/PlayerHealth.cs	4485
 Assets/Scripts/PlayerInput.cs	2616
 Assets/Scripts/PlayerInteractor.cs	3682
 Assets/Scripts/PlayerMovement.cs	6770
-Assets/Scripts/PlayerShooter.cs	12738
+Assets/Scripts/PlayerShooter.cs	13424
 Assets/Scripts/Rotator.cs	279
 Assets/Scripts/Save/SaveData.cs	2607
 Assets/Scripts/Save/SaveManager.cs	11590

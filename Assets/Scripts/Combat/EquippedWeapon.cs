@@ -8,6 +8,14 @@ public abstract class EquippedWeapon : MonoBehaviour {
     public WeaponAnimationProfile animationProfile;
     public abstract bool Fire();
 
+    public virtual bool BeginAttack() {
+        return Fire();
+    }
+
+    public virtual bool ResolveAnimationHit() {
+        return false;
+    }
+
     public virtual bool Reload() {
         return false;
     }

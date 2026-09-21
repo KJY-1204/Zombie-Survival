@@ -8,14 +8,34 @@ public class MeleeWeapon : EquippedWeapon {
 
     private Transform ownerRoot;
     private float lastAttackTime;
+    private bool attackPending;
 
     public override void SetOwner(Transform owner) {
         ownerRoot = owner;
     }
 
+    public override bool BeginAttack() {
+        if (attackPending || !CanAttack())
+        {
+            return false;
+        }
+
+        attackPending = true;
+        return true;
+    }
+
+    public override bool ResolveAnimationHit() {
+        if (!attackPending)
+        {
+            return false;
+        }
+
+        attackPending = false;
+        return Fire();
+    }
+
     public override bool Fire() {
-        if (weaponData == null || ownerRoot == null
-            || Time.time < lastAttackTime + weaponData.attackInterval)
+        if (!CanAttack())
         {
             return false;
         }
@@ -32,6 +52,11 @@ public class MeleeWeapon : EquippedWeapon {
 
         NoiseEvent.Emit(ownerRoot.position, weaponData.noiseRadius);
         return true;
+    }
+
+    private bool CanAttack() {
+        return weaponData != null && ownerRoot != null
+            && Time.time >= lastAttackTime + weaponData.attackInterval;
     }
 
     public override string GetAmmoLabel() {

@@ -14,6 +14,7 @@ public class ProjectileWeapon : EquippedWeapon {
     private Camera aimCamera;
     private float lastFireTime;
     private bool isReloading;
+    private bool attackPending;
 
     private void Awake() {
         aimCamera = Camera.main;
@@ -24,9 +25,28 @@ public class ProjectileWeapon : EquippedWeapon {
         ownerInventory = owner == null ? null : owner.GetComponent<Inventory>();
     }
 
+    public override bool BeginAttack() {
+        if (attackPending || !CanFire())
+        {
+            return false;
+        }
+
+        attackPending = true;
+        return true;
+    }
+
+    public override bool ResolveAnimationHit() {
+        if (!attackPending)
+        {
+            return false;
+        }
+
+        attackPending = false;
+        return Fire();
+    }
+
     public override bool Fire() {
-        if (weaponData == null || weaponData.projectilePrefab == null || fireTransform == null
-            || isReloading || magAmmo <= 0 || Time.time < lastFireTime + weaponData.fireInterval)
+        if (!CanFire())
         {
             return false;
         }
@@ -54,6 +74,11 @@ public class ProjectileWeapon : EquippedWeapon {
         lastFireTime = Time.time;
         NoiseEvent.Emit(fireTransform.position, weaponData.noiseRadius);
         return true;
+    }
+
+    private bool CanFire() {
+        return weaponData != null && weaponData.projectilePrefab != null && fireTransform != null
+            && !isReloading && magAmmo > 0 && Time.time >= lastFireTime + weaponData.fireInterval;
     }
 
     public override bool Reload() {
