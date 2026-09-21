@@ -1206,3 +1206,16 @@
 - 활은 Archer 클립의 앞손 지지 구조에 맞춰 왼손 그립을 기준점으로 고정했다. 한손검은 왼손 IK를 끄고 오른손만 기준으로 고정했다. 모델 원점이 칼날 중앙인 점을 반영해 검 모델을 0.5m 앞쪽으로 옮겨 손잡이를 손 위치에 맞췄다.
 - 무기 교체 시 이전 인스턴스를 즉시 비활성화해 활·검·총이 한 프레임 이상 겹쳐 보이지 않게 했다. World Play Mode에서 활은 `Idle1`, 검은 `Idle`, 검 공격은 `Attack1`이 활성화되는 것을 확인했고 콘솔 오류는 0개다.
 - 전용 프로필은 사용자가 추가한 `Assets/ExplosiveLLC`의 클립을 참조한다. 해당 외부 에셋 폴더는 사용자 소유의 미추적 파일이므로 이번 커밋에는 포함하지 않는다.
+
+### M11 진행 - 쇠뇌·맨손 전용 모션 연결 (2026-09-21)
+
+- 이전 점검은 Archer·Swordsman에 한정되어 Crossbow와 Unarmed 팩을 놓쳤다. `Crossbow@Idle`·`Crossbow@Attack1`, RPG Character의 `Unarmed-Idle`·`Unarmed-Attack-R1`은 모두 플레이어에 리타게팅 가능한 휴머노이드 클립이다.
+- 기존 `WeaponAnimationProfile`을 그대로 재사용해 정적 클립 참조만 추가한다. 맨손은 장착 무기가 없으므로 `PlayerShooter`가 별도 프로필을 보유한다.
+- 맨손 공격은 시각 피드백 범위로만 연결한다. 무기 없는 피해 판정과 콤보 설계는 이번 작업에 포함하지 않는다.
+
+### M11 완료 - 쇠뇌·맨손 전용 모션 연결 (2026-09-21)
+
+- `Crossbow Animation Profile`은 `Crossbow@Idle`·`Crossbow@Attack1`을, `Unarmed Animation Profile`은 `Unarmed-Idle`·`Unarmed-Attack-R1`을 참조한다. Crossbow Weapon과 World의 PlayerShooter에 각각 연결했다.
+- PlayerShooter는 맨손일 때 전용 프로필을 유지하고 발사 입력이 눌린 순간에만 공격 클립을 재생한다. 맨손 공격은 애니메이션만 표시하며 피해 판정은 추가하지 않았다.
+- 새 외부 공격 클립의 `Hit`, `FootL`, `FootR` AnimationEvent는 WeaponAnimationDriver가 수신해 현재 범위에서 무시한다. 외부 에셋을 직접 수정하지 않으며 콘솔 오류를 막는다.
+- World Play Mode에서 맨손은 `Unarmed-Idle`·`Unarmed-Attack-R1`, 쇠뇌는 `Idle`·`Attack1`으로 전환됐고, 콘솔 오류 0건을 확인했다.

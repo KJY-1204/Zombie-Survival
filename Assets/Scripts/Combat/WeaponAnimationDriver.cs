@@ -86,6 +86,16 @@ public class WeaponAnimationDriver : MonoBehaviour {
         attackEndTime = Time.time + activeProfile.attackClip.length;
     }
 
+    // 외부 전투 클립의 수신자 없는 이벤트를 현재 전투 범위에서 무시한다.
+    public void Hit() {
+    }
+
+    public void FootL() {
+    }
+
+    public void FootR() {
+    }
+
     private void PlayClip(AnimationClip clip) {
         if (clip == null || activeClip == clip)
         {

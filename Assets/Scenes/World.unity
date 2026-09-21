@@ -590,6 +590,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6655051713161008554, guid: 153166fe35c054a7190cb112c92f6d23,
+        type: 3}
+      propertyPath: unarmedAnimationProfile
+      value: 
+      objectReference: {fileID: 11400000, guid: 8a67501e991ee094b8ce91315d7209cd,
+        type: 2}
     - target: {fileID: 6709380617944871666, guid: 153166fe35c054a7190cb112c92f6d23,
         type: 3}
       propertyPath: m_AnchorMax.x

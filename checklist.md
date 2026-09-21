@@ -604,6 +604,15 @@
 - [x] Unity 컴파일과 같은 시드 상자 내용물 재생성 결과를 검증한다. (에디터 롤링 확인. 실제 상자 열기 Play Mode 확인은 보류)
 - [x] 커밋하고 원격 main에 push한다.
 
+## 2026-09-21 - M11 쇠뇌·맨손 전용 모션 연결
+
+- [x] ExplosiveLLC에서 휴머노이드 쇠뇌·맨손 Idle 및 Attack 클립을 확인한다.
+- [x] 쇠뇌와 맨손 전용 애니메이션 프로필을 만든다.
+- [x] PlayerShooter가 맨손 프로필과 한 번의 맨손 공격 입력을 처리하게 한다.
+- [x] Crossbow Weapon과 World 플레이어에 프로필을 연결한다.
+- [x] Unity 컴파일과 World Play Mode에서 Idle·Attack 재생을 확인한다.
+- [x] 커밋하고 원격 main에 push한다.
+
 ## 2026-09-21 - M11 전투 콘텐츠 확장 1단계
 
 - [x] LowPoly 총기 팩과 Free medieval weapons·Crusader_Castle의 실제 프리팹을 확인한다.

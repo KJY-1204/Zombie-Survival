@@ -12,6 +12,7 @@ public class PlayerShooter : MonoBehaviour {
 
     public Transform firstPersonWeaponMount; // 1인칭 모드에서 총을 배치할 기준점
     public bool useFirstPersonMount; // true면 팔꿈치 IK 힌트 대신 firstPersonWeaponMount 위치를 사용
+    public WeaponAnimationProfile unarmedAnimationProfile; // 맨손 상태에 재생할 전용 상체 모션
 
     // 숫자키로 고를 수 있는 손에 드는 무기 슬롯 (1번=주무기, 2번=보조무기)
     private static readonly EquipmentSlot[] selectableSlots = {
@@ -27,6 +28,7 @@ public class PlayerShooter : MonoBehaviour {
     private SurvivalistWeaponIK weaponIK; // 무기 교체 시 그립 보정을 다시 계산시킬 IK 컴포넌트
     private IKHelperTool ikHelperTool; // 왼손 IK 이펙터를 갱신할 IK Helper Tool 컴포넌트
     private WeaponAnimationDriver weaponAnimation; // 활·근접무기 전용 상체 애니메이션 재생기
+    private bool unarmedAttackHeld; // 맨손 공격 모션을 입력당 한 번만 재생하는 상태
 
     private Equipment equipment; // 어떤 무기를 장착 중인지 알려주는 장비 컴포넌트
     private BuildPlacer buildPlacer; // 건설 모드인지 알려주는 컴포넌트
@@ -97,13 +99,27 @@ public class PlayerShooter : MonoBehaviour {
             SelectSlot(selectableSlots[playerInput.selectWeaponIndex]);
         }
 
-        // 아무 무기도 장착하지 않았거나 건설 모드면 발사·재장전하지 않는다
-        // (건설 모드의 좌클릭은 설치 입력이므로 같이 발사되면 안 된다)
-        if (equippedWeapon == null || (buildPlacer != null && buildPlacer.isBuilding))
+        // 건설 모드의 좌클릭은 설치 입력이므로 공격과 함께 처리하지 않는다
+        if (buildPlacer != null && buildPlacer.isBuilding)
         {
+            unarmedAttackHeld = false;
             UpdateUI();
             return;
         }
+
+        if (equippedWeapon == null)
+        {
+            if (playerInput.fire && !unarmedAttackHeld && weaponAnimation != null)
+            {
+                weaponAnimation.PlayAttack();
+            }
+
+            unarmedAttackHeld = playerInput.fire;
+            UpdateUI();
+            return;
+        }
+
+        unarmedAttackHeld = false;
 
         // 입력을 감지하고 총 발사하거나 재장전
         if (playerInput.fire)
@@ -172,7 +188,7 @@ public class PlayerShooter : MonoBehaviour {
         {
             if (weaponAnimation != null)
             {
-                weaponAnimation.SetProfile(null);
+                weaponAnimation.SetProfile(unarmedAnimationProfile);
             }
 
             // 총과 함께 파괴된 왼손 이펙터를 IK Helper Tool이 계속 참조하면

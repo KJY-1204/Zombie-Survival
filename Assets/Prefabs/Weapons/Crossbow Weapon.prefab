@@ -48,6 +48,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9abba0268f9c8ee408a1ee5144744527, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileWeapon
+  anchorToLeftHand: 0
+  animationProfile: {fileID: 11400000, guid: e92f74367a1d9e14190c3874ca9a096a, type: 2}
   fireTransform: {fileID: 928293689837664540}
   weaponData: {fileID: 11400000, guid: cbf43041cd0ce3e4883ec779cde7e2f5, type: 2}
 --- !u!1 &513893351419948244
