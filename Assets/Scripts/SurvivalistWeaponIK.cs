@@ -5,8 +5,8 @@ using UnityEngine;
 public class SurvivalistWeaponIK : MonoBehaviour {
     private Animator visualAnimator;
     private PlayerShooter playerShooter;
-    private Vector3 pivotToRightGripPosition;
-    private Quaternion pivotToRightGripRotation;
+    private Vector3 pivotToGripPosition;
+    private Quaternion pivotToGripRotation;
 
     private void Awake() {
         visualAnimator = GetComponent<Animator>();
@@ -18,14 +18,12 @@ public class SurvivalistWeaponIK : MonoBehaviour {
     // 오른손-총기 그립 오프셋을 현재 gunPivot/rightHandMount 기준으로 다시 계산한다
     // 장착한 무기가 바뀌어 rightHandMount가 다른 총으로 교체될 때마다 다시 호출해야 한다
     public void RecalibrateGrip() {
-        if (playerShooter != null && playerShooter.gunPivot != null &&
-            playerShooter.rightHandMount != null)
+        Transform grip = playerShooter != null ? playerShooter.GetAnchorGrip() : null;
+
+        if (playerShooter != null && playerShooter.gunPivot != null && grip != null)
         {
-            pivotToRightGripPosition = playerShooter.gunPivot.InverseTransformPoint(
-                playerShooter.rightHandMount.position);
-            pivotToRightGripRotation = Quaternion.Inverse(
-                playerShooter.gunPivot.rotation) *
-                playerShooter.rightHandMount.rotation;
+            pivotToGripPosition = playerShooter.gunPivot.InverseTransformPoint(grip.position);
+            pivotToGripRotation = Quaternion.Inverse(playerShooter.gunPivot.rotation) * grip.rotation;
         }
     }
 
@@ -45,16 +43,19 @@ public class SurvivalistWeaponIK : MonoBehaviour {
         }
         else
         {
-            Transform rightHand = visualAnimator.GetBoneTransform(
-                HumanBodyBones.RightHand);
-            if (rightHand != null)
+            HumanBodyBones anchorBone = playerShooter.equippedWeapon != null
+                && playerShooter.equippedWeapon.anchorToLeftHand
+                ? HumanBodyBones.LeftHand
+                : HumanBodyBones.RightHand;
+            Transform anchorHand = visualAnimator.GetBoneTransform(anchorBone);
+            if (anchorHand != null)
             {
-                Quaternion weaponRotation = rightHand.rotation *
-                    Quaternion.Inverse(pivotToRightGripRotation);
+                Quaternion weaponRotation = anchorHand.rotation *
+                    Quaternion.Inverse(pivotToGripRotation);
 
                 // 오른손 그립이 손 본에 겹치도록 총기 피벗을 매 프레임 계산한다
                 playerShooter.gunPivot.SetPositionAndRotation(
-                    rightHand.position - weaponRotation * pivotToRightGripPosition,
+                    anchorHand.position - weaponRotation * pivotToGripPosition,
                     weaponRotation);
             }
         }

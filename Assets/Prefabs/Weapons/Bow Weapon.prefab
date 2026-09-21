@@ -79,6 +79,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9abba0268f9c8ee408a1ee5144744527, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileWeapon
+  anchorToLeftHand: 1
+  animationProfile: {fileID: 11400000, guid: ce5e7517b74b4c948ac2816705cabf20, type: 2}
   fireTransform: {fileID: 7062347324725396782}
   weaponData: {fileID: 11400000, guid: b1fae6913761fa242a5e763ff91a972e, type: 2}
 --- !u!1 &3918437404954873865
@@ -106,7 +108,7 @@ Transform:
   m_GameObject: {fileID: 3918437404954873865}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.02, z: -0.06}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -137,7 +139,7 @@ Transform:
   m_GameObject: {fileID: 8759354634736657313}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

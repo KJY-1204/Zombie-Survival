@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21b11c6d2a350a747a089ffe7bc94690, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeleeWeapon
+  animationProfile: {fileID: 11400000, guid: a7f7b8b5cccdb904bb8ad0d189c42b4e, type: 2}
   weaponData: {fileID: 11400000, guid: aca01c379f58b7f4c8b9182f3e5e46b3, type: 2}
 --- !u!1 &3682801767837758080
 GameObject:
@@ -136,17 +137,17 @@ PrefabInstance:
     - target: {fileID: 916567774664060306, guid: 5994481c1a08eea489178ec7c7311e75,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 916567774664060306, guid: 5994481c1a08eea489178ec7c7311e75,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 916567774664060306, guid: 5994481c1a08eea489178ec7c7311e75,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 916567774664060306, guid: 5994481c1a08eea489178ec7c7311e75,
         type: 3}

@@ -26,6 +26,7 @@ public class PlayerShooter : MonoBehaviour {
     public ItemData currentWeaponItem { get; private set; } // 현재 생성되어 있는 무기의 아이템 정의
     private SurvivalistWeaponIK weaponIK; // 무기 교체 시 그립 보정을 다시 계산시킬 IK 컴포넌트
     private IKHelperTool ikHelperTool; // 왼손 IK 이펙터를 갱신할 IK Helper Tool 컴포넌트
+    private WeaponAnimationDriver weaponAnimation; // 활·근접무기 전용 상체 애니메이션 재생기
 
     private Equipment equipment; // 어떤 무기를 장착 중인지 알려주는 장비 컴포넌트
     private BuildPlacer buildPlacer; // 건설 모드인지 알려주는 컴포넌트
@@ -45,10 +46,20 @@ public class PlayerShooter : MonoBehaviour {
     private void Start() {
         // 사용할 컴포넌트들을 가져오기
         playerInput = GetComponent<ZombiePlayerInput>();
-        playerAnimator = GetComponent<Animator>();
+        playerAnimator = FindVisualAnimator();
         equipment = GetComponent<Equipment>();
         buildPlacer = GetComponent<BuildPlacer>();
         weaponIK = GetComponentInChildren<SurvivalistWeaponIK>();
+
+        if (playerAnimator != null)
+        {
+            weaponAnimation = playerAnimator.GetComponent<WeaponAnimationDriver>();
+
+            if (weaponAnimation == null)
+            {
+                weaponAnimation = playerAnimator.gameObject.AddComponent<WeaponAnimationDriver>();
+            }
+        }
 
         // 장비 슬롯이 바뀌면 손에 든 총도 따라 바뀐다
         equipment.onChanged += RefreshWeapon;
@@ -98,7 +109,10 @@ public class PlayerShooter : MonoBehaviour {
         if (playerInput.fire)
         {
             // 발사 입력 감지시 총 발사
-            equippedWeapon.Fire();
+            if (equippedWeapon.Fire() && weaponAnimation != null)
+            {
+                weaponAnimation.PlayAttack();
+            }
         }
         else if (playerInput.reload)
         {
@@ -144,6 +158,7 @@ public class PlayerShooter : MonoBehaviour {
     private void SpawnWeapon(WeaponItemData weaponItem) {
         if (currentWeaponInstance != null)
         {
+            currentWeaponInstance.SetActive(false);
             Destroy(currentWeaponInstance);
         }
 
@@ -155,6 +170,11 @@ public class PlayerShooter : MonoBehaviour {
 
         if (weaponItem == null || weaponItem.weaponPrefab == null)
         {
+            if (weaponAnimation != null)
+            {
+                weaponAnimation.SetProfile(null);
+            }
+
             // 총과 함께 파괴된 왼손 이펙터를 IK Helper Tool이 계속 참조하면
             // 매 프레임 MissingReferenceException이 난다. 맨손 동안에는 꺼둔다
             if (ikHelperTool != null)
@@ -188,18 +208,28 @@ public class PlayerShooter : MonoBehaviour {
         rightHandMount = currentWeaponInstance.transform.Find("Right Handle");
 
         // IK Helper Tool이 왼손을 맞출 이펙터를 새 총의 Left Handle 자식으로 새로 만든다
-        if (ikHelperTool != null && leftHandMount != null)
+        if (ikHelperTool != null && equippedWeapon.animationProfile == null
+            && equippedWeapon.usesLeftHandGrip && leftHandMount != null)
         {
             var effector = new GameObject("IK Left Hand Effector").transform;
             effector.SetParent(leftHandMount, false);
             ikHelperTool.handEffector = effector;
             ikHelperTool.enabled = true;
         }
+        else if (ikHelperTool != null)
+        {
+            ikHelperTool.enabled = false;
+        }
 
         // 오른손-총기 그립 오프셋이 새 총 기준으로 다시 계산되도록 갱신
         if (weaponIK != null)
         {
             weaponIK.RecalibrateGrip();
+        }
+
+        if (weaponAnimation != null)
+        {
+            weaponAnimation.SetProfile(equippedWeapon.animationProfile);
         }
     }
 
@@ -214,6 +244,11 @@ public class PlayerShooter : MonoBehaviour {
 
     // 애니메이터의 IK 갱신
     private void OnAnimatorIK(int layerIndex) {
+        if (equippedWeapon != null && equippedWeapon.animationProfile != null)
+        {
+            return;
+        }
+
         // 아무 무기도 장착하지 않은 맨손 상태에서는 손을 맞출 대상이 없다
         if (leftHandMount == null || rightHandMount == null)
         {
@@ -237,14 +272,22 @@ public class PlayerShooter : MonoBehaviour {
                 playerAnimator.GetIKHintPosition(AvatarIKHint.RightElbow);
         }
 
-        // IK를 사용하여 왼손의 위치와 회전을 총의 오른쪽 손잡이에 맞춘다
-        playerAnimator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1.0f);
-        playerAnimator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1.0f);
+        if (equippedWeapon != null && equippedWeapon.usesLeftHandGrip)
+        {
+            // IK를 사용하여 왼손의 위치와 회전을 무기의 왼쪽 손잡이에 맞춘다
+            playerAnimator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1.0f);
+            playerAnimator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1.0f);
 
-        playerAnimator.SetIKPosition(AvatarIKGoal.LeftHand,
-            leftHandMount.position);
-        playerAnimator.SetIKRotation(AvatarIKGoal.LeftHand,
-            leftHandMount.rotation);
+            playerAnimator.SetIKPosition(AvatarIKGoal.LeftHand,
+                leftHandMount.position);
+            playerAnimator.SetIKRotation(AvatarIKGoal.LeftHand,
+                leftHandMount.rotation);
+        }
+        else
+        {
+            playerAnimator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0f);
+            playerAnimator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0f);
+        }
 
         // IK를 사용하여 오른손의 위치와 회전을 총의 오른쪽 손잡이에 맞춘다
         playerAnimator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1.0f);
@@ -254,5 +297,23 @@ public class PlayerShooter : MonoBehaviour {
             rightHandMount.position);
         playerAnimator.SetIKRotation(AvatarIKGoal.RightHand,
             rightHandMount.rotation);
+    }
+
+    private Animator FindVisualAnimator() {
+        foreach (Animator animator in GetComponentsInChildren<Animator>())
+        {
+            if (animator.isHuman)
+            {
+                return animator;
+            }
+        }
+
+        return GetComponent<Animator>();
+    }
+
+    public Transform GetAnchorGrip() {
+        return equippedWeapon != null && equippedWeapon.anchorToLeftHand
+            ? leftHandMount
+            : rightHandMount;
     }
 }

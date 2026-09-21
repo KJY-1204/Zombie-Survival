@@ -4,6 +4,7 @@ using UnityEngine;
 public class MeleeWeapon : EquippedWeapon {
     public MeleeWeaponData weaponData;
     public override float spreadRatio => 0f;
+    public override bool usesLeftHandGrip => false;
 
     private Transform ownerRoot;
     private float lastAttackTime;

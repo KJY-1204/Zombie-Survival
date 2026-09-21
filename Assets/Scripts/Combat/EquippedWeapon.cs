@@ -3,6 +3,9 @@ using UnityEngine;
 
 public abstract class EquippedWeapon : MonoBehaviour {
     public abstract float spreadRatio { get; }
+    public virtual bool usesLeftHandGrip => true;
+    public bool anchorToLeftHand;
+    public WeaponAnimationProfile animationProfile;
     public abstract bool Fire();
 
     public virtual bool Reload() {
