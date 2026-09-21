@@ -1187,6 +1187,8 @@ MonoBehaviour:
   rightHandMount: {fileID: 0}
   firstPersonWeaponMount: {fileID: 0}
   useFirstPersonMount: 0
+  unarmedAnimationProfile: {fileID: 0}
+  unarmedAttackData: {fileID: 11400000, guid: bd84f4a458b6e8d4da20695c62d00761, type: 2}
 --- !u!95 &1673264190145293338
 Animator:
   serializedVersion: 7

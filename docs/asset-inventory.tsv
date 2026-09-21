@@ -1250,7 +1250,7 @@ Assets/Ditag Design/Mesh Pack/Chest 01/Texture/T_Chest18_MetallicSmoothness.tga	
 Assets/Ditag Design/Mesh Pack/Chest 01/Texture/T_Chest18_N.tga	50331692
 Assets/Editor/ItemIconGenerator.cs	10707
 Assets/ExplosiveLLC/Crafting Mecanim Animation Pack FREE/Elements/Controls3.psd	260327
-Assets/ExplosiveLLC/Crafting Mecanim Animation Pack FREE/Elements/Editor/Resources/RatingSetup.asset	456
+Assets/ExplosiveLLC/Crafting Mecanim Animation Pack FREE/Elements/Editor/Resources/RatingSetup.asset	457
 Assets/ExplosiveLLC/Crafting Mecanim Animation Pack FREE/Elements/Editor/ReviewConfig.cs	380
 Assets/ExplosiveLLC/Crafting Mecanim Animation Pack FREE/Elements/Editor/ReviewWindowEditor.cs	3658
 Assets/ExplosiveLLC/Crafting Mecanim Animation Pack FREE/Props/Box.FBX	66912
@@ -2906,7 +2906,7 @@ Assets/Prefabs/Loot Chest.prefab	5489
 Assets/Prefabs/Motorcycle.prefab	65588
 Assets/Prefabs/MuzzleFlashEffect.prefab	120821
 Assets/Prefabs/ParticlesLight.prefab	3215
-Assets/Prefabs/Player Character.prefab	235310
+Assets/Prefabs/Player Character.prefab	227981
 Assets/Prefabs/Resources Nodes/Rock Node.prefab	8021
 Assets/Prefabs/Resources Nodes/Scrap Node.prefab	7446
 Assets/Prefabs/Resources Nodes/Tree Node.prefab	8017
@@ -3009,6 +3009,7 @@ Assets/ScriptableData/Combat/Shortsword Animation Profile.asset	616
 Assets/ScriptableData/Combat/Shortsword Data.asset	509
 Assets/ScriptableData/Combat/SMG Data.asset	640
 Assets/ScriptableData/Combat/Unarmed Animation Profile.asset	613
+Assets/ScriptableData/Combat/Unarmed Attack.asset	511
 Assets/ScriptableData/Items/Ammo Box.asset	880
 Assets/ScriptableData/Items/Armor Cap.asset	755
 Assets/ScriptableData/Items/Armor Pants.asset	771
@@ -3080,7 +3081,7 @@ Assets/Scripts/PlayerHealth.cs	4485
 Assets/Scripts/PlayerInput.cs	2616
 Assets/Scripts/PlayerInteractor.cs	3682
 Assets/Scripts/PlayerMovement.cs	6770
-Assets/Scripts/PlayerShooter.cs	13424
+Assets/Scripts/PlayerShooter.cs	15846
 Assets/Scripts/Rotator.cs	279
 Assets/Scripts/Save/SaveData.cs	2607
 Assets/Scripts/Save/SaveManager.cs	11590

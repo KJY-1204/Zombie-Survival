@@ -13,6 +13,7 @@ public class PlayerShooter : MonoBehaviour {
     public Transform firstPersonWeaponMount; // 1인칭 모드에서 총을 배치할 기준점
     public bool useFirstPersonMount; // true면 팔꿈치 IK 힌트 대신 firstPersonWeaponMount 위치를 사용
     public WeaponAnimationProfile unarmedAnimationProfile; // 맨손 상태에 재생할 전용 상체 모션
+    public MeleeWeaponData unarmedAttackData; // 맨손 공격의 피해·범위·재사용 대기시간
 
     // 숫자키로 고를 수 있는 손에 드는 무기 슬롯 (1번=주무기, 2번=보조무기)
     private static readonly EquipmentSlot[] selectableSlots = {
@@ -29,6 +30,8 @@ public class PlayerShooter : MonoBehaviour {
     private IKHelperTool ikHelperTool; // 왼손 IK 이펙터를 갱신할 IK Helper Tool 컴포넌트
     private WeaponAnimationDriver weaponAnimation; // 활·근접무기 전용 상체 애니메이션 재생기
     private bool unarmedAttackHeld; // 맨손 공격 모션을 입력당 한 번만 재생하는 상태
+    private bool unarmedAttackPending;
+    private float lastUnarmedAttackTime;
 
     private Equipment equipment; // 어떤 무기를 장착 중인지 알려주는 장비 컴포넌트
     private BuildPlacer buildPlacer; // 건설 모드인지 알려주는 컴포넌트
@@ -116,7 +119,8 @@ public class PlayerShooter : MonoBehaviour {
 
         if (equippedWeapon == null)
         {
-            if (playerInput.fire && !unarmedAttackHeld && weaponAnimation != null)
+            if (playerInput.fire && !unarmedAttackHeld && weaponAnimation != null
+                && !weaponAnimation.isAttacking && BeginUnarmedAttack())
             {
                 weaponAnimation.PlayAttack();
             }
@@ -164,6 +168,77 @@ public class PlayerShooter : MonoBehaviour {
         {
             equippedWeapon.ResolveAnimationHit();
         }
+        else
+        {
+            ResolveUnarmedAttack();
+        }
+    }
+
+    private bool BeginUnarmedAttack() {
+        if (unarmedAttackPending || unarmedAttackData == null || Time.time < lastUnarmedAttackTime
+            + unarmedAttackData.attackInterval)
+        {
+            return false;
+        }
+
+        unarmedAttackPending = true;
+        return true;
+    }
+
+    private void ResolveUnarmedAttack() {
+        if (!unarmedAttackPending || unarmedAttackData == null)
+        {
+            return;
+        }
+
+        unarmedAttackPending = false;
+        lastUnarmedAttackTime = Time.time;
+        LivingEntity target = FindUnarmedTarget();
+
+        if (target != null)
+        {
+            Vector3 hitPoint = target.transform.position + Vector3.up;
+            Vector3 hitNormal = (hitPoint - transform.position).normalized;
+            target.OnDamage(unarmedAttackData.damage, hitPoint, hitNormal);
+        }
+
+        NoiseEvent.Emit(transform.position, unarmedAttackData.noiseRadius);
+    }
+
+    private LivingEntity FindUnarmedTarget() {
+        Collider[] colliders = Physics.OverlapSphere(transform.position, unarmedAttackData.range);
+        LivingEntity closest = null;
+        float closestDistance = float.MaxValue;
+
+        foreach (Collider collider in colliders)
+        {
+            LivingEntity candidate = collider.GetComponentInParent<LivingEntity>();
+
+            if (candidate == null || candidate.dead || candidate.transform == transform
+                || candidate.transform.IsChildOf(transform))
+            {
+                continue;
+            }
+
+            Vector3 flatOffset = Vector3.ProjectOnPlane(
+                candidate.transform.position - transform.position, Vector3.up);
+
+            if (flatOffset == Vector3.zero
+                || Vector3.Angle(transform.forward, flatOffset) > unarmedAttackData.arc * 0.5f)
+            {
+                continue;
+            }
+
+            float distance = flatOffset.sqrMagnitude;
+
+            if (distance < closestDistance)
+            {
+                closest = candidate;
+                closestDistance = distance;
+            }
+        }
+
+        return closest;
     }
 
     // 손에 들 무기 슬롯을 바꾼다
