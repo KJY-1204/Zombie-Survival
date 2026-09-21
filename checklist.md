@@ -632,6 +632,13 @@
 - [x] Unity 컴파일과 Game View 재캡처로 보정 결과를 확인한다.
 - [x] 커밋하고 원격 main에 push한다.
 
+## 2026-09-21 - M12 진행 현황·에셋 인벤토리
+
+- [x] 현재 구현 범위, 보류 검증, 다음 우선 작업을 `plan.md`에 정리한다.
+- [x] `Assets`의 실제 에셋 파일 이름과 바이트 크기를 `docs/asset-inventory.tsv`에 기록한다.
+- [x] 누락·추가·크기 변경을 확인하는 `Tools/Verify-AssetInventory.ps1`을 추가한다.
+- [x] 현재 인벤토리와 실제 `Assets`가 일치하는지 검증한다.
+
 
 ## 2026-09-21 - M9 안정화: 월드 런타임 NavMesh 메시 읽기
 
