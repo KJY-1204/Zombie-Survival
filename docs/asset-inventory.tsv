@@ -3120,7 +3120,7 @@ Assets/Scripts/World/WorldNavMeshBaker.cs	4761
 Assets/Scripts/World/WorldRuntimeState.cs	3935
 Assets/Scripts/World/WorldStreamer.cs	5780
 Assets/Scripts/World/WorldZombieSpawner.cs	4339
-Assets/Scripts/Zombie.cs	12321
+Assets/Scripts/Zombie.cs	13553
 Assets/Scripts/ZombieData.cs	391
 Assets/Scripts/ZombieSpawner.cs	2522
 Assets/Sprites/Frame.png	648

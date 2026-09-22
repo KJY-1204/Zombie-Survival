@@ -22,6 +22,8 @@ public class Zombie : LivingEntity {
     private Vector3 investigatePosition; // 소리가 난 지점
     private float investigateUntil; // 이 시점이 지나면 조사를 포기한다
     private float lastSeenTime = float.NegativeInfinity; // 대상을 마지막으로 본 시점
+    private bool isPatrolling; // 유휴 상태에서 배회 지점으로 이동 중인지
+    private float patrolWaitUntil; // 다음 배회 지점을 고를 수 있는 시점
 
     public ParticleSystem hitEffect; // 피격시 재생할 파티클 효과
     public AudioClip deathSound; // 사망시 재생할 소리
@@ -92,8 +94,8 @@ public class Zombie : LivingEntity {
     }
 
     private void Update() {
-        // 쫓아가는 대상이 있거나 소리를 쫓는 중이면 걷는 애니메이션을 재생
-        zombieAnimator.SetBool("HasTarget", hasTarget || isInvestigating);
+        // 쫓아가는 대상, 소리 조사, 배회 중이면 걷는 애니메이션을 재생
+        zombieAnimator.SetBool("HasTarget", hasTarget || isInvestigating || isPatrolling);
     }
 
     // 소리가 들리면 그 지점으로 가본다 (이미 대상을 쫓는 중이면 무시)
@@ -114,6 +116,8 @@ public class Zombie : LivingEntity {
     // 소리가 난 지점(또는 마지막으로 본 자리)으로 가도록 설정한다
     // 그 지점이 NavMesh 밖이면 가장 가까운 갈 수 있는 자리로 바꿔 잡는다
     private void StartInvestigating(Vector3 position) {
+        isPatrolling = false;
+
         if (NavMesh.SamplePosition(position, out NavMeshHit hit, 8f, NavMesh.AllAreas))
         {
             investigatePosition = hit.position;
@@ -201,6 +205,7 @@ public class Zombie : LivingEntity {
                 targetEntity = visible;
                 lastSeenTime = Time.time;
                 isInvestigating = false;
+                isPatrolling = false;
             }
             else if (hasTarget && Time.time > lastSeenTime + loseSightTime)
             {
@@ -235,12 +240,48 @@ public class Zombie : LivingEntity {
             }
             else
             {
-                // 아무것도 못 보고 못 들었으면 제자리에서 기다린다
-                navMeshAgent.isStopped = true;
+                UpdatePatrol();
             }
 
             // 0.25초 주기로 처리 반복
             yield return new WaitForSeconds(0.25f);
+        }
+    }
+
+    // 유휴 좀비가 NavMesh 위의 가까운 지점을 천천히 오간다
+    private void UpdatePatrol() {
+        if (isPatrolling)
+        {
+            if (navMeshAgent.pathPending
+                || navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
+            {
+                return;
+            }
+
+            isPatrolling = false;
+            navMeshAgent.isStopped = true;
+            patrolWaitUntil = Time.time + Random.Range(2f, 4f);
+            return;
+        }
+
+        if (Time.time < patrolWaitUntil)
+        {
+            return;
+        }
+
+        Vector2 direction = Random.insideUnitCircle.normalized;
+        Vector3 candidate = transform.position + new Vector3(direction.x, 0f, direction.y)
+            * Random.Range(3f, 8f);
+
+        if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, 4f, NavMesh.AllAreas))
+        {
+            isPatrolling = true;
+            navMeshAgent.isStopped = false;
+            navMeshAgent.SetDestination(hit.position);
+        }
+        else
+        {
+            patrolWaitUntil = Time.time + 2f;
         }
     }
 
