@@ -37,8 +37,8 @@ MonoBehaviour:
   plainPropPrefabs:
   - {fileID: 8196224529914683650, guid: 072622afbbe560e4e8474af2f82b7bcd, type: 3}
   - {fileID: 3085054505567374289, guid: cdb1938554c8a224fb6e899fad57576e, type: 3}
-  plainPropMin: 0
-  plainPropMax: 3
+  plainPropMin: 6
+  plainPropMax: 10
   poiPrefab: {fileID: 498024613309676441, guid: e7871119d0f195d45b3a2673322c0129,
     type: 3}
   poiFootprint: 85
