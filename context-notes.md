@@ -1306,3 +1306,4 @@
 - 참고 이미지의 파티·퀘스트·허기/갈증·미니맵은 현재 도메인 데이터가 없으므로 추가하지 않았다. 정적 수치로 기능을 가장하지 않기 위한 범위 결정이다.
 - 첫 프리팹 검증은 `Fill Area`가 일반 Transform으로 생성돼 Slider의 fillRect 배치에 실패했다. 모든 HUD 오브젝트를 `RectTransform`으로 만드는 생성 도우미로 고친 뒤, `GameplayHudLayoutValidator.Validate`를 Unity 배치 모드에서 실행했다. 새 HUD 루트 6종과 WeaponHudUI·VehicleHudUI·InteractionPromptUI·BuildMenuUI·UIManager 참조가 모두 유효함을 확인했다.
 - Unity 6.3 배치 컴파일은 성공했고 새 오류는 없었다. 프로젝트에 이미 있던 Survivalist/Grenade 외부 에셋의 obsolete 경고와 헤드리스 환경의 그래픽 창 경고는 남는다. `-nographics` 환경이라 World Game View의 육안 확인은 별도 그래픽 Unity Editor에서 남긴다.
+- HUD 변경은 `adbea74` (`게임플레이 HUD 스타일 정비`)로 커밋했고 `origin/main`에 push했다. 사용자가 추가한 `Assets/ExplosiveLLC`와 `Assets/_Project` 미추적 파일은 이 커밋에 포함하지 않았다.
