@@ -686,3 +686,11 @@
 - [x] 새 게임으로 World를 열어 RuntimeNavMeshBuilder 오류가 사라졌는지 확인한다.
 - [x] `compilationFailed: false`, `consoleErrors: 0`을 확인한다.
 - [x] 커밋하고 원격 main에 push한다. (80cbbc1)
+
+## 2026-09-23 - M15 게임플레이 HUD 스타일 정비
+
+- [x] HUD Canvas와 현재 런타임 UI 데이터 연결을 분석한다.
+- [x] 기존 HUD 기능을 유지하는 새 앵커 기반 레이아웃을 만든다.
+- [x] Unity 배치 컴파일과 프리팹 검증으로 새 HUD 요소·기존 UI 스크립트 참조를 확인한다.
+- [ ] 그래픽 장치가 있는 Unity Editor에서 World Play Mode의 최종 렌더링을 육안 확인한다.
+- [ ] 검증된 변경을 커밋하고 원격 main에 push한다.

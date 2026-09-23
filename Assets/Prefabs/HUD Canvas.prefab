@@ -23,6 +23,7 @@ GameObject:
   - component: {fileID: 3648722489749136101}
   - component: {fileID: 7720176027757273625}
   - component: {fileID: 6145428351401642207}
+  - component: {fileID: 6302932451990302771}
   m_Layer: 5
   m_Name: HUD Canvas
   m_TagString: Untagged
@@ -458,6 +459,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6302932451990302771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1067575940484460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c17247358b44c0897863d0b0c722a91, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GameplayHudLayout
 --- !u!1 &96536734424738152
 GameObject:
   m_ObjectHideFlags: 0

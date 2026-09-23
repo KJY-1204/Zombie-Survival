@@ -1293,3 +1293,16 @@
 - 배회 상태를 같은 불리언에 포함해 기존 컨트롤러와 클립을 재사용한다. 컨트롤러·애니메이션 에셋은 수정하지 않는다.
 - World Play Mode에서 좀비 8마리가 생성됐고, 유휴 표본은 `Move` 상태와 `HasTarget: true`로 전환돼 속도 약 4.13으로 이동했다. 종료 뒤 컴파일 실패·콘솔 오류는 0개였다.
 - 콘솔 경고 1개는 이번 변경과 무관하다. 좀비 공격으로 플레이어가 죽을 때 `PlayerHealth.Die`가 컨트롤러가 없는 Animator에 `Die` 트리거를 보내며 발생했고, 별도 안정화 작업으로 남긴다.
+
+### M15 착수 - 게임플레이 HUD 스타일 정비 (2026-09-23)
+
+- 이 프로젝트의 런타임 HUD는 UI Toolkit이 아니라 `Assets/Prefabs/HUD Canvas.prefab` 하나에 모인 uGUI Canvas다. `WeaponHudUI`, `VehicleHudUI`, `InteractionPromptUI`, `BuildMenuUI`, `UIManager`가 이 프리팹의 직렬화 참조를 사용한다.
+- 참고 이미지의 정보 밀도와 모서리 배치를 적용하되, 현재 게임에 도메인 데이터가 없는 파티원, 퀘스트 진행, 허기·갈증, 미니맵을 표시하면 실제 기능처럼 오해하게 된다. 따라서 방향/지역 정보, 조작 안내, 실제 체력/무기/상호작용/차량 정보만 만든다.
+- 기존 화면형 UI(인벤토리·장비·상태·저장·보관함·건설 메뉴)는 요청 범위가 아닌 별도 화면이므로 구조와 동작을 보존한다. 이번 변경은 평상시 게임플레이 HUD와 그 시각 스타일에 한정한다.
+
+### M15 구현·검증 - 게임플레이 HUD 스타일 정비 (2026-09-23)
+
+- `GameplayHudLayout`을 `HUD Canvas`에 붙여, 기존 전체 화면 UI는 그대로 두고 평상시 HUD만 런타임에 새 앵커 레이아웃으로 만들게 했다. 상단에는 실제 플레이어 방향(8방위/각도), 우측에는 현재 구현된 단축키 안내, 좌하단에는 실제 체력·방어·무게, 우하단에는 실제 장착 무기·탄약을 둔다. 차량 상태·상호작용·건설 안내·조준점도 기존 스크립트가 새 오브젝트를 갱신한다.
+- 참고 이미지의 파티·퀘스트·허기/갈증·미니맵은 현재 도메인 데이터가 없으므로 추가하지 않았다. 정적 수치로 기능을 가장하지 않기 위한 범위 결정이다.
+- 첫 프리팹 검증은 `Fill Area`가 일반 Transform으로 생성돼 Slider의 fillRect 배치에 실패했다. 모든 HUD 오브젝트를 `RectTransform`으로 만드는 생성 도우미로 고친 뒤, `GameplayHudLayoutValidator.Validate`를 Unity 배치 모드에서 실행했다. 새 HUD 루트 6종과 WeaponHudUI·VehicleHudUI·InteractionPromptUI·BuildMenuUI·UIManager 참조가 모두 유효함을 확인했다.
+- Unity 6.3 배치 컴파일은 성공했고 새 오류는 없었다. 프로젝트에 이미 있던 Survivalist/Grenade 외부 에셋의 obsolete 경고와 헤드리스 환경의 그래픽 창 경고는 남는다. `-nographics` 환경이라 World Game View의 육안 확인은 별도 그래픽 Unity Editor에서 남긴다.
